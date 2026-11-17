@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تطبيقات زمورة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: a dark night-stage; each app is a glowing card with its own two-colour identity and a light sweep that passes over it. */
+:root{
+  --bg:#0a1020; --panel:#111a2e; --ink:#eef3fb; --muted:#9db0cc; --line:#24334f;
+  --c1:#22d3ee; --c2:#8b5cf6; --wa:#25d366; --signal:#ffb020; --signal-ink:#1b1204;
+  --display:'Readex Pro','IBM Plex Sans Arabic',system-ui,sans-serif;
+  --body:'IBM Plex Sans Arabic','Readex Pro',system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.75 var(--body);overflow-x:hidden;position:relative}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--signal);outline-offset:3px;border-radius:8px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
+
+/* moving aurora */
+.aurora{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.aurora i{position:absolute;width:55vmax;height:55vmax;border-radius:50%;filter:blur(90px);opacity:.38;animation:drift 22s ease-in-out infinite alternate}
+.aurora i:nth-child(1){background:#22d3ee;top:-20vmax;right:-15vmax}
+.aurora i:nth-child(2){background:#8b5cf6;bottom:-25vmax;left:-15vmax;animation-duration:28s}
+.aurora i:nth-child(3){background:#f43f5e;top:30vh;left:35vw;width:35vmax;height:35vmax;opacity:.2;animation-duration:34s}
+@keyframes drift{to{transform:translate(8vmax,6vmax) scale(1.15)}}
+
+/* top bar */
+header.bar{position:sticky;top:0;z-index:20;backdrop-filter:blur(14px);background:#0a1020b8;border-bottom:1px solid var(--line)}
+header.bar .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:64px;flex-wrap:wrap}
+.brand{font:700 21px var(--display);text-decoration:none;background:linear-gradient(90deg,#22d3ee,#a78bfa,#f472b6,#22d3ee);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:flow 8s linear infinite}
+nav{display:flex;gap:20px;flex-wrap:wrap;font-size:15px;align-items:center}
+nav a{text-decoration:none;color:var(--muted)}
+nav a:hover{color:var(--ink)}
+nav a.wa{color:#04210f;background:var(--wa);padding:5px 16px;border-radius:99px;font-weight:600}
+@keyframes flow{to{background-position:300% 0}}
+
+/* hero */
+.hero{padding:64px 0 40px;display:grid;grid-template-columns:1.3fr 1fr;gap:40px;align-items:center}
+.hero h1{font:700 clamp(40px,7vw,78px)/1.15 var(--display);margin:0 0 20px;text-wrap:balance}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,#22d3ee,#a78bfa,#f472b6,#fbbf24,#22d3ee);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:flow 7s linear infinite}
+.hero p{margin:0 0 28px;color:var(--muted);max-width:56ch;font-size:19px}
+.btnrow{display:flex;gap:12px;flex-wrap:wrap}
+.btn{position:relative;overflow:hidden;display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:12px;border:1.5px solid #ffffff40;text-decoration:none;font:600 16px var(--body);cursor:pointer;background:#ffffff0d;color:var(--ink);transition:transform .15s,box-shadow .2s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px -8px var(--c1)}
+.btn::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,#ffffff55 50%,transparent 60%);transform:translateX(130%);animation:sweep 4.5s ease-in-out infinite}
+.btn.primary{background:linear-gradient(135deg,var(--c1),var(--c2));border-color:transparent;color:#06101f}
+.btn.dl{background:linear-gradient(135deg,var(--signal),#ff6b3d);border-color:transparent;color:var(--signal-ink)}
+.btn.wa{background:var(--wa);border-color:transparent;color:#04210f}
+.btn.ghost{border-color:var(--line);color:var(--muted);background:transparent}
+.btn.ghost::after{display:none}
+.btn[aria-disabled="true"]{opacity:.55;pointer-events:none}
+@keyframes sweep{0%,55%{transform:translateX(130%)}100%{transform:translateX(-130%)}}
+
+.ledger{border:1px solid var(--line);border-radius:18px;background:#0e172a99;backdrop-filter:blur(6px);padding:18px 22px;direction:ltr;font:500 14px/2.05 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);position:relative;overflow:hidden}
+.ledger b{color:var(--ink);font-weight:600}
+.ledger .row{display:flex;justify-content:space-between;gap:12px;border-bottom:1px dashed var(--line)}
+.ledger .row:last-child{border:0}
+.ledger .row span:last-child{font-weight:700;background:linear-gradient(135deg,var(--a),var(--b));-webkit-background-clip:text;background-clip:text;color:transparent}
+.ledger::after,.card::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 42%,#ffffff1c 50%,transparent 58%);transform:translateX(130%);animation:sweep 6s ease-in-out infinite;animation-delay:var(--d,0s);pointer-events:none}
+
+/* filters */
+.filters{display:flex;gap:8px;flex-wrap:wrap;padding:18px 0 26px}
+.chip{padding:7px 18px;border-radius:99px;border:1.5px solid var(--line);background:#ffffff08;color:var(--muted);font:500 15px var(--body);cursor:pointer;transition:all .2s}
+.chip:hover{color:var(--ink);border-color:#ffffff55}
+.chip[aria-pressed="true"]{background:linear-gradient(135deg,#22d3ee,#8b5cf6);color:#06101f;border-color:transparent;font-weight:600}
+
+/* app cards */
+#apps{display:grid;gap:30px;padding-bottom:40px}
+.card{--c1:#22d3ee;--c2:#8b5cf6;position:relative;overflow:hidden;border-radius:26px;border:1.5px solid transparent;
+  background:linear-gradient(var(--panel),var(--panel)) padding-box,linear-gradient(135deg,var(--c1),var(--c2)) border-box;
+  display:grid;grid-template-columns:5fr 6fr;gap:0;box-shadow:0 20px 60px -30px var(--c1);animation:rise .7s both}
+@keyframes rise{from{opacity:.001;transform:translateY(18px)}to{opacity:1;transform:none}}
+.media{position:relative;min-height:260px;background:#0b1220;display:flex;align-items:center}
+.media img,.media video{width:100%;aspect-ratio:16/9;object-fit:contain;display:block;background:#0b1220}
+.play{position:absolute;inset:0;border-radius:0;display:grid;place-items:center;border:0;background:linear-gradient(180deg,transparent 40%,#0008);cursor:pointer;color:#fff;font:600 15px var(--body)}
+.play span{display:grid;place-items:center;width:78px;height:78px;border-radius:50%;background:linear-gradient(135deg,var(--c1),var(--c2));box-shadow:0 0 0 0 var(--c1);animation:pulse 2.4s infinite}
+.play svg{width:30px;height:30px;fill:#06101f;margin-inline-end:-3px}
+.play small{position:absolute;bottom:14px;inset-inline:0;text-align:center;font-size:15px}
+@keyframes pulse{70%{box-shadow:0 0 0 22px #0000}100%{box-shadow:0 0 0 0 #0000}}
+.body{padding:28px 30px;position:relative}
+.idx{direction:ltr;text-align:right;font:700 15px var(--display);letter-spacing:1px;background:linear-gradient(135deg,var(--c1),var(--c2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.card h2{font:700 clamp(26px,3.4vw,36px)/1.25 var(--display);margin:2px 0 4px}
+.tags{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px}
+.tag{font-size:13px;padding:2px 12px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
+.tag.os{border-color:var(--c1);color:var(--c1)}
+.desc{margin:0 0 14px;color:#cfd9ea}
+.feat{margin:0 0 18px;padding:0;list-style:none;display:grid;gap:6px}
+.feat li{position:relative;padding-inline-start:20px;font-size:15.5px}
+.feat li::before{content:"";position:absolute;inset-inline-start:0;top:.72em;width:9px;height:9px;border-radius:3px;background:linear-gradient(135deg,var(--c1),var(--c2))}
+.dl{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+details{border:1px solid var(--line);border-radius:14px;background:#0b1324;margin-top:10px}
+summary{cursor:pointer;padding:11px 18px;font:600 16px var(--body);list-style:none;display:flex;justify-content:space-between;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font:600 22px var(--display);color:var(--c1)}
+details[open] summary::after{content:"−"}
+details .in{padding:0 18px 16px}
+details ol{margin:0;padding-inline-start:22px}
+details li{margin-bottom:6px}
+.note{font-size:14px;color:var(--muted);margin:8px 0 0}
+
+/* contact */
+.contact{padding:40px 0 64px}
+.box{position:relative;overflow:hidden;border-radius:28px;padding:40px;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;
+  background:linear-gradient(120deg,#0f766e,#0e7490 40%,#6d28d9);background-size:200% 200%;animation:bg 10s ease-in-out infinite alternate}
+@keyframes bg{to{background-position:100% 100%}}
+.box::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 42%,#ffffff2a 50%,transparent 58%);transform:translateX(130%);animation:sweep 5s ease-in-out infinite;pointer-events:none}
+.box h2{font:700 clamp(26px,4vw,38px)/1.25 var(--display);margin:0 0 6px}
+.box p{margin:0;opacity:.92}
+.num-txt{font:700 26px var(--display);direction:ltr;display:inline-block;margin-top:10px;letter-spacing:1px}
+.box .btn{position:relative;z-index:1;font-size:18px;padding:14px 28px}
+footer{border-top:1px solid var(--line);padding:24px 0 40px;color:var(--muted);font-size:14px;position:relative;z-index:1}
+
+@media (max-width:820px){
+  .hero{grid-template-columns:1fr;padding-top:36px}
+  .card{grid-template-columns:1fr}
+  .media{min-height:0;aspect-ratio:16/9}
+  .body{padding:22px 20px}
+  .box{padding:26px}
+}
+@media (prefers-reduced-motion:reduce){*,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="#top">تطبيقات زمورة</a>
+    <nav aria-label="التنقل">
+      <a href="#apps">التطبيقات</a>
+      <a class="wa" id="waTop" href="#contact">واتساب</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap">
+    <section class="hero" aria-labelledby="h1">
+      <div>
+        <h1 id="h1">ثمانية تطبيقات أندرويد، <em>جاهزة للتحميل</em></h1>
+        <p>ألعاب وأدوات للهاتف وللتلفاز وللعائلة. لكل تطبيق رابط تحميل مباشر، وشرح للتثبيت والاستخدام، وفيديو توضيحي.</p>
+        <div class="btnrow">
+          <a class="btn primary" href="#apps">تصفح التطبيقات</a>
+          <a class="btn wa" href="#contact" id="heroWa">اسأل عبر واتساب</a>
+        </div>
+      </div>
+      <div class="ledger" aria-hidden="true" id="ledger"></div>
+    </section>
+
+    <div class="filters" id="filters" role="group" aria-label="تصفية التطبيقات"></div>
+    <section id="apps" aria-label="قائمة التطبيقات"></section>
+  </div>
+
+  <section class="contact" id="contact">
+    <div class="wrap">
+      <div class="box">
+        <div>
+          <h2>عندك سؤال أو مشكلة في التثبيت؟</h2>
+          <p>راسلني على واتساب وأرد عليك بالتفصيل.</p>
+          <span class="num-txt" id="waText"></span>
+        </div>
+        <a class="btn wa" id="waBtn" href="#contact" rel="noopener">فتح محادثة واتساب</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    ملفات APK تجريبية غير موقّعة لمتجر Google Play، وتثبَّت يدوياً بعد السماح بالتثبيت من مصادر غير معروفة.
+  </div>
+</footer>
+
+<script>
+/* ===== إعدادات يسهل تعديلها ===== */
+const WHATSAPP = "213655850060";   // الصيغة الدولية بدون + ولا مسافات
+const DL = "https://github.com/zamory78-max/apps-downloads/releases/download/";
+
+/* لكل تطبيق: صورة media/<id>.jpg وفيديو media/<id>.mp4 */
+const APPS = [
+  {
+    id:"launcher", cat:"tv", c:["#0ea5e9","#6366f1"], name:"Zemoura Launcher", repo:"zemoura-tv-launcher",
+    os:["Android TV","TV Box"], kind:"أداة",
+    desc:"لاونشر عربي (يمين ← يسار) لأجهزة TV Box التي تعمل بنظام أندرويد، يعمل كاملاً بالريموت.",
+    feat:["4 خلفيات جاهزة أو أي صورة من الجهاز","صفوف تطبيقات بأسلوب Google TV","نقل التطبيقات والمجلدات بالأسهم","مجلدات مقفلة برمز سري","الطقس لأي مدينة جزائرية (58 ولاية)","مواقيت الصلاة وفق وزارة الشؤون الدينية الجزائرية مع شاشة أذان","ويدجت طقس وصلاة متحركة","يعمل كلاونشر افتراضي ويستعيد الأذان بعد انقطاع الكهرباء"],
+    dl:[{t:"تحميل APK",u:DL+"launcher/tv-launcher.apk"}],
+    steps:["حمّل tv-launcher.apk على الجهاز، أو على الهاتف ثم انقله بفلاشة، أو استخدم تطبيق Downloader على التلفاز.","فعّل «التثبيت من مصادر غير معروفة» للتطبيق الذي تفتح به الملف.","ثبّت الملف، ثم افتح الإعدادات ← اختر Zemoura Launcher كتطبيق رئيسي.","من الإعدادات اختر المدينة وطريقة حساب الصلاة، وضع رمزك السري إن أردت قفل التطبيقات."]
+  },
+  {
+    id:"mawashi", cat:"tools", c:["#16a34a","#ca8a04"], name:"مواشي الجزائر", repo:"mawashi-dz",
+    os:["Android"], kind:"أداة",
+    desc:"إدارة القطيع بالعدّ الذكي، مع المبيعات والمحاسبة في تطبيق واحد.",
+    feat:["تسجيل رؤوس القطيع ومتابعتها","العدّ الذكي","سجل المبيعات","المحاسبة والأرباح"],
+    dl:[{t:"تحميل APK",u:DL+"mawashi/mawashi-dz.apk"}],
+    steps:["حمّل ملف mawashi-dz.apk من الزر أعلاه.","اسمح بالتثبيت من مصادر غير معروفة عند طلب الهاتف ذلك.","ثبّت التطبيق وافتحه، وابدأ بتسجيل القطيع من الشاشة الرئيسية."]
+  },
+  {
+    id:"guard", cat:"family", c:["#f43f5e","#7c3aed"], name:"Zemory Family Guard", repo:"Zemory-Family-Guard",
+    os:["Android","Android TV","Windows"], kind:"عائلة",
+    desc:"تحكم في هواتف وتابلت وتلفازات العائلة من تطبيق الوالد أو من لوحة ويب، بدون أي اشتراك.",
+    feat:["حد يومي بالدقائق لكل تطبيق","وقت النوم وزر إيقاف كل التطبيقات","جدول أسبوعي لفتح الشاشة","طلبات الطفل لفتح موقع أو تطبيق محظور","قفل التطبيقات بحظر كامل أو رمز PIN","سجل المواقع مع الحظر والبحث الآمن","يعمل على التلفاز ويندوز كذلك"],
+    dl:[
+      {t:"تطبيق الوالد (APK)",u:DL+"guard/FamilyGuard-Parent.apk"},
+      {t:"تطبيق الطفل (APK)",u:DL+"guard/FamilyGuard-Child.apk"},
+      {t:"ويندوز: الطفل",u:DL+"guard/ZemoryGuard-Windows.zip",s:1},
+      {t:"ويندوز: الوالد",u:DL+"guard/ZemoryParent-Windows.zip",s:1}
+    ],
+    steps:["ثبّت FamilyGuard-Parent.apk على هاتفك أنت، وFamilyGuard-Child.apk على جهاز كل طفل.","أنشئ حساب الوالد ببريدك وكلمة مرور من تطبيق الوالد.","على جهاز الطفل سجّل الدخول بنفس الحساب وامنح الصلاحيات المطلوبة (إمكانية الوصول، مدير الجهاز).","من تطبيق الوالد حدّد حدود الوقت والجدول والتطبيقات المحظورة.","ويندوز: فك ضغط ZemoryGuard-Windows.zip وشغّل install.bat كمسؤول. لتطبيق الوالد على ويندوز شغّل ZemoryParent.exe."],
+    note:"تحتاج النسخة المثبّتة إلى مشروع Firebase مجاني مضبوط وفق شرح المستودع."
+  },
+  {
+    id:"subway", cat:"games", c:["#f97316","#ef4444"], name:"سابواي الأبطال 3D", repo:"subway-abtal",
+    os:["Android","Android TV"], kind:"لعبة",
+    desc:"لعبة جري ثلاثية الأبعاد تعمل بدون إنترنت وبملء الشاشة، مع إضاءة وظلال واقعية.",
+    feat:["تعمل بدون اتصال","نسخة للهاتف ونسخة للتلفاز بأسهم الريموت","اهتزاز ودعم زر الرجوع","حفظ النتائج والعملات بشكل دائم"],
+    dl:[
+      {t:"نسخة الهاتف (APK)",u:DL+"subway/SubwayAbtal.apk"},
+      {t:"نسخة التلفاز (APK)",u:DL+"subway/SubwayAbtal-TV.apk"}
+    ],
+    steps:["حمّل SubwayAbtal.apk للهاتف أو SubwayAbtal-TV.apk للتلفاز.","اسمح بالتثبيت من مصادر غير معروفة ثم ثبّت اللعبة.","على الهاتف اسحب لتغيير المسار، وعلى التلفاز استخدم أسهم الريموت."]
+  },
+  {
+    id:"mutaba", cat:"tools", c:["#2563eb","#06b6d4"], name:"متابَع", repo:"mutaba",
+    os:["Android"], kind:"أداة",
+    desc:"يفتح فيسبوك بحسابك مباشرة على الصفحات التي تتابعها فقط، من الأحدث، بدون منشورات مقترحة.",
+    feat:["خلاصة الصفحات التي تتابعها فقط","ترتيب من الأحدث","تبويبات: الصفحات، المجموعات، المفضلة","تبديل عرض الهاتف أو الحاسوب","تحديث وتسجيل خروج من قائمة (⋯)"],
+    dl:[{t:"تحميل APK",u:DL+"mutaba/mutaba.apk"}],
+    steps:["حمّل mutaba.apk وثبّته.","افتح التطبيق وسجّل الدخول إلى حساب فيسبوك.","ستظهر لك خلاصة الصفحات التي تتابعها مباشرة، وتجد باقي الخيارات في القائمة بالأسفل."]
+  },
+  {
+    id:"mukallaf", cat:"tools", c:["#0d9488","#84cc16"], name:"مُكَلَّف", repo:"mukallaf",
+    os:["Android","Windows"], kind:"أداة",
+    desc:"متابعة التكليفات والمبالغ المسلَّمة والمصاريف والأرباح، وتقسيمها بين صاحب المال والمُكلَّف.",
+    feat:["تتبع التكليفات والمبالغ المسلَّمة","المصاريف والأرباح","تقسيم الربح بين الطرفين","تحديثات تُثبَّت فوق النسخة القديمة بدون حذف"],
+    dl:[
+      {t:"تحميل APK",u:DL+"mukallaf/mukallaf.apk"},
+      {t:"نسخة ويندوز (مثبّت)",u:DL+"mukallaf/mukallaf-setup.exe",s:1}
+    ],
+    steps:["حمّل mukallaf.apk وثبّته على الهاتف.","أضف التكليفات ثم المبالغ المسلَّمة والمصاريف.","يحسب التطبيق الأرباح ويقسمها بين صاحب المال والمُكلَّف.","ويندوز: افتح صفحة نسخة ويندوز وحمّل ملف exe."]
+  },
+  {
+    id:"khazzouna", cat:"games", c:["#a855f7","#ec4899"], name:"خزونة", repo:"khazzouna-android",
+    os:["Android"], kind:"لعبة",
+    desc:"لعبة اختباء وبحث ثلاثية الأبعاد للهاتف.",
+    feat:["لعبة 3D للاختباء والبحث","تعمل على أي هاتف أندرويد","تحديثات تُثبَّت فوق القديمة"],
+    dl:[{t:"تحميل APK",u:DL+"khazzouna/khazzouna.apk"}],
+    steps:["حمّل khazzouna.apk وثبّته.","افتح اللعبة واختر دورك: مختبئ أو باحث."]
+  },
+  {
+    id:"islamictv", cat:"tv", c:["#10b981","#0891b2"], name:"Zemoura TV · القنوات الإسلامية", repo:"IslamicTV",
+    os:["Android","Android TV","Windows"], kind:"قنوات",
+    desc:"تطبيق واحد للهاتف والتابلت وأجهزة Android TV، يعرض القنوات الإسلامية بواجهة تناسب كل جهاز.",
+    feat:["واجهة للهاتف: شبكة قنوات وتصنيفات وبحث ومفضلة","واجهة للتلفاز بالريموت مع تنقل بين القنوات بالأزرار","مشغل يدعم HLS وDASH وMP4 مع إعادة المحاولة عند الخطأ","قوائم قنوات من رابط JSON أو M3U تُحدَّث من الإعدادات","فيديوهات قنوات YouTube بدون اقتراحات","إعدادات محمية بكلمة مرور"],
+    dl:[
+      {t:"نسخة الهاتف (APK)",u:DL+"islamictv/ZemouraTV.apk"},
+      {t:"نسخة التلفاز (APK)",u:DL+"islamictv/ZemouraTV-AndroidTV.apk"},
+      {t:"نسخة ويندوز (مثبّت)",u:DL+"islamictv/ZemouraTV-Setup.exe",s:1}
+    ],
+    steps:["حمّل ZemouraTV.apk للهاتف أو ZemouraTV-AndroidTV.apk للتلفاز وثبّته.","افتح الإعدادات (⚙️) وأنشئ كلمة مرور من 4 أرقام على الأقل.","ضع رابط قائمة قنواتك (JSON أو M3U) واضغط «حفظ وتحديث»، فالتطبيق يعرض القنوات من القوائم التي تضيفها.","اختر قناة وشاهد. على التلفاز استخدم الأعلى والأسفل أو CH+ وCH- للتنقل بين القنوات."]
+  }
+];
+const CATS=[["all","الكل"],["tv","التلفاز"],["games","ألعاب"],["tools","أدوات"],["family","العائلة"]];
+
+/* ===== العرض ===== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pad=n=>String(n).padStart(2,"0");
+
+function render(cat){
+  const list=APPS.filter(a=>cat==="all"||a.cat===cat||(cat==="tv"&&a.os.includes("Android TV")));
+  $("#apps").innerHTML=list.map((a,k)=>{
+    const i=APPS.indexOf(a)+1;
+    return `<article class="card" id="${a.id}" style="--c1:${a.c[0]};--c2:${a.c[1]};--d:${(k*1.1).toFixed(1)}s;animation-delay:${(k*.08).toFixed(2)}s">
+      <div class="media" data-id="${a.id}">
+        <img src="media/${a.id}.jpg" alt="غلاف تطبيق ${esc(a.name)}" loading="lazy">
+        <button class="play" type="button" aria-label="تشغيل فيديو شرح ${esc(a.name)}"><span><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></span><small>شاهد فيديو الشرح</small></button>
+      </div>
+      <div class="body">
+        <div class="idx">${pad(i)} / ${pad(APPS.length)}</div>
+        <h2>${esc(a.name)}</h2>
+        <div class="tags"><span class="tag">${esc(a.kind)}</span>${a.os.map(o=>`<span class="tag os">${esc(o)}</span>`).join("")}</div>
+        <p class="desc">${esc(a.desc)}</p>
+        <ul class="feat">${a.feat.map(f=>`<li>${esc(f)}</li>`).join("")}</ul>
+        <div class="dl">
+          ${a.dl.map(d=>`<a class="btn ${d.s?"":"dl"}" href="${esc(d.u)}" rel="noopener">${esc(d.t)}</a>`).join("")}
+        </div>
+        <details><summary>طريقة التثبيت والاستخدام</summary>
+          <div class="in"><ol>${a.steps.map(s=>`<li>${esc(s)}</li>`).join("")}</ol>${a.note?`<p class="note">${esc(a.note)}</p>`:""}</div>
+        </details>
+      </div>
+    </article>`;
+  }).join("");
+}
+
+$("#apps").addEventListener("click",e=>{
+  const b=e.target.closest(".play"); if(!b) return;
+  const m=b.closest(".media"), id=m.dataset.id;
+  m.innerHTML=`<video src="media/${id}.mp4" poster="media/${id}.jpg" controls autoplay playsinline></video>`;
+  const v=m.querySelector("video"); try{v.play()}catch(_){}
+});
+
+$("#filters").innerHTML=CATS.map(([k,l],i)=>`<button class="chip" type="button" data-c="${k}" aria-pressed="${i===0}">${l}</button>`).join("");
+$("#filters").addEventListener("click",e=>{
+  const b=e.target.closest(".chip"); if(!b) return;
+  document.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",c===b));
+  render(b.dataset.c);
+});
+
+$("#ledger").style.setProperty("--d","1s");
+$("#ledger").innerHTML=APPS.map((a,i)=>{
+  const f=a.dl[0].u.split("/").pop();
+  return `<div class="row" style="--a:${a.c[0]};--b:${a.c[1]}"><b>${esc(f)}</b><span>${pad(i+1)}</span></div>`;
+}).join("");
+
+/* واتساب */
+const wa=WHATSAPP.replace(/\D/g,"");
+const link="https://wa.me/"+wa+"?text="+encodeURIComponent("السلام عليكم، عندي سؤال عن أحد تطبيقاتك.");
+["#waBtn","#heroWa","#waTop"].forEach(s=>{$(s).href=link});
+$("#waText").textContent="+213 655 85 00 60";
+render("all");
+</script>
+</body>
+</html>
