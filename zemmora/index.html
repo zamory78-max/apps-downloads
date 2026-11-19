@@ -5,6 +5,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-title" content="زمورة">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#2563eb">
@@ -452,7 +453,7 @@ function quizTab(l){
     $("#body").innerHTML=`<div class="card"><div class="ex" style="text-align:center">السؤال ${i+1} / ${qs.length}</div><div class="bar"><i style="width:${i/qs.length*100}%"></i></div>${q.p}<div class="opts">${q.o.map(o=>`<button class="opt">${q.en?E(o):esc(o)}</button>`).join("")}</div></div>`;
     if(q.say){say(q.say);$("#ql").onclick=()=>say(q.say,{rate:.7})}
     app.querySelectorAll(".opt").forEach((b,k)=>b.onclick=()=>{
-      const good=q.o[k]===q.a;if(good)score++;
+      const good=q.o[k]===q.a;sfx(good);if(good)score++;
       app.querySelectorAll(".opt").forEach((x,m)=>{x.disabled=true;if(q.o[m]===q.a)x.classList.add("ok")});
       if(!good)b.classList.add("no");
       setTimeout(()=>{i++;show()},good?700:1400);
@@ -488,6 +489,7 @@ const SCEN=[
 ];
 const C={lv:"A1",sc:null,active:false,hist:[],sample:null,busy:false,started:false,dict:null,showAr:true,done:false};
 const LVHINT={A1:"Use only very simple words and short sentences (max 8 words). Present simple. Suggestions must be 2-4 words.",A2:"Use simple everyday vocabulary and short sentences.",B1:"Use clear natural English, some past/future forms.",B2:"Use natural fluent English, include some phrasal verbs and connectors.",C1:"Use sophisticated vocabulary, idioms and nuanced structures."};
+let _ac=null;function sfx(ok){try{_ac=_ac||new(window.AudioContext||window.webkitAudioContext)();if(_ac.state==="suspended")_ac.resume();const n=_ac.currentTime,seq=ok?[[660,0],[880,.13]]:[[220,0],[165,.16]];seq.forEach(([f,d])=>{const o=_ac.createOscillator(),g=_ac.createGain();o.type=ok?"sine":"square";o.frequency.value=f;g.gain.setValueAtTime(.0001,n+d);g.gain.exponentialRampToValueAtTime(ok?.25:.12,n+d+.02);g.gain.exponentialRampToValueAtTime(.0001,n+d+.18);o.connect(g);g.connect(_ac.destination);o.start(n+d);o.stop(n+d+.2)});if(!ok&&navigator.vibrate)navigator.vibrate(120)}catch(e){}}
 const sc=()=>SCEN.find(x=>x[0]===C.sc);
 function sysPrompt(){const s=sc();
 return `You are "Coach Yalla", a friendly English tutor for Algerian Arabic (Darija) speakers. The student's CEFR level: ${C.lv}. ${LVHINT[C.lv]}
@@ -507,7 +509,7 @@ function picker(){
   app.innerHTML=`<h2>💬 اختر سيناريو المحادثة</h2>
   <div class="note" style="margin:-6px 0 8px">${HAS_AI?"المدرّس يفهم الدارجة ويصحّح لك ويقترح عليك ردوداً.":"وضع التدريب بدون إنترنت: حوارات تختلف بحسب مستواك (A1–A2 أساسي، B1–B2 متوسط، C1 متقدّم)، تختار فيها الرد الأنسب أو تكتبه بنفسك ويُقيَّم."} اختر مستواك:</div><div class="note" id="pn" style="color:#b45309;font-weight:600"></div>
   <div class="chips" id="lvc">${LEVELS.map(l=>`<button class="chip ${C.lv===l.id?"on":""}" data-v="${l.id}">${l.ic} ${l.id}</button>`).join("")}</div>
-  <div class="grid2">${SCEN.map(s=>`<div class="card sc${(!HAS_AI&&!CS[s[0]])?" dim":""}" data-v="${s[0]}"><div style="font-size:34px">${s[1]}</div><b>${s[2]}</b><small>🎯 ${s[3]}${(!HAS_AI&&!CS[s[0]])?" · 🤖 داخل Claude فقط":""}</small></div>`).join("")}</div>`;
+  <div class="grid2">${SCEN.map(s=>`<div class="card sc" data-v="${s[0]}"><div style="font-size:34px">${s[1]}</div><b>${s[2]}</b><small>🎯 ${s[3]}</small></div>`).join("")}</div>`;
   $("#lvc").onclick=e=>{const v=e.target.dataset.v;if(v){C.lv=v;picker()}};
   app.querySelectorAll(".sc").forEach(e=>e.onclick=()=>{if(!HAS_AI&&!CS[e.dataset.v]){$("#pn").textContent="🤖 هذا السيناريو يحتاج المدرّس الذكي ويعمل داخل Claude فقط. جرّب السيناريوهات غير الباهتة.";return}C.sc=e.dataset.v;C.script=null;C.active=true;C.hist=[];C.started=false;C.done=false;render();scrollTo(0,0)});
 }
@@ -673,6 +675,131 @@ friend:[
   ["That must have been quite a culture shock at first.","أكيد كانت صدمة ثقافية في الأول.",[["It was, but it broadened my horizons enormously.",2],["Yes shock much.",1],["Culture was shock I.",0]],"broaden one's horizons = يوسع الآفاق."],
   ["We must catch up properly. Over dinner perhaps?","لازم نتلاقاو مليح. على عشاء ربما؟",[["I'd be delighted. Let me check my diary and get back to you.",2],["OK dinner I come.",1],["Delighted I am dinner.",0]],"catch up = يلتقي ليتحدثا. get back to you = أرد عليك."]]]
 };
+/* ---- extra scripted role-plays (12 more scenarios) ---- */
+const T=(a,b,x,y,z,t)=>[a,b,[[x,2],[y,1],[z,0]],t];
+Object.assign(CS,{
+market:[
+[T("Hello! Nice scarf. Do you like it?","السلام! وشاح زوين. يعجبك؟","Yes, how much is it?","Yes, price?","Yes, I am scarf.","How much is it? = سؤال الثمن الأساسي."),
+ T("It is twenty dollars.","هو بعشرين دولار.","That is too expensive.","Too much money you.","It is cheap very.","too expensive = غالي بزاف."),
+ T("OK, fifteen dollars. Final price.","ماشي، خمستاشر دولار. آخر سعر.","OK, I will take it.","I take yes.","No, I am buy.","I will take it = ناخذه.")],
+[T("This scarf is handmade. Twenty dollars.","هذا الوشاح مصنوع يدوياً. عشرين دولار.","It's lovely, but it's a bit pricey. Could you lower the price?","Lower price you can?","I want free scarf.","Could you lower the price? = طلب مهذب للتخفيض."),
+ T("Well, I can do eighteen.","ممكن نخليه بثمانتاشر.","What about fifteen? That's all I can afford.","Fifteen or I go.","Eighteen is fine, bye.","What about ...? = اقتراح مهذب في المساومة."),
+ T("Fifteen, then. Cash or card?","خمستاشر إذن. كاش ولا بطاقة؟","Cash, please. Here you are.","Card is cash.","I paid yesterday.","Here you are = هاك (عند التسليم).")],
+[T("This is genuine silk. I can't go below twenty-five.","هذا حرير أصلي. ما نقدرش ننقص من خمسة وعشرين.","I appreciate the quality, but I'd be willing to pay twenty if you could meet me halfway.","Silk is bad, I give twenty.","Twenty five yes, thank.","meet me halfway = نتلاقاو في النص."),
+ T("Twenty-two, and that's my final offer.","اثنين وعشرين، وهذا آخر عرض.","Let's say twenty-one and I'll buy two of them.","Twenty-one, two scarf, buy.","No more talk, bye bye.","Buying more is a classic bargaining lever."),
+ T("Deal! Shall I wrap them as gifts?","اتفقنا! نغلفهم هدايا؟","That would be lovely, thank you for your flexibility.","Yes wrap gift is.","I do not gifts.","Thank you for your flexibility = شكر راقٍ.")]],
+taxi:[
+[T("Hello! Where to?","السلام! لوين؟","To the airport, please.","Airport go me.","I am airport.","To ..., please. = أبسط طريقة لتحديد الوجهة."),
+ T("OK. It takes thirty minutes.","ماشي. تدوم تلاتين دقيقة.","How much is it?","How many is?","Money you what?","How much is it? = بكم؟"),
+ T("Fifty dollars. Here we are.","خمسين دولار. وصلنا.","Here you are. Keep the change.","Take money is.","I no pay.","Keep the change = الباقي لك.")],
+[T("Good morning. Where would you like to go?","صباح الخير. وين تحب تروح؟","Could you take me to the central station, please?","Central station you take.","I want station now go.","Could you take me to ...? = مهذبة."),
+ T("There's heavy traffic. Is that OK?","كاين زحمة. مناسب؟","Yes, but could you use the fastest route? I'm in a hurry.","Fast, I hurry, go.","Traffic is not me.","I'm in a hurry = أنا مستعجل."),
+ T("We're here. That's twenty-five dollars.","وصلنا. خمسة وعشرين دولار.","Could I have a receipt, please?","Paper give money.","Receipt I am.","Could I have a receipt? = هل أحصل على وصل؟")],
+[T("Where to? I know the city very well.","لوين؟ نعرف المدينة مليح.","I'm heading to the old town. Could you drop me near the main square?","Old town, go go.","Town I am old.","drop me near = نزلني قرب."),
+ T("The meter is running. Is the air-conditioning OK?","العداد خدام. التكييف مناسب؟","It's a bit cold, actually. Would you mind turning it down?","Cold you off.","Air is OK is not.","Would you mind turning it down? = ممكن تخفضه؟"),
+ T("That comes to thirty dollars.","المجموع تلاتين دولار.","Here's thirty-five. Please keep the change, and thanks for the pleasant ride.","Thirty take, bye.","Thirty-five I owe.","pleasant ride = رحلة لطيفة.")]],
+pharmacy:[
+[T("Hello. How can I help?","السلام. كيفاش نعاونك؟","I have a headache.","Head is pain me.","I am headache.","I have a + ألم = أبسط وصف."),
+ T("Take these tablets.","خذ هذه الأقراص.","How often do I take them?","When I take it?","How many I do?","How often...? = كم مرة؟"),
+ T("Twice a day, after food.","مرتين في اليوم بعد الأكل.","OK, thank you.","I no understand ok.","Food is tablet.","Twice a day = مرتين في اليوم.")],
+[T("What seems to be the problem?","واش المشكل؟","I've had a sore throat and a cough for two days.","I have throat sick two day.","My throat is cough.","I've had ... for two days = عندي ... من يومين."),
+ T("Do you have any allergies?","عندك حساسية؟","No, but I'm allergic to penicillin. Is this safe?","Yes allergic.","Allergies are me no.","allergic to = عندي حساسية من."),
+ T("It's fine. Take one tablet three times a day.","لا بأس. حبة 3 مرات في اليوم.","Is there anything I should avoid while taking it?","Avoid me what?","I avoid tablet.","Is there anything I should avoid? = شي نتجنبه؟")],
+[T("Good afternoon. How can I help you today?","مساء الخير. كيف نخدمك؟","I'd like something for a persistent migraine. Do you have anything non-drowsy?","Medicine for head big give.","Migraine I am persistent.","non-drowsy = لا يسبب النعاس."),
+ T("This one works well, but it may upset your stomach.","هذا فعال لكن قد يزعج المعدة.","Should I take it on an empty stomach or with a meal?","Stomach I put it where?","Meal is stomach empty.","on an empty stomach = على معدة فارغة."),
+ T("With food. If it persists, see a doctor.","مع الأكل. إن استمر زر الطبيب.","Understood. If the symptoms don't improve in three days, I'll make an appointment.","Three day doctor go yes.","Doctor I appointment is.","If ... don't improve, I'll ... = شرط واقعي.")]],
+phone:[
+[T("Hello, customer service. How can I help?","السلام، خدمة الزبائن. كيف نخدمك؟","My internet is not working.","Internet no work is me.","I am internet.","My ... is not working = ... ما يخدمش."),
+ T("What is your name, please?","وش اسمك؟","My name is Sara.","Me Sara is name.","Sara is call.","My name is ... = اسمي."),
+ T("We will fix it today.","نصلحوه اليوم.","Thank you very much.","You very thanks.","Today I fix.","Thank you very much = شكراً جزيلاً.")],
+[T("Customer service, how may I help?","خدمة الزبائن، كيف أخدمك؟","I ordered a phone two weeks ago, but it hasn't arrived yet.","I order phone, no come.","Phone arrived is not.","hasn't arrived yet = ما وصل بعد."),
+ T("Can I have your order number?","رقم الطلبية من فضلك؟","Sure. It's 4-5-8-1-2. Could you check the status?","Number is 45812 check.","Order is check you.","Could you check ...? = ممكن تتحقق؟"),
+ T("It's delayed. We'll send it tomorrow.","متأخرة. نبعثوها غدوة.","Thank you. Could you send me a confirmation by email?","Email you send confirm.","Confirmation I am email.","Could you send me ...? = ممكن ترسل لي؟")],
+[T("Thank you for calling. What seems to be the trouble?","شكراً لاتصالك. ما المشكل؟","I've been charged twice for the same subscription and I'd like a refund.","Twice money take, back give.","Subscription I charged am.","I've been charged twice = تم خصم المبلغ مرتين."),
+ T("I'm sorry. I'll need to verify your details first.","آسف. لازم نتحقق من بياناتك.","Of course. Could you tell me how long the refund will take?","Verify quick, money now.","Details me are verify.","How long will it take? = كم يستغرق؟"),
+ T("Five working days. Anything else?","خمسة أيام عمل. شيء آخر؟","No, that's all. I'd appreciate a follow-up email confirming the refund.","No more, email yes.","Else I am nothing.","I'd appreciate ... = أقدّر لو ...")]],
+bank:[
+[T("Hello. How can I help you?","السلام. كيف نعاونك؟","I want to open an account.","Account open me.","I am account.","I want to + فعل = أريد أن."),
+ T("Do you have your ID card?","عندك بطاقة الهوية؟","Yes, here it is.","Yes, ID I.","ID is me yes.","here it is = هاهي."),
+ T("Good. Your card will come in a week.","جيد. بطاقتك تجيك في أسبوع.","Thank you. Goodbye.","You thank bye.","Week is card.","Thank you. Goodbye. = ختام مهذب.")],
+[T("Good morning. What can I do for you?","صباح الخير. ماذا أفعل لك؟","I'd like to open a savings account, please.","Savings account open I.","I want save account I am.","I'd like to + فعل = أودّ."),
+ T("Sure. Do you want a debit card too?","طبعاً. تريد بطاقة أيضاً؟","Yes, and could you tell me about the monthly fees?","Card yes, money month?","Fees are monthly me.","monthly fees = رسوم شهرية."),
+ T("There's no fee for students.","لا رسوم للطلبة.","That's great. How long will the card take to arrive?","Great, card when?","Arrive card how I.","How long will ... take? = كم تستغرق؟")],
+[T("Welcome. How may I assist you?","مرحباً. كيف أساعدك؟","I'm interested in a current account with no overdraft charges. What options do you offer?","Account good no fee give.","Option I account have.","overdraft = السحب على المكشوف."),
+ T("Our Premium account has a low rate. Interested?","حسابنا المميز بفائدة منخفضة. مهتم؟","Possibly. Could you outline the terms and conditions before I commit?","Yes interest, sign now.","Terms are me commit.","outline the terms = اشرح الشروط."),
+ T("Of course. Here's the leaflet.","طبعاً. هذه النشرة.","Thank you. I'll read it carefully and get back to you within a few days.","Read, come, I.","Leaflet I back days.","get back to you = أعود إليك.")]],
+uni:[
+[T("Hello! How can I help you?","السلام! كيف نعاونك؟","I want to study medicine.","Medicine me study.","I am medicine.","I want to study ... = أريد أن أدرس ..."),
+ T("Good. You need good marks.","جيد. تحتاج معدلاً جيداً.","What marks do I need?","Marks what need?","How much I marks?","What ... do I need? = ماذا أحتاج؟"),
+ T("Fifteen out of twenty. Apply online.","15 من 20. قدّم عبر الإنترنت.","OK, thank you for your help.","You help thanks ok.","Online I apply is.","Thank you for your help = شكراً على مساعدتك.")],
+[T("Welcome. Which course are you interested in?","مرحباً. أي تخصص يهمك؟","I'm interested in computer science. What are the entry requirements?","Computer science, what need?","I interesting computer.","entry requirements = شروط القبول."),
+ T("You need good grades and an English test.","تحتاج درجات جيدة واختبار إنجليزي.","Are there any scholarships available for international students?","Scholarship have you?","Money free I student is.","scholarships = منح دراسية."),
+ T("Yes. The deadline is in March.","نعم. آخر أجل في مارس.","Thank you. How do I submit my application?","Application where I give?","Submit I how apply?","How do I submit ...? = كيف أقدّم ...؟")],
+[T("Hello. Tell me about your academic background.","مرحباً. حدّثني عن مسارك الأكاديمي.","I graduated with a high grade in science, and I'm keen to pursue a master's in engineering.","I finish science, want engineer.","I am graduated engineering master.","I'm keen to pursue = أتطلع لمتابعة."),
+ T("Why should we choose you for the scholarship?","لماذا نختارك للمنحة؟","I'm highly motivated and I believe my research experience would contribute to your department.","Because I am good student.","Choose me scholarship money.","would contribute to = سيسهم في."),
+ T("Do you have any questions for us?","هل لديك أسئلة؟","Yes. Could you tell me what support is available for international students?","Support what yes?","Question me have any no.","what support is available = ما الدعم المتوفر؟")]],
+neighbor:[
+[T("Hello. Your music is very loud.","السلام. موسيقاك عالية بزاف.","I'm sorry. I will turn it down.","Sorry, music is down.","I no music.","I'm sorry. I will ... = آسف، سأ..."),
+ T("Thank you. It is late.","شكراً. الوقت متأخر.","Yes, you are right.","You right is.","Late I am.","you are right = معك حق."),
+ T("OK. Have a good night.","ماشي. ليلة سعيدة.","You too. Good night!","Night good you.","I am night.","You too! = وأنت كذلك.")],
+[T("Excuse me. Your dog barks every night.","عفواً. كلبك ينبح كل ليلة.","I'm really sorry about that. I didn't realise it was bothering you.","Sorry my dog bark is.","Dog no bad.","I didn't realise = لم أنتبه."),
+ T("It keeps me awake. Can you do something?","يمنعني من النوم. هل تفعل شيئاً؟","I'll keep him inside at night from now on. Would that help?","Dog inside I put maybe.","I do something no.","from now on = من الآن فصاعداً."),
+ T("That would be great. Thank you.","ممتاز. شكراً.","No problem. Please tell me if there's anything else.","No problem finish.","Else I tell nothing.","Please tell me if ... = أخبرني إذا ...")],
+[T("I'm afraid I have to complain about the noise from your flat.","للأسف لازم نشتكي من ضجيج شقتك.","I sincerely apologise. I'd no idea it was disturbing you, and I'll make sure it stops.","Sorry noise stop is.","Noise your flat I.","I sincerely apologise = أعتذر بصدق."),
+ T("It's been going on for weeks.","هذا يحدث منذ أسابيع.","That's unacceptable on my part. Perhaps we could agree on quiet hours after ten?","Weeks long no problem.","Agree hours I ten quiet.","agree on quiet hours = نتفق على ساعات هدوء."),
+ T("Fine. Let's try that.","حسناً. لنجرب.","Thank you for being so understanding. Why don't you pop round for tea sometime?","Fine, bye, you go.","Tea you are pop.","Why don't you ...? = اقتراح ودّي.")]],
+debate:[
+[T("Should students use phones in class? I say no.","هل يستعمل الطلبة الهواتف في القسم؟ أنا أقول لا.","I think yes, phones help us learn.","Phone good yes me.","Phones are I learn.","I think + جملة = أعتقد أن."),
+ T("But phones are a distraction.","لكن الهواتف تشتّت.","Not always. We can use a dictionary.","No always, dictionary I.","Phone is dictionary no.","Not always = ليس دائماً."),
+ T("Hmm, maybe you are right.","ممم، ربما معك حق.","Thank you. We can agree.","Agree I thank you.","Right is me you.","We can agree = يمكننا الاتفاق.")],
+[T("I believe phones should be banned in classrooms.","أرى أن الهواتف يجب أن تُمنع في الأقسام.","I disagree, because phones give students quick access to information.","I no agree phone info.","Phone ban is bad me.","I disagree, because ... = لا أوافق لأن ..."),
+ T("But students get distracted by social media.","لكن الطلبة تشتتهم وسائل التواصل.","That's true, but teachers can set clear rules to limit that.","True but rules.","Social I no.","That's true, but ... = صحيح لكن ..."),
+ T("That's a fair point.","نقطة وجيهة.","Thanks. In my opinion, a balanced approach works best.","Balance good I opinion.","Opinion is me best work.","In my opinion = في رأيي.")],
+[T("Smartphones damage concentration. Surely a ban is the only solution?","الهواتف تضر التركيز. أليس المنع الحل الوحيد؟","With respect, a ban overlooks the educational benefits; regulated use would be far more effective.","Ban bad, phone useful, no.","Solution I other have.","With respect, ... = بكل احترام ..."),
+ T("Studies show learners perform worse near their phones.","الدراسات تُظهر أداء أسوأ قرب الهواتف.","Some do, yet other studies suggest that guided use improves engagement.","Studies wrong, I know.","Perform I worse no.","yet = ومع ذلك."),
+ T("You make a compelling case.","حجتك مقنعة.","I appreciate that. Ultimately, it's about teaching digital responsibility, not avoidance.","Yes I win debate now.","Responsible I digital am.","Ultimately = في النهاية.")]],
+story:[
+[T("Once upon a time, a boy found a key. What happened next?","كان يا ما كان، ولد وجد مفتاحاً. ماذا حدث؟","He opened a door.","He open a door.","He opens doors yesterday.","الماضي: open → opened."),
+ T("Behind the door there was a garden.","خلف الباب كانت حديقة.","He walked into the garden.","He walk into garden.","He walking garden.","walk → walked."),
+ T("In the garden he saw a bird.","في الحديقة رأى طائراً.","The bird sang a song.","The bird sing a song.","The bird singed song.","sing → sang (شاذ).")],
+[T("Last night, I heard a strange noise. What did you do?","البارحة سمعت صوتاً غريباً. ماذا فعلتَ؟","I went to the window and looked outside.","I go to window and look.","I goed to window.","go → went (شاذ)."),
+ T("There was a light in the old house.","كان هناك ضوء في البيت القديم.","While I was watching, the light suddenly went out.","While I watched light go out.","I watching when light is out.","الماضي المستمر + الماضي البسيط: was watching / went."),
+ T("Then you heard footsteps behind you.","ثم سمعت خطوات خلفك.","I turned round and saw my brother laughing.","I turn and see brother laugh.","I turned and seen brother.","saw هو الماضي، seen اسم المفعول.")],
+[T("It was a dark, stormy night when the traveller arrived. Continue.","كانت ليلة مظلمة عاصفة حين وصل المسافر. أكمل.","Soaked to the bone, he knocked on the door, which creaked open on its own.","He was wet, knock door, open.","He knocked door and it opening.","Soaked to the bone = مبتل تماماً."),
+ T("Inside, a candle flickered on the table.","في الداخل رفّ شمعة على الطاولة.","Had he known what awaited him, he would never have stepped inside.","If he know he never come.","He would never stepped in if he knew.","Had he known..., he would have ... = شرط ماضٍ مستحيل."),
+ T("Suddenly the candle went out.","فجأة انطفأت الشمعة.","In the silence that followed, a voice whispered his name.","Voice say name him.","Voice whisper name to him after.","In the silence that followed = في الصمت الذي تلا.")]],
+grammar:[
+[T("Choose the correct sentence.","اختر الجملة الصحيحة.","She is a teacher.","She a teacher.","She are teacher.","مع she/he/it نستعمل is."),
+ T("Choose the correct sentence.","اختر الجملة الصحيحة.","I have two brothers.","I has two brothers.","I am two brothers.","مع I نستعمل have."),
+ T("Choose the correct sentence.","اختر الجملة الصحيحة.","He likes coffee.","He like coffee.","He liking coffee.","مع he/she/it نضيف s للفعل.")],
+[T("Choose the correct sentence.","اختر الجملة الصحيحة.","I have been living here since 2020.","I living here since 2020.","I am live here from 2020.","since + نقطة زمنية مع present perfect."),
+ T("Choose the correct sentence.","اختر الجملة الصحيحة.","If it rains, I will stay at home.","If it will rain, I stay home.","If it rain, I stayed.","بعد if لا نستعمل will."),
+ T("Choose the correct sentence.","اختر الجملة الصحيحة.","She asked me where I lived.","She asked me where do I live.","She asked me where I live is.","في الكلام المنقول لا نقلب ترتيب السؤال.")],
+[T("Choose the most accurate sentence.","اختر الجملة الأدق.","Had I known, I would have called you.","If I knew, I will call you.","Had I know, I would call.","Had I known = لو كنت أعلم (مقلوب)."),
+ T("Choose the most accurate sentence.","اختر الجملة الأدق.","Not only did he arrive late, but he also forgot the documents.","Not only he arrived late but forgot.","Not only did he arrived late.","بعد Not only نقلب الفاعل والمساعد."),
+ T("Choose the most accurate sentence.","اختر الجملة الأدق.","I wish I had studied harder.","I wish I studied hardest.","I wish I have studied hard.","wish + past perfect = ندم على الماضي.")]],
+meeting:[
+[T("Hello. When can we meet?","السلام. متى نلتقي؟","We can meet on Monday.","We meet Monday can I.","Monday is meet me.","We can meet on + اليوم."),
+ T("What time is good for you?","أي ساعة تناسبك؟","Ten o'clock is good for me.","Ten clock me good.","Me is ten good.","... is good for me = تناسبني."),
+ T("OK. See you on Monday.","ماشي. أراك الاثنين.","See you. Goodbye!","I see you bye.","You seen Monday.","See you! = نلتقي.")],
+[T("Let's discuss the new project. What's your plan?","لنناقش المشروع الجديد. ما خطتك؟","I suggest we start with the design, then move on to testing.","I suggest start design, test.","We starting design is.","I suggest we ... = أقترح أن ..."),
+ T("That might take too long. Can we shorten it?","قد يستغرق وقتاً طويلاً. نختصره؟","We could, if we get more people on the team.","We can, people more team.","Short it we make.","We could, if ... = ممكن إذا ..."),
+ T("Good idea. Shall we meet again on Thursday?","فكرة جيدة. نلتقي ثانية الخميس؟","Thursday works for me. I'll send an agenda beforehand.","Thursday me yes, agenda I.","Works Thursday is me.","works for me = يناسبني.")],
+[T("Our budget is tight. How do you propose we proceed?","ميزانيتنا ضيقة. كيف تقترح أن نمضي؟","I propose a phased approach: prioritise core features now and defer the rest.","Make little, later make more.","Phase I propose approach is.","phased approach = مقاربة مرحلية."),
+ T("The client wants everything by June.","الزبون يريد كل شيء بحلول جوان.","I understand, but delivering everything by then would compromise quality. Could we negotiate July?","Impossible, June no, July.","Quality is compromise June.","would compromise quality = يضر بالجودة."),
+ T("I'll have to consult the director.","سأستشير المدير.","Certainly. Let's reconvene once you have an answer.","OK director talk, me wait.","Reconvene I certain answer.","reconvene = نجتمع مجدداً.")]],
+news:[
+[T("Did you see the news? It rained a lot.","شفت الأخبار؟ أمطرت كثيراً.","Yes, there was a flood.","Yes, flood is was.","Flood I yes saw.","there was = كان هناك."),
+ T("Many people lost their homes.","كثيرون فقدوا بيوتهم.","That is very sad.","Sad is very that.","I sad very.","That is very sad = هذا محزن جداً."),
+ T("We can help them.","نقدر نساعدهم.","Yes, let's help.","Yes help we.","Let help I.","Let's + فعل = هيا نفعل.")],
+[T("Prices have risen sharply this year. Why do you think so?","ارتفعت الأسعار بحدة هذه السنة. لماذا برأيك؟","I think it's because of higher energy costs.","I think because energy cost high.","It is because energy is more cost.","It's because of + اسم = بسبب."),
+ T("Do you think the government should act?","هل ترى أن الحكومة يجب أن تتحرك؟","Yes, it should support families that are struggling.","Yes government support family.","Should support families struggling is.","should + فعل = ينبغي."),
+ T("What could be the result if it doesn't?","ما النتيجة إن لم تفعل؟","As a result, more people could fall into poverty.","Result is more poor people.","People can poverty fall.","As a result = نتيجة لذلك.")],
+[T("The report suggests unemployment is climbing. What's behind it?","التقرير يشير لارتفاع البطالة. ما السبب؟","Largely, it stems from automation, coupled with slower economic growth.","Because machine job take.","Automation stems I think.","stems from = ينبع من."),
+ T("Some argue the policy has backfired.","يرى البعض أن السياسة جاءت بنتائج عكسية.","While that may be partly true, it's too early to draw firm conclusions.","No, policy good, they wrong.","Too early I conclusion firm.","too early to draw conclusions = من المبكر الجزم."),
+ T("So what would you recommend?","فماذا توصي؟","I'd advocate investing in retraining schemes to ease the transition.","Give money, train, people.","Advocate I retrain scheme.","I'd advocate ... = أدعو إلى ...")]]
+});
+
 /* ---------- OFFLINE ROLE-PLAY ENGINE ---------- */
 const HAS_AI=!!(window.claude&&typeof window.claude.use==="function");
 const tierOf=()=>({A1:0,A2:0,B1:1,B2:1,C1:2}[C.lv]);
@@ -699,7 +826,7 @@ async function scriptReply(text){
   addMsg("user",text);const inp=$("#ci");if(inp)inp.value="";const sg=$("#sg");if(sg)sg.innerHTML="";
   let s;const ex=t[2].find(o=>o[0]===text);
   if(ex)s=ex[1];else{const b=norm(best),a=norm(text);const pct=a.length?lcsMarks(a,b).filter(Boolean).length/b.length:0;s=pct>=.8?2:pct>=.5?1:0}
-  C.score+=s;
+  C.score+=s;sfx(s===2);
   const fb=s===2?"✅ ممتاز!":s===1?"👍 مقبول، لكن الأفضل أن تقول:":"❌ الأفضل أن تقول:";
   const f=document.createElement("div");f.className="msg bot";
   f.innerHTML=`<span class="a" style="font-size:15px;color:#111">${fb}</span>`+(s<2?`<span class="e">${esc(best)}</span>`:"")+`<span class="f">💡 ${esc(t[3])}</span>`;
@@ -969,7 +1096,7 @@ function story(){
   let ans=0,sc=0;
   $("#qz").innerHTML=st.q.map((q,i)=>`<div class="card" data-q="${i}"><div class="q" style="text-align:start">${i+1}. ${E(q[0])}</div>${shuffle(q[1].map((o,k)=>k)).map(k=>`<button class="opt" data-k="${k}" style="display:block;width:100%;margin-top:8px;direction:ltr">${esc(q[1][k])}</button>`).join("")}</div>`).join("")+`<div id="res"></div>`;
   $("#qz").querySelectorAll("[data-q]").forEach(c=>{const qi=+c.dataset.q;c.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
-    if(c.dataset.d)return;c.dataset.d=1;ans++;const ok=+b.dataset.k===st.q[qi][2];if(ok)sc++;
+    if(c.dataset.d)return;c.dataset.d=1;ans++;const ok=+b.dataset.k===st.q[qi][2];sfx(ok);if(ok)sc++;
     c.querySelectorAll(".opt").forEach(x=>{if(+x.dataset.k===st.q[qi][2])x.classList.add("ok")});if(!ok)b.classList.add("no");
     if(ans===st.q.length){const pass=sc>=Math.ceil(st.q.length*.6);if(pass){S.stories[st.id]=S.stories[st.id]||{};const first=!S.stories[st.id][ls?"l":"r"];S.stories[st.id][ls?"l":"r"]=1;if(first)addXP(25)}save();
       $("#res").innerHTML=`<div class="card win"><div class="big">${pass?"🏆":"💪"}</div><h2>${sc} / ${st.q.length}</h2><div>${pass?"أحسنت! +25 نقطة":"حاول مرة أخرى بعد إعادة الاستماع"}</div>${ls?'<div class="note">يمكنك الآن إظهار النص ومراجعته.</div>':""}</div>`;
@@ -1005,7 +1132,7 @@ function drill(){
       const opts=shuffle([ar,...shuffle(drillPool().filter(x=>x[1]!==ar)).slice(0,2).map(x=>x[1])]);
       wrap(head+`<div id="op">${opts.map(o=>`<button class="opt" style="display:block;width:100%;margin-top:8px">${esc(o)}</button>`).join("")}</div></div>`);
       $("#pl").onclick=play;$("#sl").onclick=()=>{sp=sp<.8?.95:.65;$("#sl").textContent=sp<.8?"🐢 بطيء":"⏱ عادي"};
-      app.querySelectorAll("#op .opt").forEach(b=>b.onclick=()=>{const good=b.textContent===ar;if(good)sc++;app.querySelectorAll("#op .opt").forEach(x=>{x.disabled=true;if(x.textContent===ar)x.classList.add("ok")});if(!good)b.classList.add("no");$("#fb")&&0;setTimeout(()=>{i++;nxt()},good?800:1700)});
+      app.querySelectorAll("#op .opt").forEach(b=>b.onclick=()=>{const good=b.textContent===ar;sfx(good);if(good)sc++;app.querySelectorAll("#op .opt").forEach(x=>{x.disabled=true;if(x.textContent===ar)x.classList.add("ok")});if(!good)b.classList.add("no");$("#fb")&&0;setTimeout(()=>{i++;nxt()},good?800:1700)});
       setTimeout(play,300);
     }
   };
