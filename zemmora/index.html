@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-title" content="زمورة">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#2563eb">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
-<meta name="apple-mobile-web-app-title" content="زمورة">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <title>زمورة تعلم اللغات — Zemmora Language Learning</title>
@@ -118,6 +118,8 @@ body.inchat header,body.inchat nav{display:none}body.inchat #shell{padding-botto
 .hidetxt .txt{filter:blur(9px);user-select:none;pointer-events:none}
 .pop{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(88px + env(safe-area-inset-bottom));width:min(92%,480px);background:#1d2433;color:#fff;border-radius:16px;padding:10px 14px;z-index:30;display:flex;gap:10px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.3)}
 .dctin{width:100%;border:2px solid var(--line);border-radius:14px;padding:12px;font:18px system-ui}.dctin:focus{outline:none;border-color:var(--pri)}
+.sc.dim{opacity:.45}
+.sug.w{flex-wrap:wrap;max-height:34vh;overflow-y:auto}.sug.w .chip{white-space:normal;text-align:left;direction:ltr;border-radius:14px;padding:8px 12px}
 .hide{display:none!important}
 .win{text-align:center;padding:20px}.win .big{font-size:80px}
 .vid-links a{display:inline-block;margin:4px;padding:8px 12px;background:#fee2e2;color:#b91c1c;border-radius:12px;text-decoration:none;font-weight:700;font-size:14px}
@@ -337,9 +339,11 @@ function addXP(n){S.xp+=n;save();head()}
 let voiceEN=null;
 function pickVoice(){try{const v=speechSynthesis.getVoices();voiceEN=v.find(x=>/en[-_]US/i.test(x.lang))||v.find(x=>/^en/i.test(x.lang))||null}catch(e){}}
 try{speechSynthesis.onvoiceschanged=pickVoice;pickVoice()}catch(e){}
+let _tid=0;const _tcb={};window.__ttsDone=id=>{if(_tcb[id])_tcb[id]()};
 function say(text,{rate=.9,pitch=1}={}){
   return new Promise(res=>{
     const guess=Math.max(1200,text.length*75);
+    if(window.AndroidTTS){const id="u"+(++_tid);let d=false;const fin=()=>{if(!d){d=true;delete _tcb[id];res()}};_tcb[id]=fin;setTimeout(fin,guess+8000);try{AndroidTTS.speak(text,rate,pitch,id)}catch(e){fin()}return}
     try{
       if(!window.speechSynthesis)throw 0;
       speechSynthesis.cancel();
@@ -399,7 +403,7 @@ function cardsTab(l){
 
 /* ---- animated video ---- */
 let vtoken=0;
-function stopVideo(){vtoken++;try{speechSynthesis.cancel()}catch(e){}}
+function stopVideo(){vtoken++;try{speechSynthesis.cancel()}catch(e){}try{if(window.AndroidTTS)AndroidTTS.stop()}catch(e){}}
 function videoTab(l){
   const flo=l.w.map((w,i)=>`<span style="left:${(i*17+6)%90}%;top:${(i*23+8)%50}%;animation-delay:${i*.7}s">${w[2]}</span>`).join("");
   $("#body").innerHTML=`<div class="stage" style="background:linear-gradient(160deg,${l.g[0]},${l.g[1]})">
@@ -501,16 +505,16 @@ function botHTML(p){return `<span class="e">${esc(p.en)}</span>${p.ar?`<span cla
 function chat(){C.active?convo():picker()}
 function picker(){
   app.innerHTML=`<h2>💬 اختر سيناريو المحادثة</h2>
-  <div class="note" style="margin:-6px 0 8px">المدرّس يفهم الدارجة ويصحّح لك ويقترح عليك ردوداً. اختر مستواك:</div>
+  <div class="note" style="margin:-6px 0 8px">${HAS_AI?"المدرّس يفهم الدارجة ويصحّح لك ويقترح عليك ردوداً.":"وضع التدريب بدون إنترنت: حوارات تختلف بحسب مستواك (A1–A2 أساسي، B1–B2 متوسط، C1 متقدّم)، تختار فيها الرد الأنسب أو تكتبه بنفسك ويُقيَّم."} اختر مستواك:</div><div class="note" id="pn" style="color:#b45309;font-weight:600"></div>
   <div class="chips" id="lvc">${LEVELS.map(l=>`<button class="chip ${C.lv===l.id?"on":""}" data-v="${l.id}">${l.ic} ${l.id}</button>`).join("")}</div>
-  <div class="grid2">${SCEN.map(s=>`<div class="card sc" data-v="${s[0]}"><div style="font-size:34px">${s[1]}</div><b>${s[2]}</b><small>🎯 ${s[3]}</small></div>`).join("")}</div>`;
+  <div class="grid2">${SCEN.map(s=>`<div class="card sc${(!HAS_AI&&!CS[s[0]])?" dim":""}" data-v="${s[0]}"><div style="font-size:34px">${s[1]}</div><b>${s[2]}</b><small>🎯 ${s[3]}${(!HAS_AI&&!CS[s[0]])?" · 🤖 داخل Claude فقط":""}</small></div>`).join("")}</div>`;
   $("#lvc").onclick=e=>{const v=e.target.dataset.v;if(v){C.lv=v;picker()}};
-  app.querySelectorAll(".sc").forEach(e=>e.onclick=()=>{C.sc=e.dataset.v;C.active=true;C.hist=[];C.started=false;C.done=false;render();scrollTo(0,0)});
+  app.querySelectorAll(".sc").forEach(e=>e.onclick=()=>{if(!HAS_AI&&!CS[e.dataset.v]){$("#pn").textContent="🤖 هذا السيناريو يحتاج المدرّس الذكي ويعمل داخل Claude فقط. جرّب السيناريوهات غير الباهتة.";return}C.sc=e.dataset.v;C.script=null;C.active=true;C.hist=[];C.started=false;C.done=false;render();scrollTo(0,0)});
 }
 function convo(){
   const s=sc();
   app.innerHTML=`<div class="convo">
-   <div class="ctop"><button class="cb2" id="cbk">→</button><div style="flex:1"><b>${s[1]} ${s[2]}</b><small>المستوى ${C.lv}</small></div><button class="chip ${C.showAr?"on":""}" id="tg">🇩🇿 ترجمة</button></div>
+   <div class="ctop"><button class="cb2" id="cbk">→</button><div style="flex:1"><b>${s[1]} ${s[2]}</b><small>المستوى ${C.lv}${useScript()?" · تدريب بدون إنترنت":""}</small></div><button class="chip ${C.showAr?"on":""}" id="tg">🇩🇿 ترجمة</button></div>
    <div class="mission" id="ms">🎯 المهمة: ${s[3]}</div>
    <div class="chat ${C.showAr?"":"hidear"}" id="cb"></div>
    <div class="sug" id="sg"></div>
@@ -555,10 +559,12 @@ function fallback(e){
   return pre+FB[C.hist.length%FB.length].slice(4);
 }
 async function start(){
+  if(useScript())return startScript();
   C.started=true;C.hist=[{role:"user",content:sysPrompt()+"\n\nStart the role-play now: greet the student in character and ask your first question."}];
   $("#cb").innerHTML="";await ask();
 }
 async function send(t){
+  if(C.script)return scriptReply(t);
   if(C.busy)return;t=(t||"").trim();if(!t)return;
   C.busy=true;const inp=$("#ci");if(inp)inp.value="";C.hist.push({role:"user",content:t});addMsg("user",t);addXP(1);
   await ask();C.busy=false;
@@ -571,6 +577,146 @@ async function initDict(){
     d.onState(({state})=>{const m2=$("#mic");if(m2)m2.classList.toggle("rec",state==="listening")});
     m.onclick=()=>{C.dict.start().catch(()=>{})};
   }catch(e){}
+}
+
+/* ---------- OFFLINE ROLE-PLAY SCRIPTS (3 tiers: A1-A2, B1-B2, C1) ---------- */
+// turn = [bot EN, bot AR, [[option, score 2=best 1=ok 0=wrong]...], tip AR]
+const CS={
+free:[
+ [["Hello! How are you today?","السلام! كيف حالك اليوم؟",[["I'm fine, thank you. And you?",2],["I am fine you?",1],["I am fines thank.",0]],"بعد «How are you?» جاوب «I'm fine, thank you. And you?»."],
+  ["What do you do every day?","واش دير كل نهار؟",[["I go to school and play football.",2],["I am go school.",0],["School.",1]],"للعادات نستعمل الحاضر البسيط: I go, I play."],
+  ["What is your favourite food?","واش هي ماكلتك المفضلة؟",[["My favourite food is couscous.",2],["My food favourite couscous.",0],["Couscous.",1]],"الصفة قبل الاسم: favourite food."]],
+ [["How has your week been so far?","كيفاش مرّ أسبوعك لحد الآن؟",[["It's been quite busy, but productive.",2],["It is busy week I.",0],["Busy.",1]],"الحاضر التام لما يمتد الزمن لليوم: It's been busy."],
+  ["If you could travel anywhere, where would you go?","لو تقدر تسافر لأي مكان، وين تروح؟",[["I'd go to Japan because I'm fascinated by its culture.",2],["I will go Japan because culture.",1],["I would to go Japan.",0]],"If + ماضي، would + فعل: If I could, I would go."],
+  ["What is something you'd like to learn?","واش حاجة تحب تتعلمها؟",[["I'd like to learn to play the guitar.",2],["I want learn guitar.",1],["Learn I guitar.",0]],"I'd like to + فعل = أحب أن."]],
+ [["Do you think technology is making us more connected, or more isolated?","تظن التقنية تخلينا أكثر ترابطا ولا عزلة؟",[["I think it's a double-edged sword: it connects us across distances yet erodes face-to-face interaction.",2],["Both. Technology good and bad.",1],["I think isolated technology is.",0]],"double-edged sword = سيف ذو حدين. yet = لكن (رسمي)."],
+  ["Some say money can't buy happiness. Do you agree?","بعضهم يقول المال لا يشتري السعادة. توافق؟",[["To a degree. Money alleviates stress, but beyond a threshold it adds little to fulfilment.",2],["I disagree money good.",1],["Agree not money happiness.",0]],"To a degree = إلى حد ما. alleviate = يخفف."],
+  ["What legacy would you like to leave behind?","أي إرث تحب أن تتركه؟",[["I'd like to be remembered for having made learning accessible to others.",2],["I want people remember me good.",1],["Legacy I leave learning.",0]],"be remembered for + having + اسم مفعول."]]],
+cafe:[
+ [["Hello! What would you like to drink?","السلام! واش تحب تشرب؟",[["I would like a coffee, please.",2],["Coffee give me.",0],["I am coffee.",0]],"للطلب المؤدب: I would like ..., please."],
+  ["Would you like something to eat?","تحب تاكل حاجة؟",[["Yes, a croissant, please.",2],["Yes, I eat croissant yesterday.",0],["Yes, croissant.",1]],"ابدأ بـ Yes/No ثم الطلب كاملا."],
+  ["That is five hundred dinars.","هذي 500 دينار.",[["Here you are. Thank you!",2],["I am thanks.",0],["Here.",1]],"«Here you are» = تفضل."]],
+ [["Good afternoon. What can I get you today?","مساء الخير. واش نقدر نجيبلك؟",[["Could I have a cappuccino and a glass of water, please?",2],["I want cappuccino and water.",1],["Cappuccino I am wanting.",0]],"Could I have...? ألطف من I want."],
+  ["Would you like that with regular or oat milk?","بحليب عادي ولا شوفان؟",[["Oat milk, please. I'm trying to avoid dairy.",2],["Oat milk is what I am prefer.",0],["Oat.",1]],"I'm trying to + فعل = أحاول أن."],
+  ["Is that for here or to take away?","هنا ولا سفري؟",[["To take away, please. I'm in a bit of a rush.",2],["For take away I am.",0],["Take away.",1]],"to take away = سفري، in a rush = مستعجل."]],
+ [["Welcome! Our special today is a single-origin pour-over. Can I tempt you?","مرحبا! مميزنا اليوم قهوة مقطّرة أحادية المصدر. أغريك؟",[["Go on, you've talked me into it. What's the tasting profile?",2],["Yes I tempt, give me.",0],["OK, I'll take it.",1]],"you've talked me into it = أقنعتني."],
+  ["It has notes of citrus and dark chocolate. Would you like a pastry to complement it?","فيها نفحات ليمون وشوكولا داكنة. تحب معجنات تكملها؟",[["Why not? Something not too sweet, so it doesn't overpower the coffee.",2],["Yes, any sweet thing.",1],["No, I'm complemented.",0]],"overpower = يطغى على."],
+  ["Lovely choice. Shall I put it all on one bill?","اختيار جميل. نضعها في فاتورة واحدة؟",[["Yes, and it's on me today. I insist.",2],["Yes, I am paying all.",1],["Bill one is okay yes.",0]],"it's on me = عليّ."]]],
+restaurant:[
+ [["Welcome! A table for how many?","مرحبا! طاولة لكم شخص؟",[["A table for two, please.",2],["Two table me.",0],["Two.",1]],"A table for two = طاولة لشخصين."],
+  ["What would you like to order?","واش تحب تطلب؟",[["I would like chicken and rice, please.",2],["I want eat chicken.",0],["Chicken and rice.",1]],"I would like + اسم."],
+  ["Would you like a drink?","تحب مشروب؟",[["Yes, a bottle of water, please.",2],["Yes, I am water.",0],["Water.",1]],"a bottle of water = قارورة ما."]],
+ [["Good evening. Do you have a reservation?","مساء الخير. عندكم حجز؟",[["Yes, I booked a table for two under the name Amine.",2],["Yes, I have booked, name Amine.",1],["I reserve yesterday.",0]],"under the name = باسم."],
+  ["Are you ready to order, or do you need a few more minutes?","واجدين تطلبو ولا تحتاجو وقت؟",[["Could you recommend something? I'm not sure what to have.",2],["What is good? Say me.",0],["Recommend.",1]],"Could you recommend...? لطلب اقتراح."],
+  ["I'd suggest the grilled sea bass. Would you like it with vegetables or fries?","أقترح الحوت المشوي. بالخضرة ولا بالبطاطا؟",[["That sounds great. I'll have it with vegetables, please.",2],["I will to have vegetables.",0],["Vegetables.",1]],"I'll have = قرار فوري عند الطلب."]],
+ [["Good evening. Your table by the window is ready. May I take your coats?","مساء الخير. طاولتكم قرب النافذة جاهزة. آخذ معاطفكم؟",[["Thank you, that's very kind. A window table is just what we were hoping for.",2],["Yes take.",0],["Thanks, OK.",1]],"just what we were hoping for = بالضبط ما كنا نتمناه."],
+  ["Would you care for an aperitif while you peruse the menu?","تحبون فاتح شهية وأنتم تتصفحون القائمة؟",[["Just sparkling water for me, thanks. I'd like to take my time with the menu.",2],["I care aperitif.",0],["Water.",1]],"peruse = يتصفح بتمعن. Would you care for = هل ترغب في."],
+  ["Are there any dietary requirements I should inform the chef about?","هل من قيود غذائية أبلغ بها الطاهي؟",[["Yes, I'm allergic to nuts, so could you ensure the dish is completely free of them?",2],["I have nuts allergy so no nuts.",1],["I am allergy nuts yes.",0]],"allergic to + اسم. free of = خالٍ من."]]],
+shop:[
+ [["Hello! Can I help you?","السلام! نقدر نعاونك؟",[["Yes, I'm looking for a shirt.",2],["Yes, I look shirt.",0],["Shirt.",1]],"I'm looking for = أبحث عن."],
+  ["What size are you?","واش مقاسك؟",[["I am medium.",2],["My size is I medium.",0],["Medium please.",1]],"I am + مقاس."],
+  ["It is two thousand dinars.","هذي 2000 دينار.",[["OK, I will take it. Thank you.",2],["OK I am take.",0],["Take.",1]],"I'll take it = نشريه."]],
+ [["Hi there. Are you looking for anything in particular?","أهلا. تقلب على حاجة معينة؟",[["I'm after a casual jacket for the autumn.",2],["I want jacket for autumn.",1],["I looking a jacket.",0]],"I'm after = أنا أبحث عن (غير رسمي)."],
+  ["This one comes in black and navy. Would you like to try it on?","هذا يجي بالأسود والكحلي. تحب تجربو؟",[["Yes, please. Where are the fitting rooms?",2],["Yes I try on it.",0],["Fitting room.",1]],"try on = تجرب الملابس."],
+  ["How does it fit?","كيفاش مقاسو؟",[["It's a bit tight around the shoulders. Do you have it in a larger size?",2],["It is very small for me, bigger give.",0],["Bigger.",1]],"a bit tight = ضيق شوية."]],
+ [["May I assist you, or would you prefer to browse?","نعاونك ولا تفضل تتفرج؟",[["I'll browse for now, thank you, but I may need a hand shortly.",2],["I browse only.",1],["I am browsing assist no.",0]],"need a hand = أحتاج مساعدة."],
+  ["This coat is a limited edition, tailored from pure wool.","هذا المعطف نسخة محدودة، مفصّل من صوف خالص.",[["It's gorgeous, but it's rather steep. Is there any room for negotiation?",2],["Too expensive, reduce.",0],["It is expensive.",1]],"steep = مرتفع السعر. room for negotiation = مجال للتفاوض."],
+  ["I could offer ten per cent off, as it's the end of the season.","نقدر نعطي 10% تخفيض لأنها نهاية الموسم.",[["That would clinch it. I'll take it. Could you gift-wrap it as well?",2],["OK I buy and wrap.",1],["Clinch I will.",0]],"clinch it = يحسم الصفقة."]]],
+airport:[
+ [["Good morning. Passport and ticket, please.","صباح الخير. جواز السفر والتذكرة عفاك.",[["Here you are.",2],["I give you.",0],["Passport.",1]],"Here you are = تفضل."],
+  ["Do you have any luggage?","عندك أمتعة؟",[["Yes, one suitcase.",2],["Yes, I have luggage one.",0],["One.",1]],"one suitcase = ڤاليزة وحدة."],
+  ["Your gate is number twelve.","بوابتك رقم 12.",[["Thank you. Where is gate twelve?",2],["Thanks. Gate where?",1],["I am gate twelve.",0]],"Where is...? = وين...؟"]],
+ [["Hello. Where are you flying to today?","مرحبا. لأين تسافر اليوم؟",[["I'm flying to Paris. My flight leaves at ten thirty.",2],["I fly Paris, ten thirty.",1],["I am go to Paris at ten thirty.",0]],"الحاضر المستمر للخطة: I'm flying."],
+  ["Would you like a window or an aisle seat?","تحب مقعد قرب النافذة ولا الممر؟",[["A window seat, if possible, please.",2],["Window I prefer to.",0],["Window.",1]],"if possible = إن أمكن."],
+  ["I'm afraid your flight has been delayed by an hour.","للأسف رحلتك تأخرت ساعة.",[["I see. Will I still be able to catch my connecting flight?",2],["Why delay? Fix it.",0],["Okay.",1]],"connecting flight = رحلة الربط."]],
+ [["Welcome. Your booking is on a basic fare. Would you care to upgrade?","مرحبا. حجزك بسعر أساسي. تحب ترقية؟",[["What would the upgrade entail, and how much would it cost?",2],["Upgrade how much?",1],["I upgrade yes cost.",0]],"entail = يتضمن."],
+  ["Your bag exceeds the weight allowance by three kilos.","حقيبتك تتجاوز الوزن المسموح بـ3 كيلو.",[["Could I redistribute some items into my hand luggage rather than pay the excess fee?",2],["Take out three kilos.",1],["I no pay more weight.",0]],"excess fee = رسوم الزيادة."],
+  ["Boarding commences at nine fifteen at gate twenty-two.","الصعود يبدأ على 9:15 عند البوابة 22.",[["Much obliged. I'll head there straight away, so as not to miss boarding.",2],["Thanks I go gate.",1],["I obliged go.",0]],"Much obliged = ممتن جدا. so as not to = لكي لا."]]],
+hotel:[
+ [["Welcome to the hotel. Do you have a reservation?","مرحبا بك في الفندق. عندك حجز؟",[["Yes, my name is Karim.",2],["Yes, I am name Karim.",0],["Karim.",1]],"My name is = اسمي."],
+  ["How many nights will you stay?","كم ليلة ستقيم؟",[["Three nights, please.",2],["I stay three night.",0],["Three.",1]],"three nights (جمع)."],
+  ["Here is your key. Room two hundred and five.","هذا مفتاحك. الغرفة 205.",[["Thank you. Is breakfast included?",2],["Thank. Breakfast yes?",1],["I am breakfast.",0]],"Is ... included? = هل ... محسوب؟"]],
+ [["Good evening. How can I help you?","مساء الخير. كيفاش نعاونك؟",[["I'd like to check in. I booked a double room for two nights.",2],["I want check in, double room.",1],["I check in room two night booked.",0]],"check in = تسجيل الدخول."],
+  ["Would you like a sea view? It's slightly more expensive.","تحب إطلالة على البحر؟ أغلى شوية.",[["Yes, if it isn't too much extra. How much is the difference?",2],["Sea view I want free.",0],["Yes.",1]],"too much extra = زيادة كبيرة."],
+  ["Is there anything else you need?","تحتاج حاجة أخرى؟",[["Yes, the Wi-Fi isn't working in my room. Could someone have a look at it?",2],["Wi-Fi broken, fix.",0],["Wi-Fi problem.",1]],"have a look at = يفحص."]],
+ [["Welcome back, sir. I trust you had a pleasant journey?","مرحبا بعودتك سيدي. أرجو أن رحلتك كانت لطيفة؟",[["Quite pleasant, thank you, though I'm rather exhausted. Is the room ready?",2],["Yes pleasant, room ready?",1],["Journey I trust yes.",0]],"rather exhausted = منهك نوعا ما."],
+  ["I regret to inform you that your suite is unavailable owing to a plumbing issue.","يؤسفني إبلاغك أن جناحك غير متاح بسبب مشكل سباكة.",[["That's disappointing. What alternatives can you offer, and would you compensate for the inconvenience?",2],["Unavailable? Give me other room.",1],["I regret too, plumbing no.",0]],"compensate for = يعوّض عن."],
+  ["We could upgrade you to a premium room and include breakfast at no extra charge.","نقدر نرقيك لغرفة مميزة مع الفطور بدون تكلفة.",[["That's more than generous. I'd be happy to accept, thank you.",2],["OK, free breakfast I take.",1],["Generous I am.",0]],"more than generous = كريم أكثر من اللازم."]]],
+doctor:[
+ [["Hello. What is the problem?","السلام. واش المشكل؟",[["I have a headache.",2],["My head hurt me.",0],["Head.",1]],"I have a headache = عندي وجع راس."],
+  ["How long have you had it?","من متى عندك هذا؟",[["Since yesterday.",2],["From yesterday I am.",0],["Yesterday.",1]],"since + نقطة بداية."],
+  ["Take this medicine twice a day.","خذ هذا الدواء مرتين في النهار.",[["Thank you, doctor.",2],["I am thank doctor.",0],["OK.",1]],"twice a day = مرتين في اليوم."]],
+ [["What seems to be the trouble?","واش يبان المشكل؟",[["I've had a sore throat and a fever for three days.",2],["I have sore throat and fever since three days.",0],["Sore throat, fever, three days.",1]],"for + مدة مع الحاضر التام."],
+  ["Do you have any allergies to medication?","عندك حساسية من أدوية؟",[["Yes, I'm allergic to penicillin.",2],["I allergic penicillin.",0],["Penicillin.",1]],"allergic to + اسم."],
+  ["I'll prescribe antibiotics. You should feel better in a few days.","نكتبلك مضاد حيوي. تتحسن في أيام.",[["Thank you. Should I avoid anything while I'm taking them?",2],["Thanks. I eat what?",0],["OK.",1]],"avoid + اسم/فعل-ing."]],
+ [["What brings you in today?","واش جابك اليوم؟",[["For the past fortnight I've been experiencing persistent fatigue and occasional dizziness.",2],["I am tired for two weeks always.",0],["I'm very tired and dizzy.",1]],"fortnight = أسبوعان. persistent = مستمر."],
+  ["Is there any family history of heart conditions or diabetes?","هل في العائلة تاريخ لأمراض القلب أو السكري؟",[["My father was diagnosed with type two diabetes in his fifties.",2],["Father have diabetes.",1],["My father is diabetes.",0]],"was diagnosed with = شُخّص بـ."],
+  ["I'd like to run some blood tests to rule out anaemia.","أحب أجري تحاليل دم لاستبعاد فقر الدم.",[["That sounds sensible. When can I expect the results, and should I fast beforehand?",2],["Okay, tests when?",1],["Tests I expect results.",0]],"rule out = يستبعد. fast = يصوم."]]],
+job:[
+ [["Hello. Please tell me about yourself.","السلام. حدثني عن نفسك.",[["My name is Amine. I am a student.",2],["I am Amine student I.",0],["Amine.",1]],"My name is... I am a..."],
+  ["What are you good at?","في ماذا أنت جيد؟",[["I am good at computers.",2],["I good computers.",0],["Computers.",1]],"good at + اسم."],
+  ["Why do you want this job?","لماذا تريد هذه الوظيفة؟",[["Because I want to learn and work.",2],["Because I am want job.",0],["For money.",1]],"Because + جملة كاملة."]],
+ [["Could you tell me a little about your background?","تحكيلي شوية على خلفيتك؟",[["I graduated in marketing two years ago, and I've been working as an assistant since then.",2],["I graduate marketing, I work assistant two years.",1],["I am graduated marketing and I work since two years.",0]],"ماض بسيط + حاضر تام مستمر: graduated... I've been working."],
+  ["What would you say is your greatest strength?","ما أكبر نقطة قوة عندك؟",[["I'm very organised, so I always meet my deadlines.",2],["I am organised and deadline.",1],["My strength organised I am.",0]],"meet a deadline = يلتزم بالموعد."],
+  ["Where do you see yourself in five years?","أين ترى نفسك بعد 5 سنوات؟",[["I hope to be managing a small team and taking on more responsibility.",2],["In five years I manager.",1],["I see me manager.",0]],"take on = يتحمل."]],
+ [["What distinguishes you from other equally qualified candidates?","ما الذي يميزك عن مرشحين بنفس المؤهلات؟",[["Beyond my qualifications, I bring a track record of turning struggling projects around.",2],["I am more good than others.",0],["I have experience.",1]],"track record = سجل إنجازات. turn around = ينقذ."],
+  ["Describe a time you handled a conflict within a team.","صف موقفا عالجت فيه خلافا داخل فريق.",[["Once, two colleagues clashed over priorities, so I mediated and we agreed on a shared timeline.",2],["Two colleagues fight, I talk to them.",1],["I conflict team solved yes.",0]],"clash over = يتصادم حول. mediate = يتوسط."],
+  ["How do you handle working under considerable pressure?","كيف تتعامل مع العمل تحت ضغط كبير؟",[["I thrive on it, provided I can break tasks down and prioritise ruthlessly.",2],["I am under pressure good.",0],["I manage it okay.",1]],"thrive on = يزدهر بفضل. provided = بشرط."]]],
+friend:[
+ [["Hi! I'm Lina. What's your name?","أهلا! أنا لينا. واش سميتك؟",[["Hi Lina! My name is Yacine.",2],["Hi. I am name Yacine.",0],["Yacine.",1]],"My name is..."],
+  ["What do you like to do?","واش تحب تعمل؟",[["I like football and music.",2],["I am like football.",0],["Football.",1]],"I like + اسم."],
+  ["Let's meet tomorrow!","يلا نتلاقاو غدوة!",[["Great idea! See you tomorrow.",2],["I am meet tomorrow yes.",0],["OK.",1]],"See you tomorrow = نشوفك غدوة."]],
+ [["So, what do you do for a living?","واش تخدم؟",[["I work as a software developer, and I love it.",2],["I am work software developer.",0],["Developer.",1]],"work as = يعمل بصفة."],
+  ["What do you do in your free time?","واش دير في وقت فراغك؟",[["I'm really into hiking. I try to go every weekend.",2],["I into hiking go weekend.",0],["Hiking.",1]],"be into = مغرم بـ."],
+  ["We should hang out sometime!","لازم نخرجو مع بعض يوما ما!",[["I'd love to. How about Saturday afternoon?",2],["Yes. When?",1],["I love to hang when Saturday?",0]],"How about...? = ما رأيك في...؟"]],
+ [["I couldn't help noticing your accent. Where are you originally from?","لاحظت لهجتك. من وين أنت أصلا؟",[["Good ear! I grew up in Algiers, though I've lived abroad for a while.",2],["I from Algiers live abroad.",1],["My accent is Algiers.",0]],"Good ear! = أذنك حادة."],
+  ["That must have been quite a culture shock at first.","أكيد كانت صدمة ثقافية في الأول.",[["It was, but it broadened my horizons enormously.",2],["Yes shock much.",1],["Culture was shock I.",0]],"broaden one's horizons = يوسع الآفاق."],
+  ["We must catch up properly. Over dinner perhaps?","لازم نتلاقاو مليح. على عشاء ربما؟",[["I'd be delighted. Let me check my diary and get back to you.",2],["OK dinner I come.",1],["Delighted I am dinner.",0]],"catch up = يلتقي ليتحدثا. get back to you = أرد عليك."]]]
+};
+/* ---------- OFFLINE ROLE-PLAY ENGINE ---------- */
+const HAS_AI=!!(window.claude&&typeof window.claude.use==="function");
+const tierOf=()=>({A1:0,A2:0,B1:1,B2:1,C1:2}[C.lv]);
+function useScript(){return !HAS_AI&&!!CS[C.sc]}
+function addBotP(en,ar){const d=document.createElement("div");d.className="msg bot";d.innerHTML=botHTML({en,ar,fix:"",sug:[]})+`<br><button class="spk" style="width:36px;height:36px;font-size:15px;margin-top:6px">🔊</button>`;d.querySelector(".spk").onclick=()=>say(en,{rate:.85});$("#cb").appendChild(d);$("#cb").scrollTop=1e9;return d}
+function startScript(){
+  C.started=true;C.script=CS[C.sc][tierOf()];C.turn=0;C.score=0;C.reveal=false;C.busy=false;C.done=false;
+  $("#cb").innerHTML="";const m=$("#ms");if(m){m.classList.remove("won");m.textContent="🎯 المهمة: "+sc()[3]}
+  const hint=["المستوى الأساسي: اختر الرد الصحيح أو اكتبه بنفسك.","المستوى المتوسط: ردود أطول وأكثر تهذيبا، اختر الأنسب أو اكتبه.","المستوى المتقدم: اكتب ردك بنفسك بأسلوب راقٍ، وزر 💡 يُظهر الخيارات عند الحاجة."][tierOf()];
+  const i=document.createElement("div");i.className="msg bot";i.innerHTML=`<span class="a" style="font-size:14px">ℹ️ ${hint}</span>`;$("#cb").appendChild(i);
+  botTurn();
+}
+function botTurn(){const t=C.script[C.turn];addBotP(t[0],t[1]);say(t[0],{rate:.85});C.reveal=false;showOpts()}
+function showOpts(){
+  const sg=$("#sg");if(!sg)return;const t=C.script[C.turn];sg.classList.add("w");
+  if(tierOf()===2&&!C.reveal){sg.innerHTML=`<button class="chip">💡 أظهر الخيارات</button>`;sg.firstChild.onclick=()=>{C.reveal=true;showOpts()};return}
+  C.opts=shuffle(t[2].map(o=>o[0]));
+  sg.innerHTML=C.opts.map(o=>`<button class="chip">${E(o)}</button>`).join("");
+  sg.querySelectorAll(".chip").forEach((b,i)=>b.onclick=()=>scriptReply(C.opts[i]));
+}
+async function scriptReply(text){
+  if(C.busy||!C.script)return;text=(text||"").trim();if(!text)return;C.busy=true;
+  const t=C.script[C.turn],best=t[2].find(o=>o[1]===2)[0];
+  addMsg("user",text);const inp=$("#ci");if(inp)inp.value="";const sg=$("#sg");if(sg)sg.innerHTML="";
+  let s;const ex=t[2].find(o=>o[0]===text);
+  if(ex)s=ex[1];else{const b=norm(best),a=norm(text);const pct=a.length?lcsMarks(a,b).filter(Boolean).length/b.length:0;s=pct>=.8?2:pct>=.5?1:0}
+  C.score+=s;
+  const fb=s===2?"✅ ممتاز!":s===1?"👍 مقبول، لكن الأفضل أن تقول:":"❌ الأفضل أن تقول:";
+  const f=document.createElement("div");f.className="msg bot";
+  f.innerHTML=`<span class="a" style="font-size:15px;color:#111">${fb}</span>`+(s<2?`<span class="e">${esc(best)}</span>`:"")+`<span class="f">💡 ${esc(t[3])}</span>`;
+  $("#cb").appendChild(f);$("#cb").scrollTop=1e9;
+  await say(s===2?text:best,{rate:.85});
+  C.turn++;
+  if(C.turn>=C.script.length){finishScript()}else{await new Promise(r=>setTimeout(r,400));botTurn()}
+  C.busy=false;
+}
+function finishScript(){
+  const total=C.script.length*2,pct=C.score/total,stars=pct>=.8?"⭐⭐⭐":pct>=.5?"⭐⭐":"⭐";
+  const d=document.createElement("div");d.className="msg bot";
+  d.innerHTML=`<span class="a" style="font-size:16px;color:#111">🏁 انتهى الحوار! نتيجتك ${C.score}/${total} ${stars}</span><br><button class="btn sec" id="rp" style="margin-top:8px">🔁 أعد الحوار</button>`;
+  $("#cb").appendChild(d);$("#cb").scrollTop=1e9;const sg=$("#sg");if(sg)sg.innerHTML="";
+  $("#rp").onclick=()=>startScript();
+  addXP(C.score);
+  if(pct>=.6&&!C.done){C.done=true;addXP(15);const m=$("#ms");if(m){m.textContent="🎉 أحسنت! أنجزت المهمة (+15 نقطة)";m.classList.add("won")}}
 }
 
 /* ---------- STORIES: READING & LISTENING ---------- */
@@ -700,7 +846,75 @@ const ST=[
 {id:"d10",lv:"C1",t:"Negotiating a Contract",ar:"التفاوض على عقد",ic:"🤝",d:["Supplier","Buyer"],
  s:[["We value this partnership, but your latest quotation is somewhat steep.","نقدّر هذه الشراكة، بصح عرضكم الأخير مرتفع نوعا ما.",1],["Understandably. We could reduce the unit price if you commit to a larger volume.","مفهوم. نقدرو ننقصو سعر الوحدة إذا التزمتم بحجم أكبر.",0],["What discount did you have in mind?","واش تخفيض كنتم تفكرو فيه؟",1],["Eight per cent for orders exceeding five thousand units.","8% للطلبات اللي تفوق 5000 وحدة.",0],["Make it ten, and we'll sign a two-year agreement.","خليه 10، ونوقّعو اتفاقية لسنتين.",1],["Let me consult my director, but I believe we can reach a compromise.","خليني نستشير المدير، بصح نظن نقدرو نوصلو لتسوية.",0]],
  g:{quotation:"عرض سعر",steep:"مرتفع",volume:"حجم",compromise:"تسوية"},
- q:[["What is the buyer's complaint?",["Late delivery","The quotation is steep","Poor quality"],1],["What discount is first offered?",["Ten per cent","Free shipping","Eight per cent"],2],["What does the supplier do at the end?",["Rejects the proposal","Signs immediately","Says he will consult his director"],2]]}
+ q:[["What is the buyer's complaint?",["Late delivery","The quotation is steep","Poor quality"],1],["What discount is first offered?",["Ten per cent","Free shipping","Eight per cent"],2],["What does the supplier do at the end?",["Rejects the proposal","Signs immediately","Says he will consult his director"],2]]},
+{id:"s16",lv:"A1",t:"My Best Friend",ar:"أحسن صديق",ic:"🧑‍🤝‍🧑",
+ s:[["My best friend is Omar.","أحسن صاحب عندي هو عمر."],["He is tall and funny.","هو طويل ويضحّك."],["We go to the park on Fridays.","نروحو للحديقة نهار الجمعة."],["He likes pizza, but I like couscous.","هو يحب البيتزا وأنا نحب الكسكس."],["We are always happy together.","نكونو دايما فرحانين مع بعض."]],
+ g:{tall:"طويل",funny:"مضحك",park:"الحديقة",always:"دايما",together:"مع بعض"},
+ q:[["Who is Omar?",["His brother","His best friend","His teacher"],1],["When do they go to the park?",["On Fridays","On Mondays","Every night"],0],["What does the narrator like?",["Pizza","Couscous","Fish"],1]]},
+{id:"s17",lv:"A1",t:"My Room",ar:"غرفتي",ic:"🛏️",
+ s:[["My room is small but nice.","غرفتي صغيرة بصح زوينة."],["There is a bed, a desk and a lamp.","كاين سرير ومكتب ومصباح."],["The window is next to the desk.","الطاقة جنب المكتب."],["I do my homework there every evening.","نعمل الدوار هناك كل عشية."],["I love my room.","نحب غرفتي."]],
+ g:{bed:"السرير",desk:"المكتب",lamp:"المصباح",window:"الطاقة",homework:"الدوار"},
+ q:[["What is in the room?",["A bed, a desk and a lamp","A sofa and a TV","A kitchen"],0],["Where is the window?",["Next to the desk","Next to the door","On the roof"],0],["When does he do homework?",["In the morning","Every evening","Only at night"],1]]},
+{id:"s18",lv:"A2",t:"The Birthday Party",ar:"حفلة عيد الميلاد",ic:"🎂",
+ s:[["Yesterday was my sister's birthday.","البارح كان عيد ميلاد ختي."],["We invited all her friends to our house.","عرضنا كل صحباتها لدارنا."],["My mother made a big chocolate cake.","ماما حضّرت كيك كبيرة بالشوكولا."],["We played music and danced for two hours.","سمعنا الموسيقى ورقصنا ساعتين."],["Then everyone sang the birthday song.","بعدها الكل غنّى أغنية عيد الميلاد."],["She was very happy and thanked us.","كانت فرحانة بزاف وشكرتنا."]],
+ g:{birthday:"عيد ميلاد",invited:"دعونا",cake:"كيك",danced:"رقصنا",sang:"غنّى",thanked:"شكرتنا"},
+ q:[["Whose birthday was it?",["His sister's","His mother's","His friend's"],0],["What did the mother make?",["A pizza","A chocolate cake","Soup"],1],["How long did they dance?",["Ten minutes","Two hours","All night"],1]]},
+{id:"s19",lv:"A2",t:"A Day at the Beach",ar:"نهار في الشاطئ",ic:"🏖️",
+ s:[["Last summer, we spent a day at the beach.","الصيف الفايت، قضينا نهار في الشاطئ."],["The water was clear and a little cold.","الما كان صافي وبارد شوية."],["My brother built a sandcastle, and I swam with my cousins.","خويا بنى قلعة من الرمل وأنا سبحت مع أولاد عمي."],["At noon, we ate sandwiches under an umbrella.","على الظهر، كلينا سندويتشات تحت المظلة."],["In the afternoon, the sun was too strong, so we went home.","في العشية، الشمس كانت قوية بزاف فرجعنا للدار."],["It was a perfect summer day.","كان نهار صيفي مثالي."]],
+ g:{clear:"صافي",sandcastle:"قلعة رمل",swam:"سبحت",umbrella:"المظلة",strong:"قوية",perfect:"مثالي"},
+ q:[["How was the water?",["Clear and a little cold","Hot and dirty","Frozen"],0],["Where did they eat lunch?",["In a restaurant","Under an umbrella","At home"],1],["Why did they go home?",["It rained","The sun was too strong","They were hungry"],1]]},
+{id:"s20",lv:"B1",t:"Moving to a New City",ar:"الانتقال لمدينة جديدة",ic:"🏙️",
+ s:[["When Salim got a job in Oran, he had to move away from his family.","كي سليم لقى خدمة في وهران، لازم يبعد على عائلتو."],["At first, he felt lonely because he knew nobody there.","في الأول حس بالوحدة لأنو ما يعرف حتى واحد."],["He decided to join a football club to meet new people.","قرر ينضم لنادي كرة قدم باش يتعرف على ناس جدد."],["Within a month, he had made several close friends.","في ظرف شهر، كوّن عدة أصدقاء مقربين."],["They showed him the best cafés and the quiet beaches of the city.","وراوه أحسن الكافيهات والشواطئ الهادية في المدينة."],["Salim still misses his family, but he no longer feels alone.","سليم مازال يشتاق لعائلتو، بصح ما بقاش يحس بالوحدة."],["He says that moving was the best decision of his life.","يقول إن الانتقال كان أحسن قرار في حياتو."]],
+ g:{lonely:"وحيد",decided:"قرّر",join:"ينضم",several:"عدة",close:"مقرّب",misses:"يشتاق"},
+ q:[["Why did Salim move?",["For a job","For university","For a holiday"],0],["How did he meet people?",["He joined a football club","Online dating","Through his boss"],0],["How does he feel now?",["Still lonely","He no longer feels alone","Angry"],1]]},
+{id:"s21",lv:"B1",t:"The Power Cut",ar:"انقطاع الكهرباء",ic:"🔦",
+ s:[["Last night, there was a power cut in our whole neighbourhood.","البارح، كانت قطعة كهرباء في الحي كامل."],["We were having dinner when the lights suddenly went out.","كنا نتعشاو كي طفات الضو فجأة."],["My father found some candles, and my little brother was scared at first.","بابا لقى شموع، وخويا الصغير خاف في الأول."],["To cheer him up, my sister told a funny story in the dark.","باش تفرّحو، ختي حكات حكاية تضحك في الظلام."],["Soon, everyone was laughing, and we forgot about the problem.","بسرعة الكل كان يضحك ونسينا المشكل."],["After two hours, the electricity came back.","بعد ساعتين، رجعت الكهرباء."],["Strangely, we were a little disappointed that the evening was over.","غريب، تضايقنا شوية أن السهرة انتهت."]],
+ g:{neighbourhood:"الحي",suddenly:"فجأة",candles:"الشموع",scared:"خايف",cheer:"يفرّح",disappointed:"خايب الأمل"},
+ q:[["What happened last night?",["A power cut","A storm","A fire"],0],["Who told a funny story?",["His sister","His father","His brother"],0],["How did the family feel at the end?",["Only relieved","A little disappointed it was over","Angry"],1]]},
+{id:"s22",lv:"B2",t:"The Rise of Online Shopping",ar:"صعود التسوق الإلكتروني",ic:"🛒",
+ s:[["Over the past decade, online shopping has transformed the way we buy almost everything.","خلال العقد الماضي، التسوق الإلكتروني غيّر طريقة شرائنا لكل شيء تقريبا."],["Consumers can now compare prices in seconds and have products delivered to their doorstep.","المستهلكون يقدرو الآن يقارنو الأسعار في ثواني ويوصلولهم المنتجات لباب الدار."],["This convenience, however, has come at a cost for small local shops.","هذه الراحة، مع ذلك، كان لها ثمن على المحلات الصغيرة."],["Many of them struggle to compete with giant platforms that offer lower prices.","كثير منها يكافح للمنافسة مع منصات عملاقة بأسعار أقل."],["Furthermore, the packaging and delivery involved generate a considerable amount of waste.","علاوة على ذلك، التغليف والتوصيل ينتجان كمية كبيرة من النفايات."],["Some governments are therefore encouraging customers to choose slower, greener delivery options.","لذلك بعض الحكومات تشجّع الزبائن على خيارات توصيل أبطأ وأخضر."],["In the end, wise consumers weigh up both convenience and consequences before clicking 'buy'.","في النهاية، المستهلك الحكيم يوازن بين الراحة والعواقب قبل الضغط على شراء."]],
+ g:{transformed:"غيّر",doorstep:"عتبة الباب",convenience:"الراحة",compete:"ينافس",packaging:"التغليف",consequences:"العواقب"},
+ q:[["What has online shopping changed?",["The way we buy almost everything","Only clothes","Nothing"],0],["What is a drawback for small shops?",["They struggle to compete with giant platforms","They are too big","They sell too much"],0],["What do some governments encourage?",["Slower, greener delivery","Faster flights","More packaging"],0]]},
+{id:"s23",lv:"B2",t:"A Lesson in Failure",ar:"درس في الفشل",ic:"💡",
+ s:[["When Amira failed her driving test for the third time, she nearly gave up.","كي أميرة رسبت في امتحان السياقة للمرة الثالثة، كادت تستسلم."],["Her instructor, however, told her something she has never forgotten.","المدرب، مع ذلك، قال لها شيئا ما نستوش."],["'Failure is only feedback,' he said, 'and feedback is how experts are made.'","قال: الفشل مجرد ملاحظات، والملاحظات هي كيف يُصنع الخبراء."],["Encouraged, she analysed her mistakes and practised the difficult manoeuvres daily.","متشجعة، حللت أخطاءها وتدربت على المناورات الصعبة يوميا."],["Two months later, she passed with only one minor error.","بعد شهرين، نجحت بخطأ بسيط واحد فقط."],["She now believes that persistence matters more than natural talent.","هي تؤمن الآن أن المثابرة أهم من الموهبة الفطرية."],["Whenever she meets discouraged learners, she shares her story.","كل ما تلقى متعلمين محبطين، تشارك قصتها."]],
+ g:{instructor:"المدرّب",feedback:"ملاحظات",analysed:"حلّلت",manoeuvres:"مناورات",persistence:"المثابرة",discouraged:"محبَط"},
+ q:[["How many times did Amira fail the test?",["Once","Twice","Three times"],2],["What did the instructor say?",["Failure is only feedback","Give up","Try another test"],0],["What does she believe now?",["Persistence matters more than talent","Talent is everything","Luck decides"],0]]},
+{id:"s24",lv:"C1",t:"The Attention Economy",ar:"اقتصاد الانتباه",ic:"📲",
+ s:[["In the digital age, human attention has become the scarcest and most valuable commodity.","في العصر الرقمي، صار الانتباه البشري أندر سلعة وأثمنها."],["Platforms compete fiercely to capture it, deploying algorithms refined to exploit our psychological vulnerabilities.","المنصات تتنافس بشراسة لالتقاطه، بخوارزميات مصقولة لاستغلال نقاط ضعفنا النفسية."],["Notifications, infinite scrolling and autoplay are engineered to keep us engaged far beyond our intentions.","الإشعارات والتمرير اللانهائي والتشغيل التلقائي مصممة لتبقينا منشغلين أكثر من نيتنا."],["The consequence, critics argue, is a fragmented mind, ill-suited to deep reading or sustained reflection.","النتيجة، يقول النقاد، عقل مشتت لا يصلح للقراءة العميقة أو التأمل المستمر."],["Defenders counter that technology merely amplifies pre-existing human tendencies rather than creating them.","المدافعون يردون أن التقنية تضخّم الميول القائمة ولا تخلقها."],["Whatever the truth, a growing movement advocates 'digital minimalism', urging people to reclaim their attention deliberately.","أيا كانت الحقيقة، حركة متنامية تدعو إلى «الحد الأدنى الرقمي»، وتحث الناس على استعادة انتباههم عمدا."],["Ultimately, the question is not whether we use technology, but who is in control.","في النهاية، السؤال ليس هل نستعمل التقنية، بل من يتحكم."]],
+ g:{scarcest:"الأندر",algorithms:"خوارزميات",vulnerabilities:"نقاط الضعف",fragmented:"مشتت",amplifies:"تضخّم",minimalism:"الحد الأدنى"},
+ q:[["Why is attention valuable?",["It is the scarcest commodity","It is free","It is useless"],0],["What do defenders claim?",["Technology amplifies existing tendencies","Technology is evil","Nothing matters"],0],["What is the key question?",["Who is in control","How fast is Wi-Fi","Which app is best"],0]]},
+{id:"s25",lv:"C1",t:"Mother Tongue and Identity",ar:"اللغة الأم والهوية",ic:"🌍",
+ s:[["For millions of people, language is far more than a tool for communication; it is the vessel of identity.","لملايين الناس، اللغة أكثر بكثير من أداة تواصل؛ هي وعاء الهوية."],["Immigrants often describe an unsettling tension between assimilating into a new society and preserving their ancestral tongue.","المهاجرون يصفون غالبا توترا مقلقا بين الاندماج في مجتمع جديد والحفاظ على لغة الأجداد."],["Research indicates that children who grow up bilingual enjoy cognitive advantages, such as enhanced flexibility in problem-solving.","الأبحاث تشير أن الأطفال ثنائيي اللغة لهم مزايا معرفية مثل مرونة أكبر في حل المشكلات."],["Nevertheless, they may encounter prejudice if their accent or vocabulary deviates from the dominant norm.","ومع ذلك قد يواجهون تحيزا إذا انحرفت لهجتهم أو مفرداتهم عن المعيار السائد."],["Dialects, long dismissed as corrupted forms of standard languages, are now recognised by linguists as rich and legitimate systems.","اللهجات التي طالما اعتُبرت صيغا فاسدة من الفصحى صارت اليوم يعترف بها اللغويون كأنظمة غنية ومشروعة."],["Consequently, many educators advocate celebrating linguistic diversity rather than suppressing it.","وبالتالي يدعو كثير من المربين للاحتفاء بالتنوع اللغوي بدل قمعه."],["To lose a language, then, is to lose a unique way of seeing the world.","إذن، فقدان لغة هو فقدان طريقة فريدة لرؤية العالم."]],
+ g:{vessel:"وعاء",assimilating:"الاندماج",bilingual:"ثنائي اللغة",prejudice:"التحيز",dialects:"اللهجات",suppressing:"قمع"},
+ q:[["How is language described?",["The vessel of identity","Only a tool","A fashion"],0],["What advantage do bilingual children enjoy?",["Cognitive flexibility","Greater height","Nothing"],0],["How do linguists now regard dialects?",["As rich and legitimate systems","As errors","As slang only"],0]]},
+{id:"d11",lv:"A1",t:"At the Bus Stop",ar:"في محطة الأوطوبيس",ic:"🚏",d:["Tourist","Driver"],
+ s:[["Excuse me, is this the bus to the station?","سمحلي، هذا الأوطوبيس للمحطة؟",0],["Yes, it is.","إيه، هو.",1],["How much is the ticket?","بشحال التذكرة؟",0],["It is thirty dinars.","30 دينار.",1],["Thank you very much!","شكرا بزاف!",0],["You're welcome.","عفوا.",1]],
+ g:{station:"المحطة",ticket:"التذكرة",welcome:"عفوا"},
+ q:[["Where does the bus go?",["To the station","To the airport","To the beach"],0],["How much is the ticket?",["20 dinars","30 dinars","50 dinars"],1],["Who asks the questions?",["The tourist","The driver","A policeman"],0]]},
+{id:"d12",lv:"A1",t:"Buying Fruit",ar:"شراء الفواكه",ic:"🍌",d:["Customer","Seller"],
+ s:[["Good morning. I want two kilos of apples.","صباح الخير. نبغي كيلوين تفاح.",0],["Here you are. Anything else?","تفضل. حاجة أخرى؟",1],["Yes, one kilo of bananas, please.","إيه، كيلو موز، عفاك.",0],["That is four hundred dinars.","هذي 400 دينار.",1],["Here is five hundred.","هاك 500.",0],["And here is your change. Have a nice day!","وهاك الباقي. نهار سعيد!",1]],
+ g:{apples:"التفاح",bananas:"الموز",change:"الباقي",anything:"حاجة"},
+ q:[["How many kilos of apples does he buy?",["One","Two","Three"],1],["What is the total price?",["300 dinars","400 dinars","500 dinars"],1],["How much does the customer give?",["Four hundred","Five hundred","One thousand"],1]]},
+{id:"d13",lv:"A2",t:"Asking for Help in a Store",ar:"طلب المساعدة في محل",ic:"🛍️",d:["Customer","Assistant"],
+ s:[["Excuse me, could you help me? I'm looking for a gift.","سمحلي، تقدر تعاونني؟ نقلب على هدية.",0],["Of course. Who is it for?","أكيد. لمن هي؟",1],["It's for my mother. She loves scarves.","لماما. تحب الأوشحة.",0],["We have a lovely blue one on sale today.","عندنا واحد أزرق جميل عليه تخفيض اليوم.",1],["How much is it after the discount?","بشحال بعد التخفيض؟",0],["Only two thousand dinars. Shall I wrap it?","غير 2000 دينار. نغلفها؟",1]],
+ g:{gift:"هدية",scarves:"أوشحة",lovely:"جميل",discount:"تخفيض",wrap:"يغلّف"},
+ q:[["What is the customer looking for?",["A gift","A phone","A coat"],0],["Who is it for?",["Her mother","Her sister","Herself"],0],["What colour is the scarf?",["Red","Blue","Green"],1]]},
+{id:"d14",lv:"A2",t:"Making Plans",ar:"وضع خطط",ic:"📆",d:["Sara","Amine"],
+ s:[["Are you free this weekend?","راك فاضي هاد الويكاند؟",0],["On Saturday, yes. Why?","السبت إيه. علاش؟",1],["Let's go hiking in the mountains.","يلا نروحو نتمشاو في الجبل.",0],["Great idea! What time should we leave?","فكرة رائعة! على شحال نخرجو؟",1],["At seven in the morning, so we avoid the heat.","على السبعة صباحا باش نتفاداو الحر.",0],["Perfect. I'll bring sandwiches and water.","تمام. نجيب السندويتشات والما.",1]],
+ g:{free:"فاضي",hiking:"المشي في الجبل",leave:"نخرج",avoid:"نتفادى",heat:"الحر"},
+ q:[["What do they plan to do?",["Go hiking","Go shopping","Watch a film"],0],["When do they leave?",["At seven in the morning","At noon","At night"],0],["What will Amine bring?",["Sandwiches and water","A tent","Nothing"],0]]},
+{id:"d15",lv:"B1",t:"Complaining at a Restaurant",ar:"شكوى في مطعم",ic:"🍝",d:["Customer","Waiter"],
+ s:[["Excuse me, I ordered the chicken, but this is fish.","سمحلي، طلبت الدجاج لكن هذا حوت.",0],["I'm so sorry. I'll check the order right away.","آسف جدا. نشوف الطلب فورا.",1],["Also, we've been waiting for forty minutes.","وكذلك نستناو من 40 دقيقة.",0],["I apologise for the delay. The kitchen is very busy tonight.","نعتذر على التأخير. المطبخ مشغول بزاف الليلة.",1],["I understand, but I'd like a discount on the bill.","نفهم، بصح نحب تخفيض في الحساب.",0],["Certainly. I'll speak to the manager and take ten per cent off.","أكيد. نتكلم مع المدير ونخصم 10%.",1]],
+ g:{ordered:"طلبت",check:"يتحقق",delay:"تأخير",busy:"مشغول",certainly:"بالتأكيد"},
+ q:[["What was wrong with the order?",["It was fish, not chicken","It was cold","It was too salty"],0],["How long have they been waiting?",["Ten minutes","Forty minutes","Two hours"],1],["What does the waiter offer?",["Ten per cent off","A free dessert","Nothing"],0]]},
+{id:"d16",lv:"B2",t:"Job Offer Negotiation",ar:"التفاوض على عرض عمل",ic:"💰",d:["Candidate","HR Manager"],
+ s:[["Thank you for the offer. I'm very enthusiastic, but the salary is below my expectations.","شكرا على العرض. متحمس جدا لكن الراتب أقل من توقعاتي.",0],["What figure did you have in mind?","واش الرقم اللي كنت تفكر فيه؟",1],["Given my experience, I was hoping for around fifteen per cent more.","بالنظر لخبرتي، كنت أتمنى 15% أكثر تقريبا.",0],["That's a significant increase. We could offer eight per cent plus extra holidays.","هذه زيادة معتبرة. نقدر نعرض 8% مع عطل إضافية.",1],["I'd accept that if there's a performance review after six months.","نقبل إذا كان هناك تقييم أداء بعد 6 شهور.",0],["That seems reasonable. I'll put it in writing.","يبدو معقولا. نكتبها رسميا.",1]],
+ g:{enthusiastic:"متحمس",expectations:"التوقعات",significant:"معتبر",performance:"الأداء",reasonable:"معقول"},
+ q:[["What is the candidate unhappy about?",["The salary","The location","The boss"],0],["What does HR offer?",["Eight per cent plus extra holidays","Fifteen per cent","A company car"],0],["What does the candidate request?",["A review after six months","A bonus now","Remote work"],0]]},
+{id:"d17",lv:"C1",t:"Panel Discussion: Remote Education",ar:"نقاش: التعليم عن بعد",ic:"🎤",d:["Moderator","Professor"],
+ s:[["Has remote education fundamentally altered the university experience?","هل غيّر التعليم عن بعد تجربة الجامعة جذريا؟",0],["It has certainly democratised access, although it has also exposed a stark digital divide.","بالتأكيد ديمقراطَ الوصول، رغم أنه كشف أيضا فجوة رقمية صارخة.",1],["Some argue that the loss of spontaneous interaction undermines intellectual development.","بعضهم يرى أن فقدان التفاعل العفوي يقوّض النمو الفكري.",0],["That is a legitimate concern; nevertheless, hybrid models appear to preserve the best of both worlds.","هذا قلق مشروع؛ ومع ذلك النماذج الهجينة تحافظ على أفضل ما في العالمين.",1],["Would you say institutions are adequately prepared for such a shift?","هل تقول إن المؤسسات مستعدة بما يكفي لهذا التحول؟",0],["Frankly, no. Without sustained investment in infrastructure and training, the promise will remain unfulfilled.","بصراحة، لا. بدون استثمار مستمر في البنية والتدريب سيبقى الوعد غير متحقق.",1]],
+ g:{democratised:"جعله متاحا للجميع",divide:"فجوة",undermines:"يقوّض",hybrid:"هجين",adequately:"بما يكفي",unfulfilled:"غير متحقق"},
+ q:[["What did remote education expose?",["A stark digital divide","Cheaper tuition","Better exams"],0],["What do hybrid models do?",["Preserve the best of both worlds","Replace teachers","End universities"],0],["What does the professor say about institutions?",["They are not adequately prepared","They are fully prepared","They no longer exist"],0]]}
 ];
 
 let SPEED=.9; const SPD=[[.7,"🐢 0.7×"],[.9,"⏱ 0.9×"],[1.05,"🐇 1.05×"]];
@@ -809,6 +1023,7 @@ function prog(){
   $("#rs").onclick=()=>{S.xp=0;S.done={};S.stories={};S.saved=[];save();prog();head()};
 }
 render();
+
 let _ip=null;window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();_ip=e;const st=document.querySelector(".stats");if(st&&!document.getElementById("inst")){const b=document.createElement("button");b.id="inst";b.className="pill";b.style.cssText="border:0;color:#fff;cursor:pointer;font-family:inherit";b.textContent="📲 ثبّت";b.onclick=async()=>{_ip.prompt();try{await _ip.userChoice}catch(x){}b.remove()};st.appendChild(b)}});
 try{if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js")}catch(e){}
 </script>
