@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2563eb">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-title" content="زمورة">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>زمورة تعلم اللغات — Zemmora Language Learning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--ink:#1d2433;--mut:#6b7488;--pri:#2563eb;--pri2:#1e40af;--ok:#16a34a;--bad:#dc2626;--acc:#f59e0b;--line:#e3e8f0;--r:18px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{color-scheme:light}
+button{color:var(--ink);font-family:inherit}
+input{color:var(--ink);background:#fff;font-family:inherit}
+.opt.ok,.opt.no{color:var(--ink)}
+html{-webkit-text-size-adjust:100%}body{margin:0;font-family:Cairo,system-ui,sans-serif;background:#d9e0ee;color:var(--ink);overscroll-behavior-y:contain}
+#shell{max-width:520px;margin:0 auto;min-height:100dvh;background:var(--bg);position:relative;padding-bottom:calc(76px + env(safe-area-inset-bottom));box-shadow:0 0 40px rgba(0,0,0,.15)}
+.en{direction:ltr;unicode-bidi:isolate;display:inline-block}
+header{background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;padding:calc(16px + env(safe-area-inset-top)) 16px 22px;border-radius:0 0 26px 26px}
+header h1{margin:0;font-size:22px;font-weight:800}
+header p{margin:4px 0 0;opacity:.9;font-size:14px}
+.stats{display:flex;gap:10px;margin-top:12px}
+.pill{background:rgba(255,255,255,.2);padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600}
+main{padding:16px}
+.card{background:var(--card);border-radius:var(--r);padding:16px;box-shadow:0 2px 10px rgba(30,40,80,.06);margin-bottom:14px}
+h2{font-size:19px;margin:6px 0 12px}
+.levels{display:grid;gap:12px}
+.lv{display:flex;align-items:center;gap:14px;cursor:pointer;border:2px solid transparent;transition:.15s}
+.lv:hover{border-color:var(--pri)}
+.lv .ic{font-size:34px;width:60px;height:60px;border-radius:16px;display:grid;place-items:center;flex:none}
+.lv b{font-size:17px}.lv small{color:var(--mut);display:block}
+.bar{height:8px;background:var(--line);border-radius:9px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#22c55e,#16a34a);width:0;transition:.4s}
+.back{background:none;border:0;color:var(--pri);font:600 15px Cairo;cursor:pointer;padding:4px 0;margin-bottom:6px}
+.les{display:flex;align-items:center;gap:12px;cursor:pointer}
+.les .ic{font-size:30px}
+.les .done{margin-inline-start:auto;font-size:22px}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:6px 0 calc(8px + env(safe-area-inset-bottom));z-index:20;border-radius:22px 22px 0 0;box-shadow:0 -4px 18px rgba(0,0,0,.08)}
+nav button{background:none;border:0;font:600 11px Cairo;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:4px 6px;flex:1}
+nav button span{font-size:22px}nav button.on{color:var(--pri)}
+.tabs{display:flex;gap:6px;background:#e9eef7;padding:5px;border-radius:14px;margin-bottom:14px}
+.tabs button{flex:1;border:0;background:none;padding:9px 4px;border-radius:10px;font:700 14px Cairo;color:var(--mut);cursor:pointer}
+.tabs button.on{background:#fff;color:var(--pri);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.btn{background:var(--pri);color:#fff;border:0;border-radius:14px;padding:11px 18px;font:700 15px Cairo;cursor:pointer}
+.btn:hover{background:var(--pri2)}.btn.sec{background:#e8eefc;color:var(--pri)}.btn:disabled{opacity:.5;cursor:default}
+.flash{perspective:900px;height:300px;cursor:pointer;margin-bottom:12px}
+.flash .in{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flash.flip .in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px;text-align:center}
+.face.f{background:linear-gradient(160deg,#fff,#eef3ff);border:2px solid var(--line)}
+.face.b{background:linear-gradient(160deg,#eef6ff,#e6f9ee);border:2px solid #bfe3cf;transform:rotateY(180deg)}
+.big{font-size:104px;line-height:1;animation:bob 2.4s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-8px) scale(1.04)}}
+.w{font-size:30px;font-weight:800}
+.row{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap}
+.ar{color:var(--pri2);font-weight:700;font-size:22px}
+.ex{color:var(--mut);font-size:15px}
+.spk{background:#fff;border:2px solid var(--line);border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer}
+.tip{background:#fff8e6;border:1px solid #fde4a1;border-radius:14px;padding:12px;font-size:15px;line-height:1.8}
+/* video */
+.stage{position:relative;height:380px;border-radius:var(--r);overflow:hidden;color:#fff;display:flex;flex-direction:column;justify-content:flex-end}
+.stage .floaters{position:absolute;inset:0;pointer-events:none}
+.stage .floaters span{position:absolute;font-size:44px;opacity:.28;animation:fl 7s ease-in-out infinite}
+@keyframes fl{50%{transform:translateY(-22px) rotate(8deg)}}
+.chars{position:absolute;top:34px;inset-inline:0;display:flex;justify-content:space-around;align-items:flex-end}
+.ch{font-size:78px;transition:.3s;filter:grayscale(.6) brightness(.8);transform:scale(.9)}
+.ch.on{filter:none;transform:scale(1.15) translateY(-6px)}
+.ch small{display:block;font-size:13px;text-align:center;font-weight:700}
+.sub{position:relative;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);padding:12px 14px;min-height:112px;text-align:center}
+.sub .e{font-size:20px;font-weight:700;direction:ltr}
+.sub .a{font-size:16px;margin-top:4px;color:#ffe9a8}
+.prog{height:5px;background:rgba(255,255,255,.3)}.prog i{display:block;height:100%;background:#fff;width:0;transition:width .3s}
+.ctl{display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+/* quiz */
+.q{font-size:18px;font-weight:700;text-align:center;margin:8px 0}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.opt{border:2px solid var(--line);background:#fff;border-radius:14px;padding:14px 8px;font:700 17px Cairo;cursor:pointer}
+.opt.ok{background:#dcfce7;border-color:var(--ok)}.opt.no{background:#fee2e2;border-color:var(--bad)}
+/* chat */
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.chip{border:2px solid var(--line);background:#fff;border-radius:99px;padding:5px 12px;font:600 13px Cairo;cursor:pointer}
+.chip.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+.chat{flex:1;overflow:auto;background:#eef2f8;padding:12px;display:flex;flex-direction:column;gap:10px}.chat.hidear .msg .a{display:none}
+.msg{max-width:88%;padding:10px 13px;border-radius:16px;line-height:1.7;font-size:16px}
+.msg.me{align-self:flex-start;background:var(--pri);color:#fff;border-end-start-radius:4px}
+.msg.bot{align-self:flex-end;background:#fff;border-end-end-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.msg .e{font-weight:700;font-size:17px;direction:ltr;display:block;text-align:left}
+.msg .a{color:var(--pri2);font-size:14px;display:block;margin-top:4px}
+.msg .f{background:#fff4d6;border-radius:10px;padding:6px 9px;margin-top:6px;font-size:14px;display:block}
+.inp{display:flex;gap:8px;margin-top:10px}
+.inp input{flex:1;border:2px solid var(--line);border-radius:14px;padding:12px;font:16px Cairo;min-width:0}
+.inp input:focus{outline:none;border-color:var(--pri)}
+.mic{background:#fff;border:2px solid var(--line);border-radius:14px;width:48px;font-size:20px;cursor:pointer}.mic.rec{background:#fee2e2;border-color:var(--bad)}
+.note{font-size:13px;color:var(--mut);margin-top:8px;line-height:1.7}
+.convo{display:flex;flex-direction:column;height:100dvh}
+.ctop{display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 12px 10px}
+.ctop small{display:block;opacity:.85;font-size:12px}.ctop .chip{background:rgba(255,255,255,.2);color:#fff;border-color:transparent}.ctop .chip.on{background:#fff;color:var(--pri)}
+.cb2{background:rgba(255,255,255,.2);color:#fff;border:0;border-radius:50%;width:40px;height:40px;font-size:20px;cursor:pointer}
+.mission{background:#fff8e6;border-bottom:1px solid #fde4a1;padding:8px 14px;font-size:14px;font-weight:600}.mission.won{background:#dcfce7;border-color:#86efac}
+.sug{display:flex;gap:6px;overflow-x:auto;padding:8px 10px 0;background:var(--bg);min-height:8px}.sug .chip{white-space:nowrap;flex:none;background:#fff}
+.convo .inp{padding:8px 10px calc(10px + env(safe-area-inset-bottom));margin:0;background:var(--bg)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.sc{cursor:pointer;margin:0;display:flex;flex-direction:column;gap:4px;border:2px solid transparent}.sc:active{border-color:var(--pri)}.sc small{color:var(--mut);font-size:12px;line-height:1.5}
+.chips{overflow-x:auto;flex-wrap:nowrap}.chip{flex:none}
+body.inchat header,body.inchat nav{display:none}body.inchat #shell{padding-bottom:0}body.inchat main{padding:0}
+.next{display:flex;align-items:center;gap:12px;cursor:pointer;background:linear-gradient(135deg,#fef3c7,#fde68a)}
+.sn{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;padding:9px 0;border-bottom:1px dashed var(--line);font-size:18px;line-height:1.9;direction:ltr;text-align:left;cursor:pointer;border-radius:10px}
+.sn.hl{background:#fff3c4}.sn .tr{flex-basis:100%;direction:rtl;text-align:right;color:var(--pri2);font-size:15px;line-height:1.7}
+.sb{background:#eef3ff;border:0;border-radius:50%;width:30px;height:30px;font-size:14px;cursor:pointer;flex:none;margin-top:4px}
+.spkr{flex-basis:100%;font-size:12px;font-weight:700;color:var(--mut);margin-bottom:-8px;direction:ltr}
+.wd.gl{border-bottom:2px dotted var(--acc);font-weight:600}
+.hidetxt .txt{filter:blur(9px);user-select:none;pointer-events:none}
+.pop{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(88px + env(safe-area-inset-bottom));width:min(92%,480px);background:#1d2433;color:#fff;border-radius:16px;padding:10px 14px;z-index:30;display:flex;gap:10px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.dctin{width:100%;border:2px solid var(--line);border-radius:14px;padding:12px;font:18px system-ui}.dctin:focus{outline:none;border-color:var(--pri)}
+.hide{display:none!important}
+.win{text-align:center;padding:20px}.win .big{font-size:80px}
+.vid-links a{display:inline-block;margin:4px;padding:8px 12px;background:#fee2e2;color:#b91c1c;border-radius:12px;text-decoration:none;font-weight:700;font-size:14px}
+</style>
+</head>
+<body>
+<div id="shell"><header>
+  <h1>🎓 زمورة تعلم اللغات <span class="en" style="font-weight:600;font-size:15px">Zemmora</span></h1>
+  <p>تعلّم الإنجليزية من المبتدئ إلى المتقدّم — بالدارجة الجزائرية 🇩🇿</p>
+  <div class="stats"><div class="pill">⭐ <span id="xp">0</span> نقطة</div><div class="pill">✅ <span id="dn">0</span>/30 درس</div><div class="pill">🔥 <span id="st">0</span> يوم</div></div>
+</header>
+<main id="app"></main></div>
+<nav>
+  <button data-v="home" class="on"><span>📚</span>الدروس</button>
+  <button data-v="read"><span>📖</span>قراءة</button>
+  <button data-v="listen"><span>🎧</span>استماع</button>
+  <button data-v="chat"><span>💬</span>محادثة</button>
+  <button data-v="prog"><span>📈</span>تقدّمي</button>
+</nav>
+
+<script>
+/* ---------- DATA ---------- */
+const LEVELS=[
+ {id:"A1",name:"مبتدئ",en:"Beginner",ic:"🌱",c:"#dcfce7"},
+ {id:"A2",name:"أساسي",en:"Elementary",ic:"🌿",c:"#d1fae5"},
+ {id:"B1",name:"متوسط",en:"Intermediate",ic:"🌳",c:"#dbeafe"},
+ {id:"B2",name:"فوق المتوسط",en:"Upper-Intermediate",ic:"🚀",c:"#ede9fe"},
+ {id:"C1",name:"متقدّم",en:"Advanced",ic:"👑",c:"#fef3c7"}
+];
+// words: [en, darija, emoji, example, exampleDarija]
+const L=[
+{id:1,lv:"A1",t:"التحيات",en:"Greetings",ic:"👋",g:["#4f46e5","#06b6d4"],chars:["🧑","👩"],names:["Amine","Sara"],
+ w:[["Hello","السلام / أهلا","👋","Hello, my name is Amine.","أهلا، سميتي أمين."],
+ ["Goodbye","بصحتك / سلام","🤚","Goodbye, see you tomorrow!","بصحتك، نشوفك غدوة!"],
+ ["Please","عفاك","🙏","Water, please.","الما، عفاك."],
+ ["Thank you","بارك الله فيك / شكرا","😊","Thank you very much!","شكرا بزاف!"],
+ ["Sorry","سامحني","😔","Sorry, I'm late.","سامحني، تأخرت."],
+ ["Friend","صاحبي","🤝","He is my friend.","هذا صاحبي."]],
+ d:[[0,"Hello! How are you?","السلام! واش راك؟"],[1,"I'm fine, thank you. And you?","لاباس، شكرا. وإنتِ؟"],[0,"I'm good. What's your name?","مليح. واش سميتك؟"],[1,"My name is Sara. Nice to meet you!","سميتي سارة. تشرفنا!"]],
+ tip:"«How are you?» = «واش راك؟» والجواب «I'm fine» = «لاباس». وحاول تقول «Nice to meet you» كي تعرف واحد جديد."},
+{id:2,lv:"A1",t:"الأكل والمشروبات",en:"Food & Drinks",ic:"🍞",g:["#f59e0b","#ef4444"],chars:["🧑‍🍳","🧑"],names:["Waiter","Customer"],
+ w:[["Water","الما","💧","I want water.","نحب الما."],
+ ["Bread","الخبز","🍞","I eat bread every day.","ناكل الخبز كل نهار."],
+ ["Coffee","القهوة","☕","One coffee, please.","قهوة وحدة، عفاك."],
+ ["Milk","الحليب","🥛","The milk is cold.","الحليب بارد."],
+ ["Apple","التفاحة","🍎","This apple is sweet.","هاذ التفاحة حلوة."],
+ ["Hungry","جيعان","🍽️","I am hungry.","راني جيعان."]],
+ d:[[0,"Hello! What would you like?","السلام! واش تحب؟"],[1,"I would like a coffee, please.","نحب قهوة، عفاك."],[0,"Anything else?","حاجة أخرى؟"],[1,"Yes, a bottle of water. How much is it?","إيه، قارورة ما. بشحال؟"]],
+ tip:"في الدارجة «نحب» تعني «نريد» و«نحب» (أُحِبّ). في الإنجليزية: «I want» = نبغي/نحب الشيء، و«I like» = يعجبني. للتأدب قُل «I would like»."},
+{id:3,lv:"A2",t:"التسوّق",en:"Shopping",ic:"🛍️",g:["#ec4899","#8b5cf6"],chars:["🧑","🧑‍💼"],names:["Customer","Seller"],
+ w:[["Expensive","غالي","💰","This bag is expensive.","هاذ الصاك غالي."],
+ ["Cheap","رخيص","🏷️","The shoes are cheap.","الصباط رخيص."],
+ ["Discount","تخفيض","🔖","Can I get a discount?","نقدر نخذ تخفيض؟"],
+ ["Size","المقاس","📏","What size are you?","واش مقاسك؟"],
+ ["Bag","الصاك","👜","I need a new bag.","نحتاج صاك جديد."],
+ ["Receipt","الفاكتورة / الوصل","🧾","Keep the receipt.","حافظ على الوصل."]],
+ d:[[0,"How much is this jacket?","بشحال هاد الجاكيط؟"],[1,"It's four thousand dinars.","ب4000 دينار."],[0,"That's too expensive. Can you give me a discount?","غالي بزاف. تنقص لي شوية؟"],[1,"OK, three thousand five hundred for you.","مليح، 3500 ليك."]],
+ tip:"«too + صفة» = «بزاف»: too expensive = غالي بزاف. و«Can you ...?» = «تقدر ...؟» لطلب مؤدب."},
+{id:4,lv:"A2",t:"الاتجاهات",en:"Directions",ic:"🧭",g:["#0ea5e9","#22c55e"],chars:["🧑","👮"],names:["Tourist","Police officer"],
+ w:[["Left","اليسار","⬅️","Turn left.","دور على اليسار."],
+ ["Right","اليمين","➡️","Turn right.","دور على اليمين."],
+ ["Straight","طول","⬆️","Go straight.","امشي طول."],
+ ["Near","قريب","📍","The school is near.","المدرسة قريبة."],
+ ["Far","بعيد","🏔️","It is far from here.","بعيدة من هنا."],
+ ["Street","الشارع","🛣️","This street is long.","هاذ الشارع طويل."]],
+ d:[[0,"Excuse me, where is the pharmacy?","سمحلي، وين كاين الصيدلية؟"],[1,"Go straight, then turn left.","امشي طول، وبعد دور على اليسار."],[0,"Is it far?","بعيدة؟"],[1,"No, it's near the mosque.","لا، قريبة من الجامع."]],
+ tip:"«Excuse me» تستعملها قبل ما تسول واحد (سمحلي). و«Where is...?» = «وين...؟»."},
+{id:5,lv:"B1",t:"السفر والمطار",en:"Travel & Airport",ic:"✈️",g:["#0369a1","#6366f1"],chars:["🧳","🧑‍✈️"],names:["Passenger","Agent"],
+ w:[["Ticket","التذكرة","🎫","I bought a ticket online.","شريت التذكرة أونلاين."],
+ ["Passport","جواز السفر","🛂","Don't forget your passport.","ما تنساش جواز السفر."],
+ ["Luggage","الباغاج","🧳","My luggage is heavy.","الباغاج تاعي ثقيل."],
+ ["Delayed","متأخر","⏰","The flight is delayed.","الطيارة متأخرة."],
+ ["Reservation","الحجز","📅","I have a reservation.","عندي حجز."],
+ ["Gate","بوابة الصعود","🚪","Go to gate twelve.","روح لبوابة 12."]],
+ d:[[1,"Good morning. May I see your passport and ticket?","صباح الخير. نقدر نشوف جواز السفر والتذكرة؟"],[0,"Here you are. I have one suitcase to check in.","تفضل. عندي ڤاليزة وحدة نسجلها."],[1,"Your flight has been delayed by one hour.","طيارتك تأخرت ساعة."],[0,"That's fine. Which gate should I go to?","مشي مشكل. لأي بوابة نروح؟"]],
+ tip:"«has been delayed» = المبني للمجهول + الحاضر التام: حاجة وقعات وأثرها باقي الآن. مثال: «The flight has been cancelled»."},
+{id:6,lv:"B1",t:"العمل",en:"Work Life",ic:"💼",g:["#334155","#0ea5e9"],chars:["🧑‍💼","👩‍💼"],names:["Manager","Employee"],
+ w:[["Meeting","اجتماع","👥","We have a meeting at ten.","عندنا اجتماع على 10."],
+ ["Deadline","آخر أجل","⏳","The deadline is Friday.","آخر أجل نهار الجمعة."],
+ ["Salary","الراتب","💵","My salary is good.","الراتب تاعي مليح."],
+ ["Colleague","الزميل","🧑‍💼","My colleague helped me.","زميلي عاوني."],
+ ["Boss","المدير / الباترون","👔","My boss is kind.","المدير تاعي طيب."],
+ ["Appointment","موعد","📆","I have an appointment today.","عندي موعد اليوم."]],
+ d:[[0,"Did you finish the report?","كملت التقرير؟"],[1,"Not yet. I'm going to send it tomorrow morning.","مازال. راني نبعثو غدوة الصباح."],[0,"The deadline is today, remember?","آخر أجل اليوم، ركزلي؟"],[1,"I'm sorry. I will send it within two hours.","سامحني. نبعثو في ظرف ساعتين."]],
+ tip:"«I'm going to» = نية/خطة ثابتة، «I will» = قرار فوري أو وعد. مثال: «I'll help you» (وعد دروك)."},
+{id:7,lv:"B2",t:"التعبير عن الرأي",en:"Giving Opinions",ic:"💬",g:["#7c3aed","#db2777"],chars:["🧑‍🎓","👩‍🏫"],names:["Student","Teacher"],
+ w:[["In my opinion","في رايي","🤔","In my opinion, it's a great idea.","في رايي، هذي فكرة هايلة."],
+ ["However","بصح / لكن","↔️","It's cheap; however, it's slow.","رخيص، بصح بطيء."],
+ ["Although","رغم أنّ","🌦️","Although it rained, we went out.","رغم أنها شتات، خرجنا."],
+ ["On the other hand","من جهة أخرى","⚖️","On the other hand, it saves time.","من جهة أخرى، يوفر الوقت."],
+ ["As a result","ونتيجة لذلك","➡️","As a result, he failed.","ونتيجة لذلك، رسب."],
+ ["I agree","نتفق معاك","👍","I agree with you.","نتفق معاك."]],
+ d:[[1,"Do you think social media is good for teenagers?","تظن السوشيال ميديا مليحة للمراهقين؟"],[0,"In my opinion, it has both advantages and disadvantages.","في رايي، فيها المليح والخايب."],[1,"Could you explain further?","تقدر تشرح أكثر؟"],[0,"Although it connects people, it can waste a lot of time. As a result, grades may drop.","رغم أنها تربط الناس، تضيّع وقت بزاف. ونتيجة لهذا، النقاط تنقص."]],
+ tip:"«Although» + جملة كاملة، و«Despite» + اسم. «However» تجي في بداية جملة جديدة وبعدها فاصلة."},
+{id:8,lv:"B2",t:"الأفعال المركّبة",en:"Phrasal Verbs",ic:"🔧",g:["#0f766e","#84cc16"],chars:["🧑","🧑‍🔧"],names:["Karim","Mechanic"],
+ w:[["Give up","تستسلم","🏳️","Never give up!","ما تستسلمش!"],
+ ["Look forward to","متشوق ل","🤩","I look forward to meeting you.","متشوق نلقاك."],
+ ["Figure out","تلقى الحل","🧩","I can't figure it out.","ما قدرتش نلقى الحل."],
+ ["Carry on","تكمل","🏃","Carry on working.","كمّل خدمتك."],
+ ["Run out of","يخلص ليك","⛽","We ran out of petrol.","خلصلنا البنزين."],
+ ["Put off","تأجّل","📆","Don't put off your homework.","ما تأجلش الدوار."]],
+ d:[[1,"What's wrong with your car?","واش بيها طوموبيلتك؟"],[0,"I think we ran out of petrol, and I can't figure out what else is wrong.","نظن خلصلنا البنزين، وما نقدرش نفهم واش أخرى."],[1,"Don't give up. Carry on and I'll check the engine.","ما تستسلمش. كمّل وأنا نشوف المحرك."],[0,"Thanks! I look forward to driving again.","شكرا! متشوق نسوق من جديد."]],
+ tip:"الفعل المركّب = فعل + حرف، ومعناه يتغيّر: look = تشوف، look after = تهتم، look up = تبحث. تعلّمهم كجمل كاملة."},
+{id:9,lv:"C1",t:"التعابير الاصطلاحية",en:"Idioms",ic:"🎭",g:["#b45309","#be185d"],chars:["🧑‍🎤","🧑"],names:["Lina","Yacine"],
+ w:[["Break the ice","تكسر الحاجز","🧊","A joke can break the ice.","نكتة تكسر الحاجز."],
+ ["A blessing in disguise","نعمة في ثوب نقمة","🎁","Losing that job was a blessing in disguise.","ضياع الخدمة كان خير."],
+ ["Once in a blue moon","نادرا جدا","🌙","He visits once in a blue moon.","يزورنا مرة في العمر."],
+ ["The last straw","القطرة اللي فاضت الكاس","🥤","His rudeness was the last straw.","وقاحتو كانت القطرة اللي فاضت الكاس."],
+ ["Bite the bullet","تصبر وتواجه الصعب","😤","I had to bite the bullet and apologise.","لازم تحمّلت واعتذرت."],
+ ["Under the weather","مش مليح شوية","🤒","I'm feeling under the weather.","راني مش مليح شوية."]],
+ d:[[0,"You look a bit under the weather today.","باينة عليك مش مليح اليوم."],[1,"Yes, I just had to bite the bullet and finish that huge project.","إيه، لازم صبرت وكملت المشروع الكبير."],[0,"Well, maybe losing the contract was a blessing in disguise.","يمكن ضياع العقد كان خير."],[1,"Maybe. We celebrate only once in a blue moon, so let's break the ice tonight!","يمكن. نحتفلو نادرا، يلا نكسرو الحاجز الليلة!"]],
+ tip:"التعابير ما تترجمش حرفيا! «Once in a blue moon» ما علاقتها بالقمر الأزرق، معناها «نادرا جدا» (مثل «مرة في العمر» بالدارجة)."},
+{id:10,lv:"C1",t:"الأسلوب الأكاديمي",en:"Formal & Academic",ic:"🎓",g:["#1e3a8a","#0d9488"],chars:["👩‍🔬","🧑‍🏫"],names:["Researcher","Professor"],
+ w:[["Furthermore","علاوة على ذلك","➕","Furthermore, the data supports this.","علاوة على ذلك، المعطيات تدعم هذا."],
+ ["Nevertheless","ومع ذلك","🔁","Nevertheless, we continued.","ومع ذلك واصلنا."],
+ ["Consequently","وبالتالي","⛓️","Consequently, costs rose.","وبالتالي ارتفعت التكاليف."],
+ ["Albeit","وإن كان","🤏","A good, albeit short, report.","تقرير مليح وإن كان قصير."],
+ ["Hence","ومن هنا","📌","Hence the need for change.","ومن هنا الحاجة للتغيير."],
+ ["Notwithstanding","بصرف النظر عن","🚧","Notwithstanding the delay, it succeeded.","بصرف النظر عن التأخير، نجح."]],
+ d:[[1,"Does the data support your hypothesis?","المعطيات تدعم فرضيتك؟"],[0,"Largely, albeit with some limitations.","في الغالب، وإن كان بحدود."],[1,"Could you elaborate on those limitations?","تفصّل لي في هذي الحدود؟"],[0,"The sample was small; consequently, the findings should be treated with caution. Nevertheless, they are promising.","العينة صغيرة؛ وبالتالي النتائج تتاخذ بحذر. ومع ذلك هي واعدة."]],
+ tip:"الكلمات الرسمية للكتابة والعروض: استعمل «Furthermore» بدل «Also»، و«Nevertheless» بدل «But»، و«Hence» لإبراز السبب."},
+{id:11,lv:"A1",t:"العائلة",en:"Family",ic:"👨‍👩‍👧",g:["#f472b6","#fb923c"],chars:["🧒","👵"],names:["Yacine","Grandma"],
+ w:[["Mother","ماما","👩","My mother is a teacher.","ماما أستاذة."],["Father","بابا","👨","My father works hard.","بابا يخدم بزاف."],["Brother","خويا","👦","I have one brother.","عندي خو واحد."],["Sister","ختي","👧","My sister is twelve.","ختي عندها 12 سنة."],["Grandmother","جدتي","👵","I love my grandmother.","نحب جدتي."],["Family","العائلة","👨‍👩‍👧","I have a big family.","عندي عائلة كبيرة."]],
+ d:[[0,"Grandma, who is in this photo?","جدتي، شكون هذا في الصورة؟"],[1,"This is your father with his brother.","هذا بابا مع خوه."],[0,"And who is the girl?","وشكون هاذيك البنت؟"],[1,"She is your sister. She is twelve years old.","هي ختك. عندها 12 سنة."]],
+ tip:"«عندي» = «I have» والغائب «he/she has»: She has two brothers. وللعمر: «She is twelve» (ماشي has!)."},
+{id:12,lv:"A1",t:"الأرقام",en:"Numbers",ic:"🔢",g:["#2563eb","#14b8a6"],chars:["🧑","🧑‍💼"],names:["Customer","Seller"],
+ w:[["One","واحد","1️⃣","I have one book.","عندي كتاب واحد."],["Two","جوج","2️⃣","Two coffees, please.","جوج قهاوي، عفاك."],["Three","ثلاثة","3️⃣","Three apples.","ثلاث تفاحات."],["Ten","عشرة","🔟","Ten minutes.","عشر دقايق."],["Hundred","مية","💯","One hundred dinars.","مية دينار."],["Thousand","ألف","🔢","A thousand thanks!","ألف شكر!"]],
+ d:[[0,"How many oranges do you want?","قداش من برتقال تحب؟"],[1,"Ten, please.","عشرة، عفاك."],[0,"That is two hundred dinars.","هاذي 200 دينار."],[1,"Here is a thousand. Keep the change!","خذ ألف. الباقي ليك!"]],
+ tip:"انتبه: thirteen (13) تُنطق «ثيرتين» بالتشديد في آخرها، وthirty (30) بالتشديد في أولها."},
+{id:13,lv:"A1",t:"الوقت والأيام",en:"Time & Days",ic:"🕒",g:["#7c3aed","#3b82f6"],chars:["🧑","👩"],names:["Amine","Sara"],
+ w:[["Today","اليوم","📅","I am free today.","أنا فاضي اليوم."],["Tomorrow","غدوة","🌅","See you tomorrow.","نشوفك غدوة."],["Yesterday","البارح","⏪","I was tired yesterday.","كنت تعبان البارح."],["Morning","الصباح","🌄","Good morning!","صباح الخير!"],["Night","الليل","🌙","Good night.","تصبح على خير."],["Clock","الساعة","🕒","What time is it?","شحال الساعة؟"]],
+ d:[[0,"What time is it?","شحال الساعة؟"],[1,"It's half past three.","الثالثة والنصف."],[0,"Can we meet tomorrow at nine?","نقدرو نتلاقاو غدوة على التسعة؟"],[1,"Yes, nine in the morning is perfect.","إيه، التسعة صباحاً مليح."]],
+ tip:"at + ساعة (at nine)، on + يوم (on Monday)، in + جزء من اليوم (in the morning)."},
+{id:14,lv:"A1",t:"الألوان",en:"Colors",ic:"🎨",g:["#ef4444","#3b82f6"],chars:["🧒","🧑‍🎨"],names:["Child","Painter"],
+ w:[["Red","حمر","🔴","A red car.","طوموبيل حمرا."],["Blue","زرق","🔵","The sea is blue.","البحر أزرق."],["Green","خضر","🟢","Green tea.","أتاي أخضر."],["Yellow","صفر","🟡","A yellow lemon.","ليمونة صفرا."],["Black","كحل","⚫","A black cat.","قطوس كحل."],["White","بيض","⚪","A white shirt.","قميجة بيضا."]],
+ d:[[0,"What is your favourite colour?","واش هو لونك المفضل؟"],[1,"I love blue. It is the colour of the sea.","نحب الأزرق. هو لون البحر."],[0,"I prefer green, like nature.","أنا نفضل الأخضر، كي الطبيعة."],[1,"Let's paint a green tree under a blue sky!","يلا نرسمو شجرة خضرا تحت سما زرقا!"]],
+ tip:"في الإنجليزية الصفة تجي قبل الاسم وما تتغيرش: a red car، two red cars (عكس العربية)."},
+{id:15,lv:"A1",t:"الجسم",en:"The Body",ic:"🧍",g:["#10b981","#6366f1"],chars:["🧒","🧑‍⚕️"],names:["Patient","Doctor"],
+ w:[["Head","الراس","🙂","My head hurts.","راسي يوجعني."],["Eye","العين","👁️","Close your eyes.","غمّض عينيك."],["Hand","اليد","✋","Wash your hands.","اغسل يديك."],["Leg","الرجل","🦵","My leg is sore.","رجلي توجعني."],["Heart","القلب","❤️","A kind heart.","قلب طيب."],["Tooth","السنّ","🦷","I have a toothache.","عندي وجع السنّ."]],
+ d:[[1,"What's the problem?","واش المشكل؟"],[0,"My head hurts and my eyes are tired.","راسي يوجعني وعينيا تعبانين."],[1,"Do you have a fever?","عندك سخانة؟"],[0,"No, I don't. I just need to rest.","لا، نحتاج غير نرتاح."]],
+ tip:"«My head hurts» = راسي يوجعني. أو «I have a headache» = عندي وجع الراس. نفس القاعدة: toothache، stomachache."},
+{id:16,lv:"A2",t:"البيت",en:"Home",ic:"🏠",g:["#f59e0b","#10b981"],chars:["🧑‍💼","🧑"],names:["Landlord","Tenant"],
+ w:[["Kitchen","الكوزينة","🍳","The kitchen is big.","الكوزينة كبيرة."],["Bedroom","بيت النوم","🛏️","Two bedrooms.","غرفتين نوم."],["Bathroom","الحمام","🚿","The bathroom is clean.","الحمام نقي."],["Door","الباب","🚪","Close the door.","سدّ الباب."],["Window","الطاقة","🪟","Open the window.","حلّ الطاقة."],["Key","المفتاح","🔑","Where is my key?","وين المفتاح تاعي؟"]],
+ d:[[0,"Welcome! This flat has two bedrooms and a big kitchen.","مرحبا! الشقة فيها غرفتين وكوزينة كبيرة."],[1,"Is there a balcony?","كاين بالكون؟"],[0,"Yes, there is, and there are two windows in the living room.","إيه كاين، وكاين طاقتين في الصالون."],[1,"Great. How much is the rent?","برافو. بشحال الكراء؟"]],
+ tip:"There is + مفرد، There are + جمع: There is a key / There are two keys. و«كاين» بالدارجة = There is."},
+{id:17,lv:"A2",t:"الملابس",en:"Clothes",ic:"👕",g:["#ec4899","#f59e0b"],chars:["🧑","🧑‍💼"],names:["Customer","Assistant"],
+ w:[["Shirt","القميجة","👕","A white shirt.","قميجة بيضا."],["Trousers","السروال","👖","These trousers are tight.","هاذ السروال ضيق."],["Shoes","الصباط","👟","New shoes.","صباط جديد."],["Dress","الروبة","👗","A beautiful dress.","روبة زوينة."],["Coat","البالطو","🧥","Take your coat.","خذ البالطو."],["Cap","الكاسكيطة","🧢","I wear a cap.","نلبس كاسكيطة."]],
+ d:[[0,"Can I try this coat on?","نقدر نجرب هذا البالطو؟"],[1,"Of course. The fitting room is over there.","أكيد. بيت التجريب هناك."],[0,"It's a bit tight. Do you have a bigger size?","ضيق شوية. عندك مقاس أكبر؟"],[1,"Yes, here is a large. It suits you!","إيه، هذا لارج. يليق بيك!"]],
+ tip:"wear = تلبس (حالة)، put on = تلبس (حركة): I wear a coat every winter / Put on your coat!"},
+{id:18,lv:"A2",t:"الطقس",en:"Weather",ic:"⛅",g:["#0ea5e9","#facc15"],chars:["🧑","👩"],names:["Amine","Sara"],
+ w:[["Sunny","مشمس","☀️","It's sunny today.","الجو مشمس اليوم."],["Rainy","ماطر","🌧️","It's a rainy day.","نهار شتا."],["Cloudy","غايم","☁️","It's cloudy.","الجو غايم."],["Windy","فيه الريح","💨","It's very windy.","الريح بزاف."],["Snow","الثلج","❄️","It snows in winter.","يطيح الثلج في الشتاء."],["Hot","سخون","🥵","It's too hot.","سخون بزاف."]],
+ d:[[0,"What's the weather like today?","كيفاش الجو اليوم؟"],[1,"It's sunny but a bit windy.","مشمس بصح فيه شوية ريح."],[0,"Will it rain tomorrow?","تشتي غدوة؟"],[1,"Yes, it will be cloudy and rainy. Take an umbrella!","إيه، غايم وشتا. خذ المظلة!"]],
+ tip:"للطقس نستعمل «It»: It's raining، It's cold. وللمستقبل: «It will rain»."},
+{id:19,lv:"A2",t:"المواصلات",en:"Transport",ic:"🚌",g:["#0891b2","#7c3aed"],chars:["🧑","🧑‍✈️"],names:["Passenger","Clerk"],
+ w:[["Bus","الأوطوبيس","🚌","I take the bus.","نركب الأوطوبيس."],["Train","التران","🚆","The train is fast.","التران سريع."],["Taxi","الطاكسي","🚕","Call a taxi.","عيّط للطاكسي."],["Tram","الترامواي","🚊","The tram is on time.","الترامواي في وقته."],["Bike","الدراجة","🚲","I ride a bike.","نركب الدراجة."],["Station","المحطة","🚉","Where is the station?","وين المحطة؟"]],
+ d:[[0,"One ticket to the city centre, please.","تذكرة وحدة لوسط المدينة، عفاك."],[1,"Single or return?","ذهاب فقط ولا ذهاب وإياب؟"],[0,"Return, please. What time is the next tram?","ذهاب وإياب. شحال الترامواي الجاي؟"],[1,"In five minutes, from platform two.","بعد خمس دقايق، من الرصيف 2."]],
+ tip:"by + وسيلة: by bus, by train، لكن on foot (مشي). و«single/return» = ذهاب / ذهاب وإياب."},
+{id:20,lv:"B1",t:"المطعم",en:"At the Restaurant",ic:"🍽️",g:["#b91c1c","#f59e0b"],chars:["🧑","🧑‍🍳"],names:["Customer","Waiter"],
+ w:[["Menu","قائمة الطعام","📋","Can I see the menu?","نقدر نشوف القائمة؟"],["Starter","المقبّلات","🥗","I'll have a salad as a starter.","نخذ سلطة كمقبّلات."],["Main course","الطبق الرئيسي","🍛","The main course is chicken.","الطبق الرئيسي دجاج."],["Dessert","الحلويات","🍰","What's for dessert?","واش كاين من حلوى؟"],["Bill","الحساب","💳","The bill, please.","الحساب، عفاك."],["Tip","البقشيش","🪙","I left a tip.","خليت بقشيش."]],
+ d:[[1,"Are you ready to order?","واجد تطلب؟"],[0,"Yes, I'll have the soup as a starter and grilled fish as a main course.","إيه، نخذ الشربة كمقبّلات والحوت المشوي كطبق رئيسي."],[1,"Would you like anything for dessert?","تحب حاجة للحلو؟"],[0,"Just the bill, please. Is service included?","غير الحساب، عفاك. الخدمة محسوبة؟"]],
+ tip:"للطلب المؤدب: «I'll have...» أو «Could I have...?» أو «I'd like...». تجنّب «Give me...» لأنها فجّة."},
+{id:21,lv:"B1",t:"عند الطبيب",en:"At the Doctor",ic:"🏥",g:["#0d9488","#3b82f6"],chars:["🧑","👩‍⚕️"],names:["Patient","Doctor"],
+ w:[["Doctor","الطبيب","👨‍⚕️","I need to see a doctor.","نحتاج نشوف طبيب."],["Medicine","الدواء","💊","Take this medicine twice a day.","خذ هذا الدواء مرتين في النهار."],["Fever","السخانة","🌡️","I have a fever.","عندي سخانة."],["Pain","الوجع","😣","I feel pain here.","نحس بوجع هنا."],["Prescription","الوصفة","📝","Here is your prescription.","هذي الوصفة تاعك."],["Allergy","الحساسية","🤧","I have an allergy to pollen.","عندي حساسية من الغبار."]],
+ d:[[1,"What seems to be the problem?","واش المشكل؟"],[0,"I've had a fever and a sore throat for three days.","عندي سخانة ووجع الحلق من 3 أيام."],[1,"Do you have any allergies?","عندك حساسية؟"],[0,"No. Should I take some medicine?","لا. نخذ دواء؟"],[1,"Yes, here is a prescription. Rest and drink a lot of water.","إيه، هذي وصفة. ارتاح واشرب الما بزاف."]],
+ tip:"for + مدة (for three days)، since + نقطة بداية (since Monday). مع الحاضر التام: I've had a fever for three days."},
+{id:22,lv:"B1",t:"الهاتف والتقنية",en:"Phone & Tech",ic:"📱",g:["#6366f1","#06b6d4"],chars:["🧑","🧑‍💻"],names:["Customer","Support"],
+ w:[["Battery","البطارية","🔋","My battery is low.","البطارية قاربت تخلص."],["Password","كلمة السر","🔐","I forgot my password.","نسيت كلمة السر."],["Wi-Fi","الواي فاي","📶","What's the Wi-Fi password?","واش هي كلمة سر الواي فاي؟"],["Download","تحمّل","⬇️","Download the app.","حمّل التطبيق."],["Screen","الشاشة","🖥️","The screen is broken.","الشاشة مكسورة."],["Charger","الشارجور","🔌","Can I borrow your charger?","نقدر نسلف الشارجور تاعك؟"]],
+ d:[[1,"Hello, how can I help you?","مرحبا، كيفاش نقدر نعاونك؟"],[0,"My internet isn't working and the Wi-Fi keeps disconnecting.","الإنترنت ما تخدمش والواي فاي يقطع."],[1,"Please turn the router off and on again.","طفّي الراوتر وشعلو من جديد."],[0,"It's working now. Thanks a lot!","خدم الحين. شكرا بزاف!"]],
+ tip:"تعلم الأفعال المركّبة: turn on/off (تشعل/تطفي)، log in/out، plug in، set up."},
+{id:23,lv:"B1",t:"الهوايات",en:"Hobbies",ic:"⚽",g:["#16a34a","#f97316"],chars:["🧑","👩"],names:["Amine","Sara"],
+ w:[["Hobby","هواية","🎨","What's your hobby?","واش هي هوايتك؟"],["Football","كرة القدم","⚽","I love playing football.","نحب نلعب الكرة."],["Reading","القراءة","📖","Reading relaxes me.","القراءة ترّيحني."],["Cooking","الطبخ","👩‍🍳","I enjoy cooking.","نستمتع بالطبخ."],["Travelling","السفر","🗺️","Travelling opens the mind.","السفر يفتح العقل."],["Music","الموسيقى","🎵","I listen to music daily.","نسمع الموسيقى كل نهار."]],
+ d:[[0,"What do you do in your free time?","واش دير في وقت فراغك؟"],[1,"I enjoy playing football and reading novels.","نستمتع نلعب الكرة ونقرا الروايات."],[0,"I'm into cooking. I'm learning to make pasta.","أنا نحب الطبخ. راني نتعلم نعمل الباستا."],[1,"Sounds great! Could you cook for me one day?","يبان مليح! تطيب لي نهار؟"]],
+ tip:"بعد enjoy/like/love/hate نستعمل فعل + ing: I enjoy cooking. وبعد «would like» نستعمل to: I'd like to cook."},
+{id:24,lv:"B2",t:"البنك والمال",en:"Banking & Money",ic:"🏦",g:["#047857","#1d4ed8"],chars:["🧑","🧑‍💼"],names:["Client","Banker"],
+ w:[["Bank account","حساب بنكي","🏦","I'd like to open a bank account.","نحب نفتح حساب بنكي."],["Loan","قرض","💸","I applied for a loan.","قدمت على قرض."],["Savings","المدخرات","🐖","I put money into savings.","نحط الدراهم في المدخرات."],["Interest rate","نسبة الفائدة","📈","The interest rate is high.","نسبة الفائدة عالية."],["Withdraw","تسحب","🏧","I want to withdraw cash.","نحب نسحب كاش."],["Budget","الميزانية","🧮","We must stick to the budget.","لازم نحترمو الميزانية."]],
+ d:[[1,"How can I help you today?","كيفاش نعاونك اليوم؟"],[0,"I'd like to open a savings account. What is the interest rate?","نحب نفتح حساب ادخار. شحال نسبة الفائدة؟"],[1,"It's three per cent a year, and there are no monthly fees.","3% في العام وما كاين حتى مصاريف شهرية."],[0,"If I save regularly, will I get a debit card too?","إذا ادخرت بانتظام، نخذ بطاقة بنكية؟"]],
+ tip:"الجملة الشرطية: If + حاضر، will + فعل: If I save, I will buy a car. للأمر غير المحتمل: If I won, I would travel."},
+{id:25,lv:"B2",t:"البيئة",en:"Environment",ic:"🌍",g:["#15803d","#0ea5e9"],chars:["🧑‍🎓","🧑‍🏫"],names:["Student","Teacher"],
+ w:[["Pollution","التلوث","🏭","Air pollution is a big problem.","تلوث الهواء مشكل كبير."],["Recycle","تعيد التدوير","♻️","We should recycle plastic.","لازم نعيدو تدوير البلاستيك."],["Climate change","التغير المناخي","🌡️","Climate change affects everyone.","التغير المناخي يمس الكل."],["Renewable energy","طاقة متجددة","🌞","Solar is renewable energy.","الطاقة الشمسية متجددة."],["Waste","النفايات","🗑️","Reduce food waste.","قلّل نفايات الأكل."],["Endangered","مهدد بالانقراض","🐼","Pandas are endangered.","الباندا مهددة بالانقراض."]],
+ d:[[1,"Why is climate change such a serious issue?","علاش التغير المناخي مشكل خطير؟"],[0,"Because it is caused by pollution, and the planet is being damaged.","لأنو سببو التلوث، والكوكب راه يتضرر."],[1,"What can we do about it?","واش نقدرو نديرو؟"],[0,"We can recycle, reduce waste and invest in renewable energy.","نقدرو نعيدو التدوير، ونقللو النفايات ونستثمرو في الطاقة المتجددة."]],
+ tip:"المبني للمجهول: be + اسم المفعول: The planet is being damaged / Plastic is recycled. نستعمله حين الفاعل غير مهم."},
+{id:26,lv:"B2",t:"الدراسة والجامعة",en:"Education",ic:"🎓",g:["#4338ca","#db2777"],chars:["🧑‍🎓","👩‍🏫"],names:["Student","Advisor"],
+ w:[["University","الجامعة","🏛️","I study at university.","نقرا في الجامعة."],["Degree","الشهادة","📜","She has a master's degree.","عندها شهادة ماستر."],["Scholarship","منحة","🏅","He won a scholarship.","ربح منحة."],["Lecture","المحاضرة","🎤","The lecture starts at nine.","المحاضرة تبدا على التسعة."],["Assignment","الواجب","📝","Submit your assignment.","سلّم الواجب."],["Exam","الامتحان","✍️","I have an exam tomorrow.","عندي امتحان غدوة."]],
+ d:[[0,"I'd like to apply for a scholarship abroad.","نحب نقدم على منحة في الخارج."],[1,"You must submit your assignments and a motivation letter before the deadline.","لازم تسلم الواجبات ورسالة تحفيز قبل آخر أجل."],[0,"They told me that the exam was in June.","قالولي بلي الامتحان في جوان."],[1,"Yes, and we recommend you prepare early.","إيه، وننصحك تحضر بكري."]],
+ tip:"الكلام المنقول: He said that he was tired (حاضر ← ماضي). They told me that... (told + مفعول، said بدون مفعول)."},
+{id:27,lv:"B2",t:"المشاعر والعلاقات",en:"Emotions & Relationships",ic:"❤️",g:["#e11d48","#7c3aed"],chars:["🧑","👩"],names:["Amine","Sara"],
+ w:[["Anxious","قلقان","😰","I feel anxious before exams.","نحس بالقلق قبل الامتحان."],["Proud","فخور","🥹","I'm proud of you.","أنا فخور بيك."],["Jealous","غيران","😒","Don't be jealous.","ما تغيرش."],["Disappointed","خايب الأمل","😞","I'm disappointed with the result.","خايب الأمل من النتيجة."],["Supportive","داعم","🤗","My family is very supportive.","عائلتي داعمة بزاف."],["Trust","الثقة","🫶","Trust takes time.","الثقة تحتاج وقت."]],
+ d:[[0,"You look worried. What's wrong?","باينة عليك قلقة. واش بيك؟"],[1,"I'm anxious about my interview, and a bit disappointed with myself.","قلقانة من المقابلة، وخايبة الأمل شوية من روحي."],[0,"Don't be hard on yourself. I'm really proud of how hard you've worked.","ما تقسيش على روحك. أنا فخور بزاف بمجهودك."],[1,"Thanks. You're always so supportive.","شكرا. أنت دايما داعم."]],
+ tip:"-ed للشعور وing- للسبب: I'm bored (أنا مللت) / The film is boring (الفيلم ممل)."},
+{id:28,lv:"C1",t:"الإعلام والسياسة",en:"Media & Politics",ic:"📰",g:["#334155","#dc2626"],chars:["🎙️","🧑‍💼"],names:["Host","Analyst"],
+ w:[["Headline","عنوان الخبر","📰","The headline caught my eye.","العنوان شدّ انتباهي."],["Election","الانتخابات","🗳️","The election is next month.","الانتخابات الشهر الجاي."],["Policy","السياسة / القرار","📑","A new economic policy.","سياسة اقتصادية جديدة."],["Bias","التحيّز","⚖️","The article shows bias.","المقال فيه تحيّز."],["Propaganda","الدعاية","📢","That's pure propaganda.","هذي دعاية صرفة."],["Debate","النقاش","🎙️","A heated debate.","نقاش ساخن."]],
+ d:[[0,"Do you think the media coverage of the election was impartial?","تظن تغطية الإعلام للانتخابات كانت نزيهة؟"],[1,"It is widely argued that some outlets showed a degree of bias.","يُقال على نطاق واسع إنّ بعض الوسائل أظهرت درجة من التحيّز."],[0,"Might that influence public opinion?","يمكن يأثر هذا على الرأي العام؟"],[1,"Presumably so, which is why critical reading is essential.","على الأرجح، ولهذا القراءة النقدية ضرورية."]],
+ tip:"أسلوب الحذر (hedging): It is argued that / It appears that / might / presumably. يُستعمل لتفادي الجزم المطلق."},
+{id:29,lv:"C1",t:"الأعمال والتفاوض",en:"Business & Negotiation",ic:"🤝",g:["#0f172a","#0ea5e9"],chars:["🧑‍💼","👩‍💼"],names:["Client","Manager"],
+ w:[["Negotiate","تفاوض","🤝","We need to negotiate the terms.","لازم نتفاوضو على الشروط."],["Stakeholder","الطرف المعني","🧑‍🤝‍🧑","Inform all stakeholders.","أعلم كل الأطراف المعنية."],["Revenue","الإيرادات","📊","Revenue grew by ten per cent.","الإيرادات زادت 10%."],["Proposal","العرض","📄","Send me the proposal.","ابعثلي العرض."],["Compromise","تسوية","⚖️","Let's reach a compromise.","يلا نوصلو لتسوية."],["Leverage","ورقة ضغط","🏋️","We have little leverage.","عندنا ورقة ضغط قليلة."]],
+ d:[[0,"Frankly, your proposal exceeds our budget.","بصراحة، عرضكم يتجاوز ميزانيتنا."],[1,"We could consider adjusting the scope, provided the deadline is extended.","نقدرو نفكرو نعدلو النطاق، بشرط نمدّدو الموعد."],[0,"That might work. Would you be open to a compromise on price?","يمكن يمشي. مستعدين لتسوية في السعر؟"],[1,"If you commit to a longer contract, we would be willing to lower it.","إذا التزمتم بعقد أطول، نكونو مستعدين ننقصوه."]],
+ tip:"للتليين: could/might/would + provided that / as long as. «We could consider...» ألطف من «We will do...»."},
+{id:30,lv:"C1",t:"العلم والابتكار",en:"Science & Innovation",ic:"🔬",g:["#4c1d95","#06b6d4"],chars:["👩‍🔬","🧑‍🏫"],names:["Researcher","Professor"],
+ w:[["Breakthrough","اختراق علمي","💡","A major breakthrough in medicine.","اختراق كبير في الطب."],["Hypothesis","الفرضية","🧪","Test the hypothesis.","اختبر الفرضية."],["Artificial intelligence","الذكاء الاصطناعي","🤖","AI is changing industries.","الذكاء الاصطناعي يغيّر الصناعات."],["Sustainable","مستدام","🌱","Sustainable development.","تنمية مستدامة."],["Outcome","النتيجة","🎯","The outcome was unexpected.","النتيجة كانت غير متوقعة."],["Cutting-edge","متطور جدا","⚡","Cutting-edge technology.","تكنولوجيا متطورة جدا."]],
+ d:[[1,"What is the significance of your breakthrough?","شنو أهمية اختراقكم؟"],[0,"Not only does it improve accuracy, but it also reduces costs dramatically.","ليس فقط يحسّن الدقة، بل يقلّل التكاليف بشكل كبير."],[1,"Is the technology sustainable in the long term?","التكنولوجيا مستدامة على المدى الطويل؟"],[0,"Provided we secure funding, the outcome should be transformative.","بشرط نضمنو التمويل، النتيجة راح تكون تحويلية."]],
+ tip:"القلب (inversion) للتأكيد: «Not only does it...» «Rarely have we seen...». بعد الظرف السلبي يتقدم المساعد على الفاعل."}
+];
+
+/* ---------- STATE ---------- */
+const S={view:"home",lv:null,les:null,tab:"cards",card:0,xp:0,done:{},streak:0,last:"",stories:{},saved:[],dl:"A1",sid:null,mode:"read",drill:"dict"};
+const tabOf=v=>({lessons:"home",lesson:"home",story:S.mode==="listen"?"listen":"read",drill:"listen"}[v]||v);
+try{Object.assign(S,JSON.parse(localStorage.getItem("zemmora")||"{}"))}catch(e){}
+const save=()=>{try{localStorage.setItem("zemmora",JSON.stringify({xp:S.xp,done:S.done,streak:S.streak,last:S.last,stories:S.stories,saved:S.saved,dl:S.dl}))}catch(e){}};
+(function streak(){const t=new Date().toDateString();if(S.last!==t){const y=new Date(Date.now()-864e5).toDateString();S.streak=S.last===y?S.streak+1:1;S.last=t;save()}})();
+const $=s=>document.querySelector(s),app=$("#app");
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const E=s=>`<span class="en">${esc(s)}</span>`;
+function head(){$("#xp").textContent=S.xp;$("#dn").textContent=Object.keys(S.done).length;$("#st").textContent=S.streak}
+function addXP(n){S.xp+=n;save();head()}
+
+/* ---------- SPEECH ---------- */
+let voiceEN=null;
+function pickVoice(){try{const v=speechSynthesis.getVoices();voiceEN=v.find(x=>/en[-_]US/i.test(x.lang))||v.find(x=>/^en/i.test(x.lang))||null}catch(e){}}
+try{speechSynthesis.onvoiceschanged=pickVoice;pickVoice()}catch(e){}
+function say(text,{rate=.9,pitch=1}={}){
+  return new Promise(res=>{
+    const guess=Math.max(1200,text.length*75);
+    try{
+      if(!window.speechSynthesis)throw 0;
+      speechSynthesis.cancel();
+      const u=new SpeechSynthesisUtterance(text);u.lang="en-US";u.rate=rate;u.pitch=pitch;if(voiceEN)u.voice=voiceEN;
+      let done=false;const fin=()=>{if(!done){done=true;res()}};
+      u.onend=fin;u.onerror=fin;setTimeout(fin,guess+4000);
+      speechSynthesis.speak(u);
+    }catch(e){setTimeout(res,guess)}
+  });
+}
+
+/* ---------- ROUTER ---------- */
+function go(v,o={}){stopVideo();Object.assign(S,{view:v},o);document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===tabOf(v)));render();scrollTo(0,0)}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>go(b.dataset.v,{lv:null,les:null}));
+function render(){head();document.body.classList.toggle("inchat",S.view==="chat"&&C.active);({home,lessons,lesson,chat,prog,read,listen,story,drill})[S.view]()}
+
+/* ---------- HOME ---------- */
+function lvPct(id){const ls=L.filter(l=>l.lv===id);return Math.round(100*ls.filter(l=>S.done[l.id]).length/ls.length)}
+function nextCard(){const n=L.find(l=>!S.done[l.id]);return n?`<div class="card next" id="nxl" data-i="${n.id}"><div style="font-size:38px">${n.ic}</div><div style="flex:1"><small style="color:#92400e">▶ تابع من حيث توقفت</small><div><b>${n.t}</b> <span class="ex">${E(n.en)} · ${n.lv}</span></div></div><div style="font-size:22px">◀</div></div>`:`<div class="card">🏆 أنهيت كل الدروس!</div>`}
+function home(){
+  app.innerHTML=`<div class="card"><h2>👋 مرحبا بيك!</h2><div style="line-height:1.9">اختار مستواك وابدأ. كل درس فيه: <b>بطاقات بالصور</b> 🖼️، <b>فيديو حواري متحرّك</b> 🎬، و<b>اختبار</b> 🎯. وفي تبويب <b>محادثة</b> 💬 تهدر مع مدرّس ذكي يفهم الدارجة ويصحّحلك.</div></div>
+  ${nextCard()}<div class="grid2" style="margin-bottom:14px"><div class="card sc" id="hr"><div style="font-size:34px">📖</div><b>قصص للقراءة</b><small>قصص ومقالات بالكلمات المسطّرة</small></div><div class="card sc" id="hl"><div style="font-size:34px">🎧</div><b>تدريب الاستماع</b><small>إملاء وحوارات وقصص</small></div></div><h2>📚 المستويات</h2><div class="levels">${LEVELS.map(l=>`<div class="card lv" data-l="${l.id}"><div class="ic" style="background:${l.c}">${l.ic}</div><div style="flex:1"><b>${l.name} · ${E(l.id)}</b><small>${E(l.en)}</small><div class="bar"><i style="width:${lvPct(l.id)}%"></i></div></div></div>`).join("")}</div>`;
+  app.querySelectorAll(".lv").forEach(e=>e.onclick=()=>go("lessons",{lv:e.dataset.l}));$("#hr").onclick=()=>go("read");$("#hl").onclick=()=>go("listen");const nx=$("#nxl");if(nx)nx.onclick=()=>go("lesson",{les:+nx.dataset.i,tab:"cards",card:0});
+}
+function lessons(){
+  const lv=LEVELS.find(l=>l.id===S.lv);
+  app.innerHTML=`<button class="back">→ رجوع</button><h2>${lv.ic} ${lv.name} ${E(lv.id)}</h2>${L.filter(l=>l.lv===lv.id).map(l=>`<div class="card les" data-i="${l.id}"><div class="ic">${l.ic}</div><div><b>${l.t}</b><div class="ex">${E(l.en)} · ${l.w.length} كلمات</div></div><div class="done">${S.done[l.id]?"✅":"◀"}</div></div>`).join("")}`;
+  $(".back").onclick=()=>go("home");
+  app.querySelectorAll(".les").forEach(e=>e.onclick=()=>go("lesson",{les:+e.dataset.i,tab:"cards",card:0}));
+}
+
+/* ---------- LESSON ---------- */
+function lesson(){
+  const l=L.find(x=>x.id===S.les);
+  app.innerHTML=`<button class="back">→ رجوع</button><h2>${l.ic} ${l.t} <span class="ex">${E(l.en)}</span></h2>
+  <div class="tabs">${[["cards","🖼️ بطاقات"],["video","🎬 فيديو"],["quiz","🎯 اختبار"]].map(([k,n])=>`<button data-t="${k}" class="${S.tab===k?"on":""}">${n}</button>`).join("")}</div><div id="body"></div>`;
+  $(".back").onclick=()=>go("lessons");
+  app.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{stopVideo();S.tab=b.dataset.t;S.card=0;lesson()});
+  ({cards:cardsTab,video:videoTab,quiz:quizTab})[S.tab](l);
+}
+function cardsTab(l){
+  const w=l.w[S.card];
+  $("#body").innerHTML=`<div class="flash" id="fl"><div class="in">
+    <div class="face f"><div class="big">${w[2]}</div><div class="w">${E(w[0])}</div><div class="ex">اضغط لرؤية المعنى 👆</div></div>
+    <div class="face b"><div class="ar">${esc(w[1])}</div><div class="w" style="font-size:24px">${E(w[0])}</div><div class="ex">${E(w[3])}</div><div class="ar" style="font-size:16px">${esc(w[4])}</div></div></div></div>
+  <div class="row"><button class="btn sec" id="pv" ${S.card?"":"disabled"}>▶ السابق</button><button class="spk" id="sp">🔊</button><button class="spk" id="sx" title="الجملة">💬</button><button class="btn" id="nx">${S.card<l.w.length-1?"التالي ◀":"أنهيت ✔"}</button></div>
+  <div class="row ex" style="margin:8px">${S.card+1} / ${l.w.length}</div>
+  <div class="tip">💡 <b>نصيحة:</b> ${l.tip}</div>
+  <div class="card" style="margin-top:12px"><b>🎥 فيديوهات حقيقية للمزيد:</b><div class="vid-links">
+   <a target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${encodeURIComponent("learn English "+l.en+" lesson")}">▶ ${esc(l.t)} على يوتيوب</a>
+   <a target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${encodeURIComponent("تعلم الانجليزية "+l.t+" بالدارجة")}">▶ شرح بالعربية</a></div></div>`;
+  $("#fl").onclick=()=>{$("#fl").classList.toggle("flip");if($("#fl").classList.contains("flip"))say(w[0])};
+  $("#sp").onclick=()=>say(w[0],{rate:.75});$("#sx").onclick=()=>say(w[3]);
+  $("#pv").onclick=()=>{S.card--;cardsTab(l)};
+  $("#nx").onclick=()=>{if(S.card<l.w.length-1){S.card++;cardsTab(l);addXP(2)}else{addXP(10);S.tab="video";lesson()}};
+}
+
+/* ---- animated video ---- */
+let vtoken=0;
+function stopVideo(){vtoken++;try{speechSynthesis.cancel()}catch(e){}}
+function videoTab(l){
+  const flo=l.w.map((w,i)=>`<span style="left:${(i*17+6)%90}%;top:${(i*23+8)%50}%;animation-delay:${i*.7}s">${w[2]}</span>`).join("");
+  $("#body").innerHTML=`<div class="stage" style="background:linear-gradient(160deg,${l.g[0]},${l.g[1]})">
+    <div class="floaters">${flo}</div>
+    <div class="chars">${l.chars.map((c,i)=>`<div class="ch" id="ch${i}">${c}<small>${esc(l.names[i])}</small></div>`).join("")}</div>
+    <div class="sub"><div class="e" id="se">▶ اضغط تشغيل لمشاهدة الحوار</div><div class="a" id="sa"></div></div><div class="prog"><i id="pg"></i></div></div>
+  <div class="ctl"><button class="btn" id="pl">▶ تشغيل</button><button class="btn sec" id="sl">🐢 بطيء</button><button class="btn sec" id="nx2">إلى الاختبار 🎯</button></div>
+  <div class="note">🎬 حوار متحرّك بصوت إنجليزي مع الترجمة بالدارجة. يعمل الصوت حسب متصفحك.</div>`;
+  let slow=false;
+  $("#sl").onclick=()=>{slow=!slow;$("#sl").textContent=slow?"🐇 عادي":"🐢 بطيء"};
+  $("#nx2").onclick=()=>{S.tab="quiz";lesson()};
+  $("#pl").onclick=async()=>{
+    stopVideo();const my=vtoken;$("#pl").textContent="🔁 إعادة";
+    for(let i=0;i<l.d.length;i++){
+      if(my!==vtoken)return;
+      const [who,en,ar]=l.d[i];
+      [0,1].forEach(k=>{const c=$("#ch"+k);c&&c.classList.toggle("on",k===who)});
+      $("#se").textContent=en;$("#sa").textContent=ar;$("#pg").style.width=((i)/l.d.length*100)+"%";
+      await say(en,{rate:slow?.65:.9,pitch:who?1.35:.8});
+      if(my!==vtoken)return;
+      await new Promise(r=>setTimeout(r,slow?1800:900));
+    }
+    if(my!==vtoken)return;
+    $("#pg").style.width="100%";$("#se").textContent="🎉 Well done!";$("#sa").textContent="أحسنت! الحين جرّب الاختبار";
+    [0,1].forEach(k=>$("#ch"+k)?.classList.add("on"));addXP(10);
+  };
+}
+
+/* ---- quiz ---- */
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
+function quizTab(l){
+  const all=L.flatMap(x=>x.w);
+  const qs=shuffle(l.w).flatMap((w,i)=>{
+    const t=i%3;
+    const pool=(k,n)=>shuffle(all.filter(x=>x[k]!==w[k])).slice(0,n).map(x=>x[k]);
+    if(t===0)return[{p:`<div class="big" style="font-size:90px">${w[2]}</div><div class="q">ماذا تعني هذه الصورة بالإنجليزية؟</div>`,a:w[0],o:shuffle([w[0],...pool(0,3)]),en:true}];
+    if(t===1)return[{p:`<div class="q">ما معنى ${E(w[0])} بالدارجة؟</div>`,a:w[1],o:shuffle([w[1],...pool(1,3)]),en:false}];
+    return[{p:`<div class="q">🔊 استمع واختر الكلمة الصحيحة</div><div class="row"><button class="spk" id="ql">🔊</button></div>`,a:w[0],o:shuffle([w[0],...pool(0,3)]),en:true,say:w[0]}];
+  });
+  let i=0,score=0;
+  const show=()=>{
+    if(i>=qs.length){const ok=score>=qs.length*0.6;if(ok){S.done[l.id]=1;addXP(score*5+20)}save();head();
+      $("#body").innerHTML=`<div class="card win"><div class="big">${ok?"🏆":"💪"}</div><h2>${score} / ${qs.length}</h2><div>${ok?"ممتاز! أنهيت الدرس وربحت نقاط ⭐":"قريب! راجع البطاقات وجرّب من جديد"}</div><div class="row" style="margin-top:14px"><button class="btn sec" id="rt">🔁 أعد</button><button class="btn" id="bk">القائمة</button></div></div>`;
+      $("#rt").onclick=()=>quizTab(l);$("#bk").onclick=()=>go("lessons");return}
+    const q=qs[i];
+    $("#body").innerHTML=`<div class="card"><div class="ex" style="text-align:center">السؤال ${i+1} / ${qs.length}</div><div class="bar"><i style="width:${i/qs.length*100}%"></i></div>${q.p}<div class="opts">${q.o.map(o=>`<button class="opt">${q.en?E(o):esc(o)}</button>`).join("")}</div></div>`;
+    if(q.say){say(q.say);$("#ql").onclick=()=>say(q.say,{rate:.7})}
+    app.querySelectorAll(".opt").forEach((b,k)=>b.onclick=()=>{
+      const good=q.o[k]===q.a;if(good)score++;
+      app.querySelectorAll(".opt").forEach((x,m)=>{x.disabled=true;if(q.o[m]===q.a)x.classList.add("ok")});
+      if(!good)b.classList.add("no");
+      setTimeout(()=>{i++;show()},good?700:1400);
+    });
+  };
+  show();
+}
+
+/* ---------- CHAT ---------- */
+// id, icon, title, mission (Arabic), role description (English)
+const SCEN=[
+["free","🗣️","محادثة حرّة","احكِ لي 3 أشياء عن نفسك","Free chat about anything: daily life, hobbies, dreams, family. Mission: the student tells you at least 3 things about themselves and asks you 1 question."],
+["friend","🎉","صديق جديد","تعرّف على صديق وخذ موعداً للقاء","You are a friendly new person the student just met at a party. Mission: small talk, exchange interests, and arrange to meet again."],
+["cafe","☕","في المقهى","اطلب مشروباً وحلوى واسأل عن السعر","You are a waiter in a café. Mission: the student orders a drink and a snack, and asks the price."],
+["restaurant","🍽️","في المطعم","اطلب وجبة كاملة وادفع الحساب","You are a waiter in a restaurant. Mission: the student orders starter, main and dessert, asks about ingredients, and asks for the bill."],
+["market","🧺","في السوق (مساومة)","اشترِ شيئاً وانقص من السعر","You are a seller in a tourist market. Mission: the student buys one item and bargains the price down politely."],
+["shop","🛍️","محل ملابس","اختر المقاس واللون وادفع","You are a clothes-shop assistant. Mission: the student finds a size and colour, tries it on, and pays."],
+["airport","✈️","في المطار","سجّل الدخول واسأل عن البوابة","You are an airport check-in agent. Mission: the student checks in, handles luggage, and asks about gate and delays."],
+["hotel","🏨","في الفندق","احجز وأبلغ عن مشكلة في الغرفة","You are a hotel receptionist. Mission: the student checks in, asks about breakfast and Wi-Fi, and reports a problem with the room."],
+["taxi","🚕","سيارة أجرة","حدّد وجهتك واسأل عن الثمن","You are a taxi driver in a big city. Mission: the student gives a destination, asks the fare and time, and gives directions."],
+["doctor","🏥","عند الطبيب","صِف الأعراض وافهم النصيحة","You are a doctor. Mission: the student describes symptoms and understands the advice and prescription."],
+["pharmacy","💊","في الصيدلية","اطلب دواءً واسأل كيف يؤخذ","You are a pharmacist. Mission: the student asks for medicine for a cold or headache and asks how to take it."],
+["phone","📞","خدمة الزبائن","حلّ مشكلة في الإنترنت أو طلبية","You are a customer service agent on the phone. Mission: the student explains a problem (internet or lost order) and gets it solved."],
+["bank","🏦","في البنك","افتح حساباً واسأل عن البطاقة","You are a bank clerk. Mission: the student opens an account and asks about a card and fees."],
+["job","💼","مقابلة عمل","قدّم نفسك وأقنع المحاور","You are a job interviewer. Mission: the student introduces themselves, explains strengths and why they want the job."],
+["uni","🎓","الجامعة والمنح","اسأل عن التخصصات والمنحة","You are a university admissions advisor. Mission: the student asks about courses, scholarships and deadlines."],
+["neighbor","🏠","مشكلة مع الجار","اعتذر وحلّ المشكلة بلباقة","You are a neighbour complaining politely about noise. Mission: the student apologises and finds a polite solution."],
+["debate","⚖️","نقاش وجدال","دافع عن رأيك بحجج","You are a debate partner. Topic: 'Should students use smartphones in class?' Take the opposite side from the student. Mission: the student gives opinions with reasons and answers your counter-arguments."],
+["story","📖","نكتب قصة معاً","أضف جملاً بالماضي لتكمل القصة","You co-write a story with the student, one or two sentences each turn. Mission: the student adds sentences using past tenses to continue the story."],
+["grammar","✏️","مدرّب القواعد","اكتب جملاً وتعلّم من التصحيح","You are a kind grammar coach. Give the student a topic and ask them to write one sentence at a time. Correct every mistake and give one mini-rule. Mission: the student writes 5 correct sentences."],
+["meeting","🤝","اجتماع وتفاوض","اقترح خطة وتفاوض على الموعد","You are a business colleague in a meeting. Mission: the student proposes a plan and negotiates a deadline and budget."],
+["news","📰","نقاش الأخبار","حلّل الأسباب والنتائج برسمية","You are a discussion partner about a current-affairs topic (pick one, e.g. AI in jobs). Mission: the student analyses causes and consequences using formal language."]
+];
+const C={lv:"A1",sc:null,active:false,hist:[],sample:null,busy:false,started:false,dict:null,showAr:true,done:false};
+const LVHINT={A1:"Use only very simple words and short sentences (max 8 words). Present simple. Suggestions must be 2-4 words.",A2:"Use simple everyday vocabulary and short sentences.",B1:"Use clear natural English, some past/future forms.",B2:"Use natural fluent English, include some phrasal verbs and connectors.",C1:"Use sophisticated vocabulary, idioms and nuanced structures."};
+const sc=()=>SCEN.find(x=>x[0]===C.sc);
+function sysPrompt(){const s=sc();
+return `You are "Coach Yalla", a friendly English tutor for Algerian Arabic (Darija) speakers. The student's CEFR level: ${C.lv}. ${LVHINT[C.lv]}
+Scenario: ${s[4]}
+Stay in your role and keep the conversation moving with ONE short reply and ONE question. The student may write in English, Arabic, Algerian Darija (Arabic script or Latin letters / arabizi like "nheb nechri khobz"), or a mix. Understand all of them. If they write in Darija/Arabic, tell them how to say it in English and continue.
+ALWAYS reply in EXACTLY this format (no markdown, no extra text):
+EN: <your short in-role English reply, ending with a simple question>
+AR: <natural translation of your EN reply in Algerian Darija, Arabic script>
+FIX: <only if the student made English mistakes or used Darija: the corrected English sentence + a one-line explanation in Darija. Otherwise write FIX: none>
+SUG: <three short possible student replies in English suited to level ${C.lv}, separated by | >
+DONE: <yes only when the mission is clearly accomplished, otherwise no>`}
+function parseBot(t){const g=k=>{const m=t.match(new RegExp("(?:^|\\n)"+k+":\\s*([\\s\\S]*?)(?=\\n(?:EN|AR|FIX|SUG|DONE):|$)"));return m?m[1].trim():""};return{en:g("EN")||t.trim(),ar:g("AR"),fix:g("FIX"),sug:g("SUG").split("|").map(x=>x.trim()).filter(Boolean).slice(0,3),done:/^yes/i.test(g("DONE"))}}
+function botHTML(p){return `<span class="e">${esc(p.en)}</span>${p.ar?`<span class="a">🇩🇿 ${esc(p.ar)}</span>`:""}${p.fix&&!/^none/i.test(p.fix)?`<span class="f">✏️ ${esc(p.fix)}</span>`:""}`}
+
+function chat(){C.active?convo():picker()}
+function picker(){
+  app.innerHTML=`<h2>💬 اختر سيناريو المحادثة</h2>
+  <div class="note" style="margin:-6px 0 8px">المدرّس يفهم الدارجة ويصحّح لك ويقترح عليك ردوداً. اختر مستواك:</div>
+  <div class="chips" id="lvc">${LEVELS.map(l=>`<button class="chip ${C.lv===l.id?"on":""}" data-v="${l.id}">${l.ic} ${l.id}</button>`).join("")}</div>
+  <div class="grid2">${SCEN.map(s=>`<div class="card sc" data-v="${s[0]}"><div style="font-size:34px">${s[1]}</div><b>${s[2]}</b><small>🎯 ${s[3]}</small></div>`).join("")}</div>`;
+  $("#lvc").onclick=e=>{const v=e.target.dataset.v;if(v){C.lv=v;picker()}};
+  app.querySelectorAll(".sc").forEach(e=>e.onclick=()=>{C.sc=e.dataset.v;C.active=true;C.hist=[];C.started=false;C.done=false;render();scrollTo(0,0)});
+}
+function convo(){
+  const s=sc();
+  app.innerHTML=`<div class="convo">
+   <div class="ctop"><button class="cb2" id="cbk">→</button><div style="flex:1"><b>${s[1]} ${s[2]}</b><small>المستوى ${C.lv}</small></div><button class="chip ${C.showAr?"on":""}" id="tg">🇩🇿 ترجمة</button></div>
+   <div class="mission" id="ms">🎯 المهمة: ${s[3]}</div>
+   <div class="chat ${C.showAr?"":"hidear"}" id="cb"></div>
+   <div class="sug" id="sg"></div>
+   <div class="inp"><button class="mic hide" id="mic">🎤</button><input id="ci" placeholder="اكتب بالإنجليزية أو بالدارجة…" autocomplete="off"><button class="btn" id="cs">➤</button></div></div>`;
+  $("#cbk").onclick=()=>{stopVideo();C.active=false;render()};
+  $("#tg").onclick=()=>{C.showAr=!C.showAr;$("#tg").classList.toggle("on",C.showAr);$("#cb").classList.toggle("hidear",!C.showAr)};
+  $("#cs").onclick=()=>send($("#ci").value);$("#ci").onkeydown=e=>{if(e.key==="Enter")send($("#ci").value)};
+  initDict();
+  if(!C.started)start();
+  else{C.hist.forEach((m,i)=>{if(i)addMsg(m.role,m.content)});const l=C.hist[C.hist.length-1];if(l&&l.role==="assistant")showSug(parseBot(l.content))}
+}
+function addMsg(role,text){
+  const d=document.createElement("div");d.className="msg "+(role==="user"?"me":"bot");
+  if(role==="user")d.innerHTML=`<span class="en" style="direction:auto;display:block;text-align:start">${esc(text)}</span>`;
+  else{const p=parseBot(text);d.innerHTML=botHTML(p)+`<br><button class="spk" style="width:36px;height:36px;font-size:15px;margin-top:6px">🔊</button>`;d.querySelector(".spk").onclick=()=>say(p.en,{rate:.85})}
+  $("#cb").appendChild(d);$("#cb").scrollTop=1e9;return d;
+}
+function showSug(p){
+  const sg=$("#sg");if(!sg)return;
+  sg.innerHTML=p.sug.map(x=>`<button class="chip">${E(x)}</button>`).join("");
+  sg.querySelectorAll(".chip").forEach((b,i)=>b.onclick=()=>send(p.sug[i]));
+}
+async function getSample(){if(C.sample!==null)return C.sample;try{C.sample=(window.claude&&await claude.use("sample"))||false}catch(e){C.sample=false}return C.sample}
+async function ask(){
+  const sm=await getSample();const sg=$("#sg");if(sg)sg.innerHTML="";
+  const bubble=document.createElement("div");bubble.className="msg bot";bubble.innerHTML='<span class="a">… يكتب</span>';$("#cb").appendChild(bubble);$("#cb").scrollTop=1e9;
+  let txt="";
+  try{
+    if(!sm)throw{code:"none"};
+    const r=await sm(C.hist,{cache:false,modelTier:"quick",onText:({text})=>{txt=text;const p=parseBot(text);bubble.innerHTML=botHTML(p);$("#cb").scrollTop=1e9}});
+    txt=r.text||txt;
+  }catch(e){txt=fallback(e)}
+  bubble.remove();if(!$("#cb"))return;
+  C.hist.push({role:"assistant",content:txt});addMsg("assistant",txt);
+  const p=parseBot(txt);say(p.en,{rate:.85});showSug(p);
+  if(p.done&&!C.done){C.done=true;addXP(15);const m=$("#ms");if(m){m.textContent="🎉 أحسنت! أنجزت المهمة (+15 نقطة) — تقدر تواصل الدردشة";m.classList.add("won")}}
+}
+const FB=["EN: Nice! Tell me more. What is your favourite food?\nAR: مليح! قولي أكثر. واش هي ماكلتك المفضلة؟\nFIX: none\nSUG: I like pizza|I like couscous|I don't know\nDONE: no","EN: Great. Where do you live?\nAR: برافو. وين تسكن؟\nFIX: none\nSUG: I live in Algiers|I live in Oran|In a small town\nDONE: no","EN: Good job! What do you do every day?\nAR: أحسنت! واش دير كل نهار؟\nFIX: none\nSUG: I study|I work|I play football\nDONE: no"];
+function fallback(e){
+  if(e&&e.code==="rate_limited")return "EN: Please wait a little and try again.\nAR: استنى شوية وعاود.\nFIX: none\nSUG: OK|Wait|Again\nDONE: no";
+  const pre=e&&e.code==="not_granted"?"EN: AI chat is switched off. Practice question: ":"EN: AI tutor is not available here. Practice question: ";
+  return pre+FB[C.hist.length%FB.length].slice(4);
+}
+async function start(){
+  C.started=true;C.hist=[{role:"user",content:sysPrompt()+"\n\nStart the role-play now: greet the student in character and ask your first question."}];
+  $("#cb").innerHTML="";await ask();
+}
+async function send(t){
+  if(C.busy)return;t=(t||"").trim();if(!t)return;
+  C.busy=true;const inp=$("#ci");if(inp)inp.value="";C.hist.push({role:"user",content:t});addMsg("user",t);addXP(1);
+  await ask();C.busy=false;
+}
+async function initDict(){
+  try{
+    if(!window.claude)return;const d=await claude.use("dictation");if(!d)return;C.dict=d;
+    const m=$("#mic");if(!m)return;m.classList.remove("hide");
+    d.onFinal(({text})=>{const i=$("#ci");if(i)i.value=(i.value+" "+text).trim()});
+    d.onState(({state})=>{const m2=$("#mic");if(m2)m2.classList.toggle("rec",state==="listening")});
+    m.onclick=()=>{C.dict.start().catch(()=>{})};
+  }catch(e){}
+}
+
+/* ---------- STORIES: READING & LISTENING ---------- */
+const ST=[
+{id:"s1",lv:"A1",t:"My Day",ar:"يومي",ic:"🌞",
+ s:[["I wake up at seven.","نفيق على السبعة."],["I drink coffee and eat bread.","نشرب القهوة وناكل الخبز."],["Then I go to school by bus.","بعدها نروح للمدرسة بالأوطوبيس."],["I study English with my friend.","نقرا الإنجليزية مع صاحبي."],["In the evening, I play football.","في العشية نلعب الكرة."],["At night, I sleep early.","في الليل نرقد بكري."]],
+ g:{wake:"يفيق",school:"المدرسة",study:"يدرس",evening:"العشية",early:"بكري",sleep:"يرقد"},
+ q:[["What time does he wake up?",["At six","At seven","At eight"],1],["How does he go to school?",["By bus","By car","On foot"],0],["What does he do in the evening?",["Reads a book","Plays football","Watches TV"],1]]},
+{id:"s2",lv:"A1",t:"My Family",ar:"عائلتي",ic:"👨‍👩‍👧",
+ s:[["This is my family.","هذي عائلتي."],["My father is a doctor.","بابا طبيب."],["My mother is a teacher.","ماما أستاذة."],["I have one sister and one brother.","عندي ختي وحدة وخو واحد."],["My sister is ten years old.","ختي عندها 10 سنين."],["We live in a small house in Oran.","نسكنو في دار صغيرة في وهران."]],
+ g:{doctor:"طبيب",teacher:"أستاذ",live:"يسكن",small:"صغير",house:"دار",years:"سنين"},
+ q:[["What is the father's job?",["Teacher","Doctor","Driver"],1],["How many sisters and brothers does he have?",["Two sisters","One sister and one brother","Three brothers"],1],["Where do they live?",["Algiers","Oran","Annaba"],1]]},
+{id:"s3",lv:"A1",t:"At the Market",ar:"في السوق",ic:"🧺",
+ s:[["Today I go to the market with my mother.","اليوم نروح للسوق مع ماما."],["We need tomatoes, onions and bread.","نحتاجو طماطم وبصل وخبز."],["The tomatoes are cheap, but the apples are expensive.","الطماطم رخيصة بصح التفاح غالي."],["My mother asks, 'How much is one kilo?'","ماما تسول: بشحال الكيلو؟"],["The seller says, 'One hundred dinars.'","البائع يقول: مية دينار."],["We buy two kilos and go home.","نشريو كيلوين ونرجعو للدار."]],
+ g:{market:"السوق",need:"يحتاج",cheap:"رخيص",expensive:"غالي",seller:"البائع",kilo:"كيلو"},
+ q:[["What is cheap?",["Apples","Tomatoes","Bread"],1],["How much is one kilo?",["50 dinars","100 dinars","200 dinars"],1],["How many kilos do they buy?",["One","Two","Three"],1]]},
+{id:"s4",lv:"A2",t:"A Rainy Trip",ar:"رحلة ماطرة",ic:"🌧️",
+ s:[["Last Saturday, we planned a trip to the beach.","السبت الفايت، خططنا لرحلة للبحر."],["In the morning, the sky was grey and it started to rain.","في الصباح، السما كانت رمادية وبدات تشتي."],["Dad said, 'Let's go to the museum instead.'","بابا قال: يلا نروحو للمتحف بدلها."],["The museum was big and warm, and we saw old coins.","المتحف كان كبير ودافي، وشفنا عملات قديمة."],["After that, we had hot soup in a small café.","بعدها، كلينا شربة سخونة في كافيه صغير."],["It was not the plan, but it was a great day.","ماشي هي الخطة، بصح كان نهار رائع."]],
+ g:{planned:"خطّطنا",beach:"الشاطئ",museum:"المتحف",instead:"بدلا من ذلك",coins:"عملات",plan:"خطة"},
+ q:[["Where did they plan to go?",["The mountain","The beach","The museum"],1],["Why did they change the plan?",["It rained","The car broke down","They were tired"],0],["What did they eat after the museum?",["Pizza","Hot soup","Ice cream"],1]]},
+{id:"s5",lv:"A2",t:"Lost in the City",ar:"تائه في المدينة",ic:"🗺️",
+ s:[["Karim arrived in Istanbul late at night.","كريم وصل لإسطنبول متأخر في الليل."],["He could not find his hotel, so he asked a young man.","ما لقاش الفندق تاعو، فسقسى شاب."],["The young man pointed to the end of the street.","الشاب أشار لآخر الشارع."],["'Turn right at the bakery,' he said, 'and walk for two minutes.'","قال: دور يمين عند المخبزة وامشي دقيقتين."],["Karim thanked him and found the hotel easily.","كريم شكرو ولقى الفندق بسهولة."],["He was tired, but he was very happy.","كان تعبان بصح فرحان بزاف."]],
+ g:{arrived:"وصل",hotel:"الفندق",pointed:"أشار",bakery:"المخبزة",easily:"بسهولة",thanked:"شكر"},
+ q:[["When did Karim arrive?",["In the morning","At night","In the afternoon"],1],["Where should he turn right?",["At the bakery","At the bank","At the mosque"],0],["How did he feel at the end?",["Angry","Sad","Happy"],2]]},
+{id:"s6",lv:"A2",t:"The New Phone",ar:"التليفون الجديد",ic:"📱",
+ s:[["Sara wanted a new phone because her old one was slow.","سارة حبت تليفون جديد لأن القديم بطيء."],["She saved money for three months.","ادّخرت الدراهم 3 شهور."],["Finally, she went to the shop with her brother.","أخيرا، راحت للمحل مع خوها."],["The seller showed her two phones: a cheap one and a modern one.","البائع وراها تليفونين: رخيص وحديث."],["She chose the cheap one, because the price was fair.","اختارت الرخيص لأن السعر معقول."],["She was proud of herself.","كانت فخورة بروحها."]],
+ g:{wanted:"حبّت",saved:"ادّخرت",finally:"أخيرا",modern:"حديث",price:"السعر",fair:"معقول"},
+ q:[["Why did Sara want a new phone?",["Her old one was slow","Her old one was lost","It was a gift"],0],["How long did she save money?",["Three weeks","Three months","Three years"],1],["Which phone did she choose?",["The cheap one","The modern one","Neither"],0]]},
+{id:"s7",lv:"B1",t:"The Job Interview",ar:"مقابلة العمل",ic:"💼",
+ s:[["Yacine had been looking for a job for six months.","ياسين كان يقلّب على خدمة من 6 شهور."],["Finally, a company invited him for an interview.","أخيرا، شركة دعاتو لمقابلة."],["He prepared carefully and arrived fifteen minutes early.","حضّر مليح ووصل بكري بـ15 دقيقة."],["The manager asked him about his strengths and weaknesses.","المدير سولو على نقاط قوتو وضعفو."],["Yacine was honest and explained that he sometimes works too slowly.","ياسين كان صادق وشرح بلي يخدم ببطء أحيانا."],["The manager smiled and said that honesty was important.","المدير ابتسم وقال بلي الصدق مهم."],["A week later, Yacine got the job.","بعد أسبوع، ياسين خذا الخدمة."]],
+ g:{interview:"مقابلة",prepared:"حضّر",strengths:"نقاط القوة",weaknesses:"نقاط الضعف",honest:"صادق",honesty:"الصدق"},
+ q:[["How long had Yacine been looking for a job?",["Six weeks","Six months","Six years"],1],["What weakness did he mention?",["He is often late","He sometimes works slowly","He is shy"],1],["What happened a week later?",["He got the job","He was refused","He travelled abroad"],0]]},
+{id:"s8",lv:"B1",t:"A Small Mistake",ar:"غلطة صغيرة",ic:"✉️",
+ s:[["Last Monday, Nadia sent an important email to her boss.","الإثنين الفايت، نادية بعثت إيميل مهم لمديرها."],["An hour later, she realised that she had attached the wrong file.","بعد ساعة، لاحظت بلي ربطت ملف غالط."],["She panicked, but then she took a deep breath.","ارتبكت، بصح بعدها تنفست بعمق."],["She wrote a second email to apologise and sent the correct file.","كتبت إيميل ثاني تعتذر وبعثت الملف الصحيح."],["To her surprise, her boss replied within minutes.","ولدهشتها، مديرها رد في دقايق."],["He said that everyone makes mistakes, and what matters is how you fix them.","قال بلي الكل يغلط، والمهم كيفاش تصلحها."],["Nadia felt much better after that.","نادية حسّت براحة بعدها."]],
+ g:{attached:"أرفقت",wrong:"غالط",panicked:"ارتبكت",apologise:"تعتذر",surprise:"مفاجأة",matters:"المهم"},
+ q:[["What mistake did Nadia make?",["Sent it to the wrong person","Attached the wrong file","Forgot the subject"],1],["How did she fix it?",["She ignored it","She phoned him","She sent a second email"],2],["What did the boss say?",["Everyone makes mistakes","She must leave","He was angry"],0]]},
+{id:"s9",lv:"B1",t:"A Healthy Change",ar:"تغيير صحي",ic:"🥗",
+ s:[["Two years ago, Omar ate fast food every day.","قبل سنتين، عمر كان ياكل الفاست فود كل نهار."],["He felt tired and he had gained a lot of weight.","كان يحس بالتعب وزاد في وزنو بزاف."],["His doctor warned him that he needed to change his lifestyle.","طبيبو حذّرو بلي لازم يغيّر نمط حياتو."],["So he started walking for thirty minutes every morning.","فبدا يمشي 30 دقيقة كل صباح."],["He also replaced soft drinks with water and added vegetables to his meals.","وبدّل المشروبات الغازية بالما وزاد الخضرة في وجباتو."],["After a year, he had lost twenty kilos.","بعد عام، نقص 20 كيلو."],["Today he says that small habits can change a life.","اليوم يقول بلي العادات الصغيرة تغيّر حياة."]],
+ g:{gained:"زاد",weight:"الوزن",warned:"حذّر",lifestyle:"نمط الحياة",replaced:"بدّل",habits:"عادات"},
+ q:[["What did Omar eat every day?",["Fast food","Vegetables","Fish"],0],["What did he start doing every morning?",["Running","Walking","Swimming"],1],["How many kilos did he lose?",["Ten","Twenty","Thirty"],1]]},
+{id:"s10",lv:"B2",t:"The Remote Worker",ar:"الخدمة من البيت",ic:"💻",
+ s:[["Since the pandemic, many companies have allowed employees to work from home.","منذ الجائحة، شركات كثيرة سمحت للموظفين يخدمو من الدار."],["Lina, a graphic designer, was thrilled at first.","لينا، مصممة، كانت متحمسة في الأول."],["She no longer wasted two hours commuting every day.","ما بقاتش تضيّع ساعتين في المواصلات كل نهار."],["However, she soon discovered that the boundary between work and rest had become blurred.","بصح اكتشفت بسرعة بلي الحدود بين الخدمة والراحة ولات ضبابية."],["She found herself answering emails at midnight.","لقات روحها ترد على الإيميلات في نص الليل."],["Eventually, she set strict working hours and created a separate workspace.","في الأخير، حددت ساعات عمل صارمة وخلقت مكان خدمة منفصل."],["As a result, her productivity increased and her stress decreased.","ونتيجة لذلك، زادت إنتاجيتها ونقص الضغط."]],
+ g:{employees:"الموظفين",thrilled:"متحمس",commuting:"التنقل للعمل",boundary:"الحدود",blurred:"ضبابي",productivity:"الإنتاجية"},
+ q:[["Why was Lina happy at first?",["Higher salary","No daily commute","Longer holidays"],1],["What problem did she discover?",["Bad internet","Work and rest became blurred","Loneliness"],1],["What was the result of her new rules?",["More stress","Less productivity","Higher productivity and less stress"],2]]},
+{id:"s11",lv:"B2",t:"The Last Train",ar:"آخر قطار",ic:"🚆",
+ s:[["It was nearly midnight when Hana realised she had missed the last train.","كانت تقريبا نص الليل كي لاحظت هنا بلي فاتها آخر تران."],["The platform was empty, apart from an old man reading a newspaper.","الرصيف كان فارغ، ماعدا شيخ يقرا جريدة."],["'You look worried,' he said without lifting his eyes.","قال من دون ما يرفع عينيه: باينة عليك قلقانة."],["She explained that her phone had died and that she had no way to call a taxi.","شرحتلو بلي تليفونها طفى وما عندها كيفاش تعيّط لطاكسي."],["To her surprise, he handed her his own phone without hesitation.","ولدهشتها، ناولها تليفونو من غير تردد."],["Within ten minutes, a taxi arrived, and Hana thanked him warmly.","في عشر دقايق، وصل طاكسي، وهنا شكرتو بحرارة."],["She never forgot that small act of kindness from a complete stranger.","ما نستش أبدا هذا الفعل الصغير من الطيبة من غريب تماما."]],
+ g:{realised:"أدركت",platform:"الرصيف",hesitation:"تردد",stranger:"غريب",kindness:"الطيبة",handed:"ناول"},
+ q:[["Why couldn't Hana call a taxi?",["She had no money","Her phone had died","She forgot the number"],1],["What did the old man do?",["Ignored her","Lent her his phone","Called the police"],1],["What did Hana remember afterwards?",["The delay","A small act of kindness","The cold weather"],1]]},
+{id:"s12",lv:"B2",t:"Social Media Debate",ar:"جدل السوشيال ميديا",ic:"📱",
+ s:[["Some people argue that social media brings the world closer together.","بعض الناس يقولو بلي السوشيال ميديا تقرّب العالم."],["Others claim that it makes us lonelier than ever.","وآخرين يزعمو بلي تخلينا أكثر وحدة من قبل."],["Research suggests that both views contain some truth.","الأبحاث تقترح بلي الرأيين فيهم شوية حقيقة."],["On the one hand, teenagers can share ideas with peers across continents.","من جهة، المراهقين يقدرو يتشاركو الأفكار مع أقرانهم عبر القارات."],["On the other hand, constant comparison with others can damage self-esteem.","ومن جهة أخرى، المقارنة المستمرة مع الآخرين تضر بالثقة بالنفس."],["Experts therefore recommend limiting screen time and following positive accounts.","لهذا ينصح الخبراء بتحديد وقت الشاشة ومتابعة حسابات إيجابية."],["Ultimately, the impact depends on how we choose to use it.","في الأخير، التأثير يعتمد على كيفاش نختارو نستعملوها."]],
+ g:{argue:"يرى / يجادل",lonelier:"أكثر وحدة",peers:"الأقران",constant:"مستمر","self-esteem":"الثقة بالنفس",ultimately:"في النهاية"},
+ q:[["What do experts recommend?",["Quitting entirely","Limiting screen time","Posting more"],1],["According to research...",["Only the first view is true","Both views contain some truth","Neither view is true"],1],["The impact depends on...",["The app","How we use it","The country"],1]]},
+{id:"s13",lv:"C1",t:"The Paradox of Choice",ar:"مفارقة الاختيار",ic:"🧠",
+ s:[["We tend to assume that having more options inevitably makes us happier.","نميلو نفترضو بلي كثرة الخيارات تسعدنا حتما."],["Psychologist Barry Schwartz challenged this assumption, arguing that an abundance of choices can be paralysing.","عالم النفس باري شوارتز شكّك في هذا الافتراض، قائلا إن وفرة الخيارات قد تشلّ."],["When faced with dozens of alternatives, people often postpone decisions or regret the ones they make.","حين نواجه عشرات البدائل، الناس غالبا يؤجلو القرارات أو يندمو على اللي يتخذوها."],["Moreover, the expectation of finding the perfect option fuels dissatisfaction, however good the outcome.","علاوة على ذلك، توقع إيجاد الخيار المثالي يغذّي عدم الرضا مهما كانت النتيجة جيدة."],["Some economists dispute these findings, noting that results vary considerably across cultures.","بعض الاقتصاديين يطعنو في هذه النتائج، مشيرين لاختلافها بين الثقافات."],["Nevertheless, the idea has influenced how designers simplify menus, websites and even ballots.","ومع ذلك، الفكرة أثّرت على كيفاش المصممين يبسطو القوائم والمواقع وحتى أوراق الاقتراع."]],
+ g:{assumption:"افتراض",abundance:"وفرة",paralysing:"مشلّ",postpone:"يؤجّل",regret:"يندم",dispute:"يطعن في"},
+ q:[["What did Schwartz argue?",["More choice always helps","Too many choices can paralyse","Choices are irrelevant"],1],["How do some economists respond?",["They agree fully","They dispute the findings","They ignore the idea"],1],["The idea has influenced...",["Design simplification","Tax law","Sports rules"],0]]},
+{id:"s14",lv:"C1",t:"Lost Languages",ar:"اللغات المفقودة",ic:"🗣️",
+ s:[["Linguists estimate that roughly one language disappears every two weeks.","اللغويون يقدّرو أن لغة تختفي تقريبا كل أسبوعين."],["When the last fluent speaker dies, an entire worldview is lost with them.","كي يموت آخر متحدث بطلاقة، تضيع معاه نظرة كاملة للعالم."],["This is not merely a matter of nostalgia: languages encode unique knowledge about medicine, ecology and history.","هذا ماشي مجرد حنين: اللغات تحمل معرفة فريدة عن الطب والبيئة والتاريخ."],["Despite grim predictions, some communities have achieved remarkable revivals.","رغم التوقعات القاتمة، بعض المجتمعات حققت إحياءات ملفتة."],["Welsh, for instance, has gained thousands of new speakers thanks to schools and digital media.","الويلزية مثلا اكتسبت آلاف المتحدثين الجدد بفضل المدارس والإعلام الرقمي."],["Whether such efforts can be replicated on a global scale remains an open question.","هل يمكن تكرار هذه الجهود على نطاق عالمي يبقى سؤالا مفتوحا."]],
+ g:{linguists:"اللغويون",fluent:"طليق",nostalgia:"حنين",encode:"يحمل / يرمّز",revivals:"إحياء",replicated:"يُكرَّر"},
+ q:[["How often does a language disappear?",["Every day","Every two weeks","Every year"],1],["Which language is given as a revival example?",["Latin","Welsh","Hebrew"],1],["What remains uncertain?",["Whether Welsh will vanish","Whether revivals can scale globally","Whether linguists exist"],1]]},
+{id:"s15",lv:"C1",t:"A Case for Slowness",ar:"في مدح البطء",ic:"🐢",
+ s:[["In an age obsessed with speed, deliberately slowing down has become almost a radical act.","في عصر مهووس بالسرعة، التباطؤ عمدا صار شبه فعل ثوري."],["Proponents of the 'slow movement' contend that rushing erodes both quality and well-being.","أنصار حركة البطء يرون أن الاستعجال يضعف الجودة والعافية."],["A growing body of research indicates that deep concentration requires uninterrupted stretches of time.","مجموعة متنامية من الأبحاث تشير أن التركيز العميق يتطلب فترات متواصلة."],["Yet critics point out that few people can afford to disconnect, particularly those in precarious jobs.","لكن النقاد يشيرون أن قلة من الناس يقدرو ينقطعو، خاصة أصحاب الوظائف الهشة."],["Perhaps the truth lies somewhere in between: efficiency without frenzy.","ربما الحقيقة في الوسط: كفاءة بدون هوس."],["The challenge, as ever, is to apply that principle consistently.","التحدي، كالعادة، هو تطبيق هذا المبدأ باستمرار."]],
+ g:{obsessed:"مهووس",proponents:"أنصار",erodes:"يضعف",precarious:"هشّ",frenzy:"هوس",consistently:"باستمرار"},
+ q:[["What do proponents of the slow movement claim?",["Rushing erodes quality and well-being","Speed is always good","Work is useless"],0],["What do critics point out?",["Few can afford to disconnect","Everyone is slow","The research is wrong"],0],["What compromise is suggested?",["Efficiency without frenzy","Total silence","More meetings"],0]]},
+/* ---- long articles (B2/C1) ---- */
+{id:"a1",lv:"B2",t:"Why We Sleep",ar:"لماذا ننام",ic:"😴",
+ s:[["Sleep is often treated as a luxury, yet scientists increasingly regard it as a biological necessity.","يُعامَل النوم كترف، بينما العلماء يعتبرونه ضرورة بيولوجية."],["During deep sleep, the brain consolidates memories and clears toxic waste accumulated during the day.","في النوم العميق، الدماغ يثبّت الذكريات وينظّف السموم المتراكمة في النهار."],["Adults need between seven and nine hours a night, though individual requirements vary.","البالغون يحتاجو بين 7 و9 ساعات في الليل، رغم اختلاف الاحتياجات."],["Chronic sleep deprivation has been linked to obesity, heart disease and depression.","الحرمان المزمن من النوم مرتبط بالسمنة وأمراض القلب والاكتئاب."],["Surprisingly, even a single sleepless night can impair concentration as much as alcohol.","والمدهش أن ليلة واحدة بلا نوم تُضعف التركيز مثل الكحول."],["Smartphones are a major culprit because their blue light suppresses the hormone that induces sleep.","الهواتف سبب رئيسي لأن ضوءها الأزرق يثبّط هرمون النوم."],["Experts therefore advise switching off screens an hour before bedtime.","لذلك ينصح الخبراء بإطفاء الشاشات قبل النوم بساعة."],["Keeping a regular schedule, even at weekends, also helps the body clock stay stable.","الحفاظ على جدول منتظم، حتى في العطلة، يساعد الساعة البيولوجية على الاستقرار."],["In short, prioritising sleep is one of the simplest investments we can make in our health.","باختصار، إعطاء النوم الأولوية من أبسط الاستثمارات في صحتنا."]],
+ g:{consolidates:"يثبّت",chronic:"مزمن",deprivation:"حرمان",impair:"يُضعف",culprit:"المتسبب",prioritising:"إعطاء الأولوية"},
+ q:[["How much sleep do adults generally need?",["Four to five hours","Seven to nine hours","Ten to twelve hours"],1],["What does deep sleep do for the brain?",["Raises blood pressure","Burns fat","Consolidates memories and clears waste"],2],["Why are smartphones a culprit?",["They are noisy","Blue light suppresses the sleep hormone","They are heavy"],1],["What do experts advise?",["Drink coffee at night","Sleep during the day","Switch off screens an hour before bed"],2]]},
+{id:"a2",lv:"B2",t:"The Rise of Electric Cars",ar:"صعود السيارات الكهربائية",ic:"🚗",
+ s:[["Not long ago, electric cars were regarded as a niche product for enthusiasts.","ما بعيد، السيارات الكهربائية كانت منتجا هامشيا لعشاقها."],["Today, falling battery prices and stricter emission rules are driving a rapid change.","اليوم، انخفاض أسعار البطاريات وتشديد قواعد الانبعاثات يدفعان لتغيير سريع."],["Several countries have announced that they will ban the sale of new petrol cars within two decades.","عدة دول أعلنت أنها ستمنع بيع سيارات البنزين الجديدة خلال عقدين."],["Proponents emphasise that electric vehicles produce no exhaust fumes and are cheaper to run.","المؤيدون يؤكدون أنها لا تنتج عوادم وأن تشغيلها أرخص."],["However, critics highlight the environmental cost of mining lithium and the shortage of charging stations.","بصح النقاد يبرزون التكلفة البيئية لتعدين الليثيوم ونقص محطات الشحن."],["Moreover, the electricity itself may come from polluting power plants, which undermines the benefits.","علاوة على ذلك، الكهرباء قد تأتي من محطات ملوِّثة، وهذا يقوّض الفوائد."],["Even so, studies show that over their lifetime, electric cars generally emit far less carbon.","ومع ذلك، الدراسات تبيّن أنها على مدى عمرها تُصدر كربونا أقل بكثير."],["The decisive factor will be how quickly grids switch to renewable sources.","العامل الحاسم هو سرعة تحوّل الشبكات إلى مصادر متجددة."],["If that happens, the transition could prove to be a turning point for the climate.","إذا حدث ذلك، قد يكون الانتقال نقطة تحوّل للمناخ."]],
+ g:{niche:"هامشي",emission:"انبعاث",proponents:"المؤيدون",undermines:"يقوّض",decisive:"حاسم",grids:"الشبكات"},
+ q:[["What is driving the change?",["Cheaper petrol","Falling battery prices and stricter rules","Fewer roads"],1],["What is one criticism of electric cars?",["They look odd","They are too fast","Lithium mining harms the environment"],2],["What do studies say about lifetime emissions?",["Electric cars emit far less carbon","They emit more","There is no difference"],0],["What is the decisive factor?",["Tyre prices","Car colours","How quickly grids switch to renewables"],2]]},
+{id:"a3",lv:"B2",t:"Cities of the Future",ar:"مدن المستقبل",ic:"🏙️",
+ s:[["By 2050, nearly seventy per cent of the world's population is expected to live in cities.","بحلول 2050، يُتوقع أن يعيش قرابة 70% من سكان العالم في المدن."],["This unprecedented urbanisation puts enormous pressure on housing, transport and public services.","هذا التحضّر غير المسبوق يضغط على السكن والنقل والخدمات العامة."],["Planners are therefore experimenting with 'smart city' technologies that monitor traffic and energy use in real time.","لذلك المخططون يجرّبون تقنيات المدينة الذكية التي ترصد المرور والطاقة آنيا."],["Some cities have introduced congestion charges to discourage cars from entering the centre.","بعض المدن فرضت رسوم ازدحام لمنع السيارات من دخول المركز."],["Others are creating green rooftops and parks to reduce heat and improve air quality.","وأخرى تنشئ أسطحا خضراء وحدائق لخفض الحرارة وتحسين جودة الهواء."],["Nevertheless, critics warn that data-driven cities may compromise residents' privacy.","ومع ذلك، يحذّر النقاد من أن المدن المعتمدة على البيانات قد تمسّ بخصوصية السكان."],["There is also the risk that affordable housing will remain out of reach for ordinary families.","وهناك خطر أن يبقى السكن بأسعار معقولة بعيد المنال عن العائلات العادية."],["Ultimately, a successful city is not defined by its technology alone, but by how inclusive it is.","في النهاية، المدينة الناجحة لا تُعرَّف بتقنيتها فقط بل بمدى شمولها."],["Citizens must therefore have a voice in shaping the places where they live.","لذلك يجب أن يكون للمواطنين صوت في تشكيل أماكن عيشهم."]],
+ g:{unprecedented:"غير مسبوق",urbanisation:"التحضّر",congestion:"ازدحام",compromise:"يمسّ / يضرّ",affordable:"بأسعار معقولة",inclusive:"شامل"},
+ q:[["What share of people will live in cities by 2050?",["About thirty per cent","About fifty per cent","About seventy per cent"],2],["What do congestion charges do?",["Build parks","Lower rents","Discourage cars from entering the centre"],2],["What privacy concern is raised?",["Cameras are broken","Data-driven cities may compromise privacy","Cities are too quiet"],1],["What defines a successful city?",["Technology alone","How inclusive it is","Its size"],1]]},
+{id:"a4",lv:"C1",t:"The Ethics of Gene Editing",ar:"أخلاقيات التعديل الجيني",ic:"🧬",
+ s:[["The advent of CRISPR has placed the power to rewrite DNA within the reach of ordinary laboratories.","ظهور كريسبر وضع قدرة إعادة كتابة الحمض النووي في متناول المخابر العادية."],["Proponents envisage a future in which hereditary diseases such as cystic fibrosis are eradicated before birth.","المؤيدون يتصورون مستقبلا تُستأصل فيه الأمراض الوراثية قبل الولادة."],["Yet the same technology could, in principle, be used to select traits like height or intelligence.","غير أن نفس التقنية يمكن مبدئيا استعمالها لاختيار صفات كالطول والذكاء."],["Ethicists caution that this could entrench inequality, since only the wealthy might afford such enhancements.","علماء الأخلاق يحذّرون من أن هذا قد يرسّخ اللامساواة، لأن الأثرياء فقط قد يتحمّلون التحسينات."],["Moreover, alterations to the germline are inheritable, which means that mistakes would be passed on to future generations.","علاوة على ذلك، تعديلات الخلايا الجنسية وراثية، أي أن الأخطاء تنتقل للأجيال القادمة."],["In 2018, the announcement that gene-edited babies had been born prompted worldwide condemnation.","في 2018، إعلان ولادة أطفال معدّلين وراثيا أثار إدانة عالمية."],["Consequently, many scientists now call for a moratorium on heritable editing until robust safeguards exist.","وبالتالي، يدعو علماء كثر إلى وقف مؤقت للتعديل الوراثي حتى توجد ضمانات قوية."],["Whether regulation can keep pace with innovation remains a matter of intense debate.","هل يمكن للتنظيم مواكبة الابتكار يبقى موضع جدل شديد."],["What is certain is that society, not scientists alone, must decide how far to go.","الأكيد أن المجتمع، وليس العلماء وحدهم، هو من يقرّر إلى أي مدى نذهب."]],
+ g:{advent:"ظهور",hereditary:"وراثي",eradicated:"مُستأصَل",entrench:"يرسّخ",moratorium:"وقف مؤقت",safeguards:"ضمانات"},
+ q:[["What do proponents hope for?",["To make people taller only","To eradicate hereditary diseases","To end all research"],1],["Why do ethicists worry?",["It is too cheap","It is too slow","It could entrench inequality"],2],["Why are germline edits especially risky?",["They are painless","Mistakes pass to future generations","They are temporary"],1],["What do many scientists now call for?",["Unlimited use","Immediate commercialisation","A moratorium on heritable editing"],2]]},
+{id:"a5",lv:"C1",t:"Globalisation: Winners and Losers",ar:"العولمة: رابحون وخاسرون",ic:"🌐",
+ s:[["Globalisation has lifted hundreds of millions out of poverty, particularly in East Asia.","العولمة انتشلت مئات الملايين من الفقر، خاصة في شرق آسيا."],["Consumers in wealthy countries have benefited from cheaper goods and a wider variety of products.","المستهلكون في الدول الغنية استفادوا من سلع أرخص وتنوّع أوسع."],["However, the gains have been distributed unevenly, both between and within countries.","غير أن المكاسب وُزّعت بشكل غير متساوٍ بين الدول وداخلها."],["In many industrial regions, factory closures have left communities with chronic unemployment and a sense of abandonment.","في مناطق صناعية كثيرة، غلق المصانع ترك مجتمعات بالبطالة المزمنة وشعور بالإهمال."],["This resentment has fuelled the rise of populist movements promising to restore protection.","هذا الاستياء غذّى صعود حركات شعبوية تعد بإعادة الحماية."],["Economists counter that tariffs often raise prices and invite retaliation, harming the very workers they aim to protect.","الاقتصاديون يردّون بأن الرسوم الجمركية ترفع الأسعار وتستجلب الرد بالمثل، فتضر بالعمال أنفسهم."],["A more constructive approach, they argue, would combine open trade with generous retraining and social support.","نهج أكثر بناءً، يقولون، يجمع التجارة المفتوحة مع إعادة تأهيل وإسناد اجتماعي سخي."],["The pandemic exposed the fragility of long supply chains, prompting firms to diversify their sources.","الجائحة كشفت هشاشة سلاسل الإمداد الطويلة، فدفعت الشركات لتنويع مصادرها."],["Globalisation is thus not ending, but evolving into something more resilient and, perhaps, more equitable.","العولمة إذن لا تنتهي بل تتطور إلى شيء أكثر صمودا وربما أكثر إنصافا."]],
+ g:{unevenly:"بشكل غير متساوٍ",abandonment:"إهمال",resentment:"استياء",tariffs:"رسوم جمركية",fragility:"هشاشة",resilient:"صامد"},
+ q:[["Who benefited from globalisation?",["Only the rich","Nobody","Hundreds of millions left poverty and consumers got cheaper goods"],2],["What happened in many industrial regions?",["New factories opened","Factory closures caused unemployment","Wages tripled"],1],["What do economists say about tariffs?",["They always help workers","They are free","They often raise prices and invite retaliation"],2],["What did the pandemic reveal?",["Cheap shipping","Unlimited stocks","The fragility of long supply chains"],2]]},
+{id:"a6",lv:"C1",t:"The Science of Habit",ar:"علم العادة",ic:"🔁",
+ s:[["Roughly forty per cent of our daily actions are performed not by conscious decision but by habit.","حوالي 40% من أفعالنا اليومية تتم بالعادة لا بقرار واعٍ."],["Researchers describe a three-step loop: a cue triggers a routine, which delivers a reward.","الباحثون يصفون حلقة من ثلاث خطوات: إشارة تحفّز روتينا يمنح مكافأة."],["Over time, the brain automates the sequence, freeing mental energy for other tasks.","مع الوقت، الدماغ يؤتمت التسلسل، محرّرا طاقة ذهنية لمهام أخرى."],["This efficiency, however, is a double-edged sword, since harmful habits become just as entrenched.","هذه الكفاءة سيف ذو حدّين، لأن العادات الضارة تترسّخ بالقدر نفسه."],["Contrary to popular belief, there is no magic number of days after which a habit forms.","خلافا للاعتقاد الشائع، لا يوجد رقم سحري من الأيام لتكوين العادة."],["One study found that the process ranged from eighteen to two hundred and fifty-four days.","دراسة وجدت أن المدة تراوحت بين 18 و254 يوما."],["Rather than relying on willpower, experts recommend redesigning one's environment to make good behaviour effortless.","بدل الاعتماد على قوة الإرادة، ينصح الخبراء بإعادة تصميم البيئة لجعل السلوك الجيد بلا جهد."],["Linking a new habit to an existing one, such as stretching after brushing teeth, markedly improves success.","ربط عادة جديدة بعادة قائمة، كالتمطّط بعد تنظيف الأسنان، يحسّن النجاح بشكل ملحوظ."],["Small, consistent steps, in other words, outperform heroic but short-lived efforts.","الخطوات الصغيرة المنتظمة، بعبارة أخرى، تتفوّق على الجهود البطولية قصيرة العمر."]],
+ g:{cue:"إشارة",automates:"يؤتمت",entrenched:"راسخ",willpower:"قوة الإرادة",effortless:"بلا جهد",outperform:"يتفوّق على"},
+ q:[["What are the parts of the habit loop?",["Wish, plan, fail","Cue, routine, reward","Rest, work, sleep"],1],["How long does a habit take to form?",["Exactly twenty-one days","One week","It varies widely"],2],["Why is automation a 'double-edged sword'?",["It uses more energy","Harmful habits also become entrenched","It is illegal"],1],["What do experts recommend?",["Rely on willpower","Avoid routines","Redesign your environment"],2]]},
+/* ---- audio dialogues ---- */
+{id:"d1",lv:"A1",t:"Meeting a New Friend",ar:"التعرّف على صديق",ic:"🤝",d:["Sara","Amine"],
+ s:[["Hi! I'm Sara. What's your name?","أهلا! أنا سارة. واش سميتك؟",0],["Hi Sara! My name is Amine.","أهلا سارة! سميتي أمين.",1],["Where are you from?","من وين راك؟",0],["I'm from Algiers. And you?","أنا من الجزائر العاصمة. وأنت؟",1],["I'm from Constantine. I'm a student.","أنا من قسنطينة. أنا طالبة.",0],["Nice to meet you, Sara!","تشرفنا يا سارة!",1]],
+ g:{from:"من",student:"طالبة",nice:"لطيف"},
+ q:[["Where is Amine from?",["Oran","Algiers","Constantine"],1],["Where is Sara from?",["Constantine","Algiers","Annaba"],0],["What is Sara's job?",["Teacher","Doctor","Student"],2]]},
+{id:"d2",lv:"A1",t:"Ordering Pizza",ar:"طلب بيتزا",ic:"🍕",d:["Customer","Staff"],
+ s:[["Hello, Pizza House. How can I help you?","ألو، بيتزا هاوس. كيفاش نعاونك؟",1],["I want a large pizza, please.","نبغي بيتزا كبيرة، عفاك.",0],["What kind? Cheese or chicken?","أي نوع؟ جبن ولا دجاج؟",1],["Chicken, and two bottles of water.","دجاج، وقارورتين ما.",0],["That's two thousand dinars.","هذي 2000 دينار.",1],["OK. Please bring it to my house.","مليح. جيبها للدار عفاك.",0]],
+ g:{large:"كبير",cheese:"جبن",chicken:"دجاج",bottles:"قارورات"},
+ q:[["What size pizza does the customer want?",["Small","Medium","Large"],2],["What kind of pizza?",["Cheese","Chicken","Fish"],1],["How much is it?",["1000 dinars","2000 dinars","3000 dinars"],1]]},
+{id:"d3",lv:"A2",t:"Booking a Doctor",ar:"حجز موعد عند الطبيب",ic:"📅",d:["Patient","Receptionist"],
+ s:[["Hello, I'd like to make an appointment with Dr. Brahimi.","السلام، نحب ناخذ موعد مع الدكتور براهيمي.",0],["Of course. Is it urgent?","أكيد. مستعجل؟",1],["Not really, but I've had a cough for a week.","ماشي بزاف، بصح عندي سعال من أسبوع.",0],["We have a free slot on Thursday at ten.","عندنا وقت فارغ الخميس على العشرة.",1],["Thursday is fine. Do I need to bring anything?","الخميس مليح. لازم نجيب حاجة؟",0],["Just your ID card and previous test results.","غير بطاقة الهوية ونتائج التحاليل القديمة.",1]],
+ g:{appointment:"موعد",urgent:"مستعجل",cough:"سعال",slot:"وقت متاح"},
+ q:[["Why does the patient call?",["To cancel","To make an appointment","To buy medicine"],1],["When is the appointment?",["Tuesday at ten","Thursday at ten","Thursday at two"],1],["What should he bring?",["Nothing","Money only","ID card and test results"],2]]},
+{id:"d4",lv:"A2",t:"Renting a Flat",ar:"كراء شقة",ic:"🏢",d:["Tenant","Owner"],
+ s:[["Hello, I'm calling about the flat for rent.","ألو، نتصل على الشقة للكراء.",0],["Yes, it has two bedrooms and a small balcony.","إيه، فيها غرفتين وبالكون صغير.",1],["How much is the rent per month?","بشحال الكراء في الشهر؟",0],["It's thirty thousand dinars, water included.","30 ألف دينار، والما محسوبة.",1],["Can I visit it this weekend?","نقدر نزورها هاد الويكاند؟",0],["Sure. Saturday at four o'clock suits me.","أكيد. السبت على الرابعة يناسبني.",1]],
+ g:{rent:"كراء",balcony:"بالكون",included:"محسوب",suits:"يناسب"},
+ q:[["How many bedrooms does the flat have?",["One","Two","Three"],1],["What is included in the rent?",["Electricity","Internet","Water"],2],["When is the visit?",["Saturday at four","Sunday at four","Friday at six"],0]]},
+{id:"d5",lv:"B1",t:"Flight Delay",ar:"تأخر الرحلة",ic:"✈️",d:["Passenger","Agent"],
+ s:[["Excuse me, my flight to Paris has been delayed. What should I do?","سمحلي، طيارتي لباريس تأخرت. واش نعمل؟",0],["I'm sorry about that. It will now leave at nine thirty.","آسفة. ستقلع الآن على التاسعة والنصف.",1],["But I have a connecting flight in Paris at eleven.","بصح عندي طيارة ربط في باريس على الحداشن.",0],["In that case, we can rebook you on tomorrow morning's flight.","في هذه الحالة، نقدر نعيد حجزك على طيارة غدوة الصباح.",1],["Will the airline pay for a hotel?","شركة الطيران تدفع الفندق؟",0],["Yes, and we'll give you a meal voucher too.","إيه، وراح نعطيك قسيمة وجبة زيادة.",1]],
+ g:{delayed:"متأخرة",connecting:"ربط",rebook:"يعيد الحجز",voucher:"قسيمة"},
+ q:[["Where is the passenger flying?",["London","Paris","Rome"],1],["Why is she worried?",["She lost her passport","The seat is bad","She may miss a connecting flight"],2],["What will the airline offer?",["Nothing","A hotel and a meal voucher","A refund only"],1]]},
+{id:"d6",lv:"B1",t:"Talking About Work",ar:"الحديث عن العمل",ic:"👔",d:["Karim","Lina"],
+ s:[["How's the new job going?","كيفاش الخدمة الجديدة؟",0],["It's busy, but I'm learning a lot.","مشغولة بصح نتعلم بزاف.",1],["Do you work from home?","تخدمي من الدار؟",0],["Two days a week. The rest, I go to the office.","يومين في الأسبوع. والباقي نروح للمكتب.",1],["What do you like most about it?","واش أكثر حاجة تعجبك؟",0],["My team is great, and my manager gives clear feedback.","فريقي رائع ومديري يعطي ملاحظات واضحة.",1]],
+ g:{busy:"مشغول",office:"مكتب",feedback:"ملاحظات",team:"فريق"},
+ q:[["How often does Lina work from home?",["Every day","Never","Two days a week"],2],["What does she like most?",["The salary","Her team and manager","The commute"],1],["How is the job?",["Boring","Busy but educational","Very easy"],1]]},
+{id:"d7",lv:"B2",t:"Debate: Homework",ar:"نقاش: الواجبات",ic:"🎓",d:["Student","Teacher"],
+ s:[["Honestly, I think homework is a waste of time.","بصراحة، نظن الواجبات ضياع وقت.",0],["Really? Many educators argue that it reinforces learning.","بصح؟ مربّين كثار يرَوْ أنها تعزّز التعلم.",1],["Maybe, but excessive homework causes stress and leaves no time for hobbies.","ممكن، بصح الواجبات الكثيرة تسبب ضغط وما تخليش وقت للهوايات.",0],["That's a fair point. Perhaps quality matters more than quantity.","نقطة وجيهة. ربما الجودة أهم من الكمية.",1],["Exactly. Short, meaningful tasks would be far more effective.","بالضبط. مهام قصيرة وهادفة تكون أنجع بكثير.",0],["I'll consider adjusting my approach next term.","راح نفكر نعدّل أسلوبي الفصل الجاي.",1]],
+ g:{reinforces:"يعزّز",excessive:"مفرط",quantity:"كمية",meaningful:"هادف"},
+ q:[["What is the student's view?",["Homework is essential","Homework is a waste of time","There should be more"],1],["What does the teacher concede?",["Homework is useless","Students are lazy","Quality may matter more than quantity"],2],["What will the teacher do?",["Give more homework","Consider adjusting the approach","Retire"],1]]},
+{id:"d8",lv:"B2",t:"Apologising to a Client",ar:"اعتذار لزبون",ic:"📞",d:["Client","Manager"],
+ s:[["I'm calling because our order still hasn't arrived.","نتصل لأن الطلبية تاعنا مازال ما وصلتش.",0],["I sincerely apologise for the inconvenience. Let me check what happened.","نعتذر بصدق على الإزعاج. خليني نشوف واش صرا.",1],["It was supposed to be delivered last Friday.","كان لازم تتسلم الجمعة الفايتة.",0],["I see the problem: it was sent to the wrong address.","شفت المشكل: تبعثت لعنوان غالط.",1],["That's unacceptable. We need it by tomorrow.","هذا غير مقبول. نحتاجوها لغدوة.",0],["I'll arrange express delivery at no extra cost, and offer you a discount.","نرتّب توصيل سريع بدون تكلفة إضافية، ونقدملك تخفيض.",1]],
+ g:{apologise:"يعتذر",inconvenience:"إزعاج",unacceptable:"غير مقبول",express:"سريع"},
+ q:[["What is the problem?",["Wrong product","Broken item","It was sent to the wrong address"],2],["When does the client need the order?",["Tomorrow","Next week","Today at noon"],0],["What does the manager offer?",["A refund only","Express delivery and a discount","Nothing"],1]]},
+{id:"d9",lv:"C1",t:"Radio Interview: AI & Jobs",ar:"حوار إذاعي: الذكاء الاصطناعي والوظائف",ic:"🎙️",d:["Host","Expert"],
+ s:[["Will artificial intelligence render many professions obsolete?","هل سيجعل الذكاء الاصطناعي مهنا كثيرة بائدة؟",0],["Some tasks will undoubtedly disappear, but history suggests new roles will emerge.","بعض المهام ستختفي حتما، لكن التاريخ يوحي بظهور أدوار جديدة.",1],["Isn't this transition likely to leave vulnerable workers behind?","ألا يرجَّح أن هذا الانتقال سيترك العمال الهشّين وراءه؟",0],["It could, unless governments invest heavily in retraining.","قد يحدث، إلا إذا استثمرت الحكومات بقوة في إعادة التأهيل.",1],["So adaptability is the key skill?","إذن القدرة على التكيّف هي المهارة المفتاح؟",0],["Adaptability, along with critical thinking and creativity, which machines struggle to replicate.","التكيّف، مع التفكير النقدي والإبداع، اللي الآلات تجد صعوبة في تقليدهم.",1]],
+ g:{obsolete:"بائد",emerge:"يظهر",vulnerable:"هشّ",adaptability:"التكيّف"},
+ q:[["What does the expert expect?",["All jobs vanish","Some tasks vanish while new roles emerge","Nothing changes"],1],["What could protect vulnerable workers?",["Banning AI","Longer hours","Investment in retraining"],2],["Which skills are hard for machines to replicate?",["Critical thinking and creativity","Speed","Memory"],0]]},
+{id:"d10",lv:"C1",t:"Negotiating a Contract",ar:"التفاوض على عقد",ic:"🤝",d:["Supplier","Buyer"],
+ s:[["We value this partnership, but your latest quotation is somewhat steep.","نقدّر هذه الشراكة، بصح عرضكم الأخير مرتفع نوعا ما.",1],["Understandably. We could reduce the unit price if you commit to a larger volume.","مفهوم. نقدرو ننقصو سعر الوحدة إذا التزمتم بحجم أكبر.",0],["What discount did you have in mind?","واش تخفيض كنتم تفكرو فيه؟",1],["Eight per cent for orders exceeding five thousand units.","8% للطلبات اللي تفوق 5000 وحدة.",0],["Make it ten, and we'll sign a two-year agreement.","خليه 10، ونوقّعو اتفاقية لسنتين.",1],["Let me consult my director, but I believe we can reach a compromise.","خليني نستشير المدير، بصح نظن نقدرو نوصلو لتسوية.",0]],
+ g:{quotation:"عرض سعر",steep:"مرتفع",volume:"حجم",compromise:"تسوية"},
+ q:[["What is the buyer's complaint?",["Late delivery","The quotation is steep","Poor quality"],1],["What discount is first offered?",["Ten per cent","Free shipping","Eight per cent"],2],["What does the supplier do at the end?",["Rejects the proposal","Signs immediately","Says he will consult his director"],2]]}
+];
+
+let SPEED=.9; const SPD=[[.7,"🐢 0.7×"],[.9,"⏱ 0.9×"],[1.05,"🐇 1.05×"]];
+function gloss(st,w){const k=w.toLowerCase();for(const x of [k,k.replace(/s$/,""),k.replace(/es$/,""),k.replace(/ed$/,""),k.replace(/d$/,""),k.replace(/ing$/,""),k.replace(/ly$/,"")])if(st.g[x])return[x,st.g[x]];return null}
+function words(t,st){return esc(t).replace(/[A-Za-z][A-Za-z'-]*/g,w=>{const g=gloss(st,w);return g?`<span class="wd gl" data-k="${g[0]}">${w}</span>`:w})}
+
+function storyList(mode){
+  const done=id=>S.stories[id]&&S.stories[id][mode==="listen"?"l":"r"];
+  return LEVELS.map(l=>{const ss=ST.filter(s=>s.lv===l.id&&(mode==="listen"||!s.d));return `<h2>${l.ic} ${l.name} ${E(l.id)}</h2>`+ss.map(s=>`<div class="card les story-i" data-id="${s.id}"><div class="ic">${s.ic}</div><div><b>${E(s.t)}</b><div class="ex">${s.ar} · ${s.s.length} جمل${s.d?" · 💬 حوار":s.s.length>=9?" · 📰 مقال":""}</div></div><div class="done">${done(s.id)?"✅":mode==="listen"?"🎧":"📖"}</div></div>`).join("")}).join("");
+}
+function bindStories(mode){app.querySelectorAll(".story-i").forEach(e=>e.onclick=()=>go("story",{sid:e.dataset.id,mode}))}
+function read(){
+  app.innerHTML=`<div class="card"><h2>📖 قصص للقراءة</h2><div style="line-height:1.9">${ST.filter(s=>!s.d).length} قصة ومقالا مرتبة حسب المستوى. اضغط على <b>الكلمات المسطّرة</b> لمعناها وحفظها في دفترك، وعلى الجملة لترجمتها بالدارجة، ثم أجب عن أسئلة الفهم.</div></div>`+storyList("read");
+  bindStories("read");
+}
+function listen(){
+  app.innerHTML=`<div class="card"><h2>🎧 تدريب الاستماع</h2><div style="line-height:1.9">استمع بدون نص ثم أجب عن الأسئلة. اختر مستوى التمارين:</div><div class="chips" id="dl" style="margin-top:8px">${LEVELS.map(l=>`<button class="chip ${S.dl===l.id?"on":""}" data-v="${l.id}">${l.ic} ${l.id}</button>`).join("")}</div></div>
+  <div class="grid2" style="margin-bottom:14px"><div class="card sc" id="d1"><div style="font-size:34px">✍️</div><b>إملاء</b><small>اسمع الجملة واكتبها</small></div><div class="card sc" id="d2"><div style="font-size:34px">🎯</div><b>اسمع واختر</b><small>اختر الترجمة الصحيحة</small></div></div>
+  <h2>🎙️ حوارات وقصص ومقالات مسموعة</h2>`+storyList("listen");
+  $("#dl").onclick=e=>{if(e.target.dataset.v){S.dl=e.target.dataset.v;save();listen()}};
+  $("#d1").onclick=()=>go("drill",{drill:"dict"});$("#d2").onclick=()=>go("drill",{drill:"pick"});
+  bindStories("listen");
+}
+function story(){
+  const st=ST.find(x=>x.id===S.sid),ls=S.mode==="listen";const pitch=i=>st.d?(st.s[i][2]?1.3:.8):1;
+  app.innerHTML=`<button class="back">→ رجوع</button>
+  <div class="card" style="text-align:center"><div class="big" style="font-size:72px">${st.ic}</div><h2 style="margin:4px 0">${E(st.t)}</h2><div class="ex">${st.ar} · ${E(st.lv)}</div></div>
+  <div class="ctl" style="margin:0 0 10px"><button class="btn" id="pa">▶ استمع للقصة</button><button class="btn sec" id="sp2">${SPD.find(x=>x[0]===SPEED)[1]}</button>${ls?'<button class="btn sec" id="rv">👁 أظهر النص</button>':'<button class="btn sec" id="ta">🇩🇿 كل الترجمة</button>'}</div>
+  <div class="card ${ls?"hidetxt":""}" id="stx">${st.s.map((s,i)=>`<div class="sn" data-i="${i}">${st.d?`<div class="spkr">${st.s[i][2]?"🔵":"🟠"} ${esc(st.d[st.s[i][2]])}</div>`:""}<button class="sb" data-i="${i}">🔊</button><span class="txt">${words(s[0],st)}</span><div class="tr hide">${esc(s[1])}</div></div>`).join("")}</div>
+  <div class="note" id="hn">${ls?"🎧 النص مخفي. استمع مرتين على الأقل ثم أجب عن الأسئلة.":"💡 اضغط على الكلمة المسطّرة لمعناها، وعلى الجملة لترجمتها."}</div>
+  <h2 style="margin-top:14px">🎯 أسئلة الفهم</h2><div id="qz"></div><div class="pop hide" id="pop"></div>`;
+  $(".back").onclick=()=>go(ls?"listen":"read");
+  const sn=[...app.querySelectorAll(".sn")];
+  $("#sp2").onclick=()=>{const i=(SPD.findIndex(x=>x[0]===SPEED)+1)%SPD.length;SPEED=SPD[i][0];$("#sp2").textContent=SPD[i][1]};
+  $("#pa").onclick=async()=>{stopVideo();const my=vtoken;$("#pa").textContent="🔁 أعد الاستماع";
+    for(let i=0;i<st.s.length;i++){if(my!==vtoken)return;sn.forEach((e,k)=>e.classList.toggle("hl",k===i));await say(st.s[i][0],{rate:SPEED,pitch:pitch(i)});if(my!==vtoken)return;await new Promise(r=>setTimeout(r,350))}
+    sn.forEach(e=>e.classList.remove("hl"));heard=true};
+  let heard=false;
+  if(ls)$("#rv").onclick=()=>{$("#stx").classList.remove("hidetxt");$("#rv").remove()};
+  else $("#ta").onclick=()=>sn.forEach(e=>e.querySelector(".tr").classList.toggle("hide"));
+  $("#stx").onclick=e=>{
+    const sb=e.target.closest(".sb");if(sb){stopVideo();say(st.s[+sb.dataset.i][0],{rate:SPEED,pitch:pitch(+sb.dataset.i)});return}
+    const wd=e.target.closest(".gl");
+    if(wd){const k=wd.dataset.k,ar=st.g[k],p=$("#pop");p.innerHTML=`<div style="flex:1"><b class="en">${esc(k)}</b> — ${esc(ar)}</div><button class="spk" id="pw">🔊</button><button class="btn" id="ps">＋ احفظ</button>`;p.classList.remove("hide");
+      $("#pw").onclick=()=>say(k,{rate:.7});
+      $("#ps").onclick=()=>{if(!S.saved.some(x=>x[0]===k)){S.saved.push([k,ar]);save();addXP(1)}$("#ps").textContent="✓ محفوظة"};return}
+    $("#pop").classList.add("hide");
+    if(ls&&$("#stx").classList.contains("hidetxt"))return;
+    const s=e.target.closest(".sn");if(s)s.querySelector(".tr").classList.toggle("hide");
+  };
+  // quiz
+  let ans=0,sc=0;
+  $("#qz").innerHTML=st.q.map((q,i)=>`<div class="card" data-q="${i}"><div class="q" style="text-align:start">${i+1}. ${E(q[0])}</div>${shuffle(q[1].map((o,k)=>k)).map(k=>`<button class="opt" data-k="${k}" style="display:block;width:100%;margin-top:8px;direction:ltr">${esc(q[1][k])}</button>`).join("")}</div>`).join("")+`<div id="res"></div>`;
+  $("#qz").querySelectorAll("[data-q]").forEach(c=>{const qi=+c.dataset.q;c.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
+    if(c.dataset.d)return;c.dataset.d=1;ans++;const ok=+b.dataset.k===st.q[qi][2];if(ok)sc++;
+    c.querySelectorAll(".opt").forEach(x=>{if(+x.dataset.k===st.q[qi][2])x.classList.add("ok")});if(!ok)b.classList.add("no");
+    if(ans===st.q.length){const pass=sc>=Math.ceil(st.q.length*.6);if(pass){S.stories[st.id]=S.stories[st.id]||{};const first=!S.stories[st.id][ls?"l":"r"];S.stories[st.id][ls?"l":"r"]=1;if(first)addXP(25)}save();
+      $("#res").innerHTML=`<div class="card win"><div class="big">${pass?"🏆":"💪"}</div><h2>${sc} / ${st.q.length}</h2><div>${pass?"أحسنت! +25 نقطة":"حاول مرة أخرى بعد إعادة الاستماع"}</div>${ls?'<div class="note">يمكنك الآن إظهار النص ومراجعته.</div>':""}</div>`;
+      if(ls)$("#stx").classList.remove("hidetxt");$("#res").scrollIntoView({behavior:"smooth"})}
+  })});
+}
+
+/* ---- drills ---- */
+function drillPool(){const i=LEVELS.findIndex(l=>l.id===S.dl);return L.filter(l=>{const k=LEVELS.findIndex(x=>x.id===l.lv);return k===i||k===i-1}).flatMap(l=>[...l.d.map(x=>[x[1],x[2]]),...l.w.map(w=>[w[3],w[4]])]).filter((x,k,a)=>a.findIndex(y=>y[0]===x[0])===k)}
+function norm(s){return s.toLowerCase().replace(/[^a-z0-9' ]/g," ").split(/\s+/).filter(Boolean)}
+function lcsMarks(a,b){const n=a.length,m=b.length,d=Array.from({length:n+1},()=>Array(m+1).fill(0));for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)d[i][j]=a[i]===b[j]?d[i+1][j+1]+1:Math.max(d[i+1][j],d[i][j+1]);const mk=Array(m).fill(false);let i=0,j=0;while(i<n&&j<m){if(a[i]===b[j]){mk[j]=true;i++;j++}else if(d[i+1][j]>=d[i][j+1])i++;else j++}return mk}
+function drill(){
+  const P=shuffle(drillPool()).slice(0,8),dict=S.drill==="dict";let i=0,sc=0,sp=.85;
+  const wrap=h=>{app.innerHTML=`<button class="back">→ رجوع</button><h2>${dict?"✍️ إملاء":"🎯 اسمع واختر"} · ${E(S.dl)}</h2>`+h;$(".back").onclick=()=>{stopVideo();go("listen")}};
+  const nxt=()=>{
+    if(i>=P.length){const ok=sc>=P.length*.6;if(ok)addXP(sc*3+15);wrap(`<div class="card win"><div class="big">${ok?"🏆":"💪"}</div><h2>${sc} / ${P.length}</h2><div>${ok?"أحسنت! سمعك يتحسن 🎧":"كرّر التمرين وستتحسن"}</div><div class="row" style="margin-top:12px"><button class="btn" id="again">🔁 تمرين جديد</button></div></div>`);$("#again").onclick=()=>drill();return}
+    const [en,ar]=P[i];
+    const head=`<div class="card"><div class="ex" style="text-align:center">${i+1} / ${P.length}</div><div class="bar"><i style="width:${i/P.length*100}%"></i></div><div class="row" style="margin:14px 0"><button class="spk" id="pl" style="width:70px;height:70px;font-size:30px">🔊</button><button class="btn sec" id="sl">${sp<.8?"🐢 بطيء":"⏱ عادي"}</button></div>`;
+    const play=()=>say(en,{rate:sp});
+    if(dict){
+      wrap(head+`<input id="ty" class="dctin" dir="ltr" placeholder="Type what you hear…" autocomplete="off" autocapitalize="off" spellcheck="false"><div class="row" style="margin-top:10px"><button class="btn sec" id="ht">💡 تلميح</button><button class="btn" id="ck">تحقق ✔</button></div><div id="fb" style="margin-top:10px;text-align:center"></div></div>`);
+      $("#pl").onclick=play;$("#sl").onclick=()=>{sp=sp<.8?.95:.65;$("#sl").textContent=sp<.8?"🐢 بطيء":"⏱ عادي"};
+      $("#ht").onclick=()=>{$("#fb").innerHTML=`<div class="ar" style="font-size:17px">${esc(ar)}</div>`};
+      let checked=false;
+      $("#ck").onclick=()=>{
+        if(checked){i++;nxt();return}checked=true;
+        const t=norm($("#ty").value),b=norm(en),mk=lcsMarks(t,b),pct=mk.filter(Boolean).length/b.length;if(pct>=.8)sc++;
+        $("#fb").innerHTML=`<div class="en" style="font-size:19px;line-height:2">${b.map((w,k)=>`<span style="color:${mk[k]?"#16a34a":"#dc2626"};font-weight:700">${esc(w)}</span>`).join(" ")}</div><div class="ar" style="font-size:16px">${esc(ar)}</div><div>${pct>=.8?"✅ ممتاز":"❌ راجع الكلمات الحمراء"} (${Math.round(pct*100)}%)</div>`;
+        $("#ck").textContent=i<P.length-1?"التالي ◀":"النتيجة";
+      };
+      setTimeout(play,300);
+    }else{
+      const opts=shuffle([ar,...shuffle(drillPool().filter(x=>x[1]!==ar)).slice(0,2).map(x=>x[1])]);
+      wrap(head+`<div id="op">${opts.map(o=>`<button class="opt" style="display:block;width:100%;margin-top:8px">${esc(o)}</button>`).join("")}</div></div>`);
+      $("#pl").onclick=play;$("#sl").onclick=()=>{sp=sp<.8?.95:.65;$("#sl").textContent=sp<.8?"🐢 بطيء":"⏱ عادي"};
+      app.querySelectorAll("#op .opt").forEach(b=>b.onclick=()=>{const good=b.textContent===ar;if(good)sc++;app.querySelectorAll("#op .opt").forEach(x=>{x.disabled=true;if(x.textContent===ar)x.classList.add("ok")});if(!good)b.classList.add("no");$("#fb")&&0;setTimeout(()=>{i++;nxt()},good?800:1700)});
+      setTimeout(play,300);
+    }
+  };
+  nxt();
+}
+
+/* ---------- PROGRESS ---------- */
+function prog(){
+  const n=Object.keys(S.done).length;
+  const badge=n>=10?"👑 أستاذ":n>=7?"🚀 متقدّم":n>=4?"🌳 متوسط":n>=1?"🌱 مبتدئ نشيط":"🥚 بداية جديدة";
+  app.innerHTML=`<div class="card" style="text-align:center"><div class="big" style="font-size:70px">${badge.split(" ")[0]}</div><h2>${badge.split(" ").slice(1).join(" ")}</h2><div>⭐ ${S.xp} نقطة · 🔥 ${S.streak} يوم متتالي</div></div>
+  <h2>التقدّم حسب المستوى</h2>${LEVELS.map(l=>`<div class="card"><b>${l.ic} ${l.name} ${E(l.id)}</b> <span class="ex">${lvPct(l.id)}%</span><div class="bar"><i style="width:${lvPct(l.id)}%"></i></div></div>`).join("")}
+  <h2>📒 دفتر كلماتي (${S.saved.length})</h2><div class="card" id="nb">${S.saved.length?S.saved.map((w,i)=>`<div class="row" style="justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--line)"><span><b class="en">${esc(w[0])}</b> — ${esc(w[1])}</span><span><button class="spk" data-s="${i}" style="width:36px;height:36px;font-size:15px">🔊</button><button class="spk" data-d="${i}" style="width:36px;height:36px;font-size:15px">🗑️</button></span></div>`).join(""):"<div class=\"ex\">اضغط على الكلمات المسطّرة في القصص لحفظها هنا.</div>"}</div><div class="card"><div>📖 قصص مقروءة: <b>${Object.values(S.stories).filter(x=>x.r).length}</b> · 🎧 قصص مسموعة: <b>${Object.values(S.stories).filter(x=>x.l).length}</b></div></div><div class="card"><button class="btn sec" id="rs">🗑️ مسح التقدّم</button></div>`;
+  app.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>say(S.saved[+b.dataset.s][0],{rate:.7}));app.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{S.saved.splice(+b.dataset.d,1);save();prog()});
+  $("#rs").onclick=()=>{S.xp=0;S.done={};S.stories={};S.saved=[];save();prog();head()};
+}
+render();
+let _ip=null;window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();_ip=e;const st=document.querySelector(".stats");if(st&&!document.getElementById("inst")){const b=document.createElement("button");b.id="inst";b.className="pill";b.style.cssText="border:0;color:#fff;cursor:pointer;font-family:inherit";b.textContent="📲 ثبّت";b.onclick=async()=>{_ip.prompt();try{await _ip.userChoice}catch(x){}b.remove()};st.appendChild(b)}});
+try{if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js")}catch(e){}
+</script>
+</body>
+</html>
