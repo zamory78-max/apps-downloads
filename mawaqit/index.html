@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>شاشة المسجد - أوقات الصلاة في الجزائر</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--cc:217,183,101;--gl:6,26,20;--gla:.6;--co:1;--ac:217,183,101;--ac2:243,223,166;--gold:#d9b765;--gold2:#f3dfa6;--ink:#f6f1e3;--mut:#a9c2b7;--glass:rgba(6,26,20,.6);--line:rgba(var(--ac),.38);--s:1}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#000}
+body{font-family:'Cairo','Noto Sans Arabic','Droid Arabic Kufi','Droid Sans Arabic',system-ui,sans-serif;color:var(--ink)}
+#bg{position:fixed;inset:0;z-index:0;background:#08221b}
+#scrim{position:fixed;inset:0;background:#000;opacity:.2;z-index:1;pointer-events:none}
+.stage{position:fixed;left:50%;top:50%;width:1920px;height:1080px;transform:translate(-50%,-50%) scale(var(--s));transform-origin:center center}
+#stage{z-index:2;padding:26px 56px;display:grid;grid-template-rows:122px 1fr auto 262px;gap:22px}
+
+/* الترويسة */
+header{grid-row:1;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;position:relative}
+header::after{content:"";position:absolute;left:0;right:0;bottom:-8px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.65}
+.hl{font-size:30px;color:var(--mut);line-height:1.5}
+.hl b{color:var(--ink);font-weight:700;font-size:38px}
+.hl.r{text-align:right}.hl.l{text-align:left}
+.hl .g{color:var(--gold2);font-family:'Amiri','Noto Naskh Arabic','Droid Arabic Naskh',serif;font-size:34px}
+#mosqueName{font-family:'Amiri','Noto Naskh Arabic','Droid Arabic Naskh',serif;font-weight:700;font-size:80px;color:var(--gold2);text-shadow:0 4px 26px rgba(0,0,0,.6);padding:0 36px;line-height:1.2;max-width:1000px;white-space:nowrap;text-align:center}
+
+/* اللوحات */
+main{grid-row:2;display:grid;grid-template-columns:1fr 1.2fr;gap:28px;min-height:0}
+.panel{position:relative;background:rgba(var(--gl),calc(var(--gla)*var(--co)));backdrop-filter:blur(calc(10px*var(--co)));-webkit-backdrop-filter:blur(calc(10px*var(--co)));border:1px solid var(--line);border-radius:30px;box-shadow:0 18px 50px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08)}
+#clockPanel{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+#clock{font-weight:800;font-size:216px;line-height:1;direction:ltr;font-variant-numeric:tabular-nums;letter-spacing:-.01em;text-shadow:0 6px 30px rgba(0,0,0,.45)}
+#clock small{font-size:70px;color:var(--gold);font-weight:600;margin-inline-start:10px;letter-spacing:0}
+#dateG{font-size:42px;font-weight:600}
+#dayTag{font-size:30px;color:var(--gold2);font-family:'Amiri','Noto Naskh Arabic','Droid Arabic Naskh',serif}
+
+#status{display:flex;align-items:center;justify-content:center;gap:34px;padding:24px 38px;transition:background .5s,border-color .5s}
+#ring{position:relative;width:390px;height:390px;flex:none}
+#ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.rbg{fill:none;stroke:rgba(255,255,255,.11);stroke-width:14}
+.rfg{fill:none;stroke:var(--gold);stroke-width:14;stroke-linecap:round;transition:stroke-dashoffset .4s linear}
+#stCount{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:116px;direction:ltr;font-variant-numeric:tabular-nums}
+#stCount.long{font-size:72px}
+#stText{flex:1;min-width:0;display:flex;flex-direction:column;gap:14px;text-align:right}
+#stLabel{font-size:32px;color:var(--mut)}
+#stName{font-family:'Amiri','Noto Naskh Arabic','Droid Arabic Naskh',serif;font-weight:700;font-size:94px;color:var(--gold2);line-height:1.1}
+.chips{display:flex;gap:12px;flex-wrap:wrap}
+.chip{background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:14px;padding:6px 18px;font-size:28px}
+.chip b{direction:ltr;display:inline-block;color:var(--gold2);font-weight:800}
+#stNote{font-size:26px;color:var(--mut)}
+#status.iqama{background:rgba(var(--ac),.2);border-color:var(--gold);animation:pulse 1.8s ease-in-out infinite}
+#status.iqama .rfg{stroke:var(--gold2)}
+#status.adhan{background:rgba(var(--ac),.28);border-color:var(--gold2);box-shadow:0 0 70px rgba(var(--ac),.35) inset;animation:pulse 2.6s ease-in-out infinite}
+#status.adhan .rfg{stroke:var(--gold2)}
+#status.adhan #stCount{font-size:96px}
+#status.adhan #stNote{font-family:'Amiri','Noto Naskh Arabic','Droid Arabic Naskh',serif;font-size:38px;color:var(--gold2)}
+#status.prayer #ring,#status.prayer .chips{display:none}
+#status.prayer #stText{text-align:center;align-items:center}
+#status.prayer #stName{font-size:130px}
+#status.prayer #stNote{font-family:'Amiri','Noto Naskh Arabic','Droid Arabic Naskh',serif;font-size:44px;color:var(--gold2)}
+@keyframes pulse{50%{box-shadow:0 0 0 10px rgba(var(--ac),.22) inset}}
+
+/* شريط الأذكار */
+#band{grid-row:3;height:84px;display:flex;align-items:center;justify-content:center;text-align:center;background:rgba(var(--gl),calc(var(--gla)*var(--co)));backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:22px;padding:0 44px}
+#band.hide{display:none}
+#bandTxt{font-family:'Amiri','Noto Naskh Arabic','Droid Arabic Naskh',serif;font-size:40px;color:var(--gold2);line-height:1.3;transition:opacity .5s;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#bandTxt.out{opacity:0}
+#bandTxt.ad{font-family:'Cairo','Noto Sans Arabic','Droid Sans Arabic',sans-serif;font-weight:700;color:var(--ink);font-size:34px}
+
+/* بطاقات الصلاة */
+#times{grid-row:4;display:grid;grid-template-columns:repeat(6,1fr);gap:18px}
+.card{position:relative;background:linear-gradient(180deg,rgba(var(--cc),calc(.34*var(--co))),rgba(var(--cc),calc(.11*var(--co))));backdrop-filter:blur(calc(10px*var(--co)));border:1.5px solid rgba(var(--cc),calc(.3 + .45*var(--co)));box-shadow:0 12px 36px rgba(0,0,0,.3);border-radius:26px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:14px 8px;transition:all .35s}
+.card .n{font-family:'Amiri','Noto Naskh Arabic','Droid Arabic Naskh',serif;font-weight:700;font-size:50px;color:var(--gold2);line-height:1.1}
+.card .a{font-weight:800;font-size:86px;line-height:1.05;direction:ltr;font-variant-numeric:tabular-nums}
+.card .i{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);width:82%;text-align:center;font-size:30px;color:var(--mut);line-height:1.35;min-height:84px}
+.card .i b{color:var(--ink);font-weight:700;direction:ltr;display:inline-block}
+.card .i small{display:block;font-size:23px}
+.card.active{border-color:var(--gold2);box-shadow:0 0 0 2px rgba(var(--ac2),.55),0 14px 44px rgba(var(--cc),.28)}
+
+
+#stCount.long,#status.adhan #stCount.long{font-size:70px!important}
+.lay2 #stCount.long{font-size:58px!important}
+.lay1 #stCount.long,.lay4 #stCount.long{font-size:64px!important}
+/* ===== التصاميم ===== */
+.lay1 #mosqueName{font-size:96px}
+.lay1 main,.lay4 main{grid-template-columns:1fr;grid-template-rows:auto auto;align-content:center;justify-items:center;gap:22px}
+.lay1 #clockPanel,.lay4 #clockPanel{width:980px;padding:20px 30px 16px}
+
+.lay1 #clock,.lay4 #clock{font-size:230px}
+.lay1 #status,.lay4 #status{width:980px;padding:14px 34px;gap:26px;justify-content:center}
+.lay1 #ring svg,.lay4 #ring svg{display:none}
+.lay1 #ring,.lay4 #ring{width:auto;height:auto}
+.lay1 #stCount,.lay4 #stCount{position:static;font-size:84px}
+.lay1 #stCount.long,.lay4 #stCount.long{font-size:64px}
+.lay1 #stText,.lay4 #stText{flex:none;flex-direction:row;align-items:center;gap:22px}
+.lay1 #stName,.lay4 #stName{font-size:70px}
+.lay1 #stLabel,.lay4 #stLabel{font-size:36px}
+.lay1 .chips,.lay1 #stNote,.lay4 .chips,.lay4 #stNote{display:none}
+.lay1 #status.prayer #stName,.lay4 #status.prayer #stName{font-size:76px}
+.lay1 #status.prayer #stText,.lay4 #status.prayer #stText{flex-direction:row}
+/* جانبي */
+.lay2#stage{grid-template-columns:1fr 640px;grid-template-rows:122px 1fr auto}
+.lay2 header{grid-column:1/3}
+.lay2 main{grid-column:1;grid-row:2;grid-template-columns:1fr;grid-template-rows:1fr 1.15fr}
+.lay2 #band{grid-column:1;grid-row:3}
+.lay2 #times{grid-column:2;grid-row:2/4;grid-template-columns:1fr;grid-template-rows:repeat(6,1fr);gap:14px}
+.lay2 .card{flex-direction:row;justify-content:space-between;padding:4px 28px}
+.lay2 .card .n{font-size:48px}
+.lay2 .card .a{font-size:72px}
+.lay2 .card .i{margin:0;padding:0 0 0 0;border:0;width:170px;min-height:0;font-size:25px;text-align:left}
+.lay2 .card .i small{font-size:20px}
+.lay2 #clock{font-size:240px}
+.lay2 #ring{width:330px;height:330px}.lay2 #stCount{font-size:92px}
+/* علوي */
+.lay3#stage{grid-template-rows:122px auto 1fr auto}
+.lay3 #times{grid-row:2}
+.lay3 main{grid-row:3}
+.lay3 #band{grid-row:4}
+.lay3 .card{padding:8px 6px}
+.lay3 .card .n{font-size:40px}
+.lay3 .card .a{font-size:66px}
+.lay3 .card .i{margin-top:4px;padding-top:6px;min-height:0;font-size:24px}
+.lay3 .card .i small{display:none}
+.lay3 #clock{font-size:250px}
+/* بسيط */
+.lay4 #stage,.lay4#stage{text-shadow:0 2px 16px rgba(0,0,0,.75)}
+.lay4 .panel{background:none;border:none;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+.lay4 #clock{font-size:300px}
+.lay4 #status{background:none}
+.lay4 .card{background:none;border:none;border-bottom:6px solid transparent;box-shadow:none;border-radius:0;backdrop-filter:none}
+.lay4 .card.active{border-bottom-color:var(--gold2);box-shadow:none;background:rgba(var(--cc),calc(.12*var(--co)))}
+.lay4 #band{background:none;border:none;backdrop-filter:none}
+.lay4 header::after{display:none}
+
+/* لون البطاقات يشمل كل الصناديق */
+.cc-all:not(.lay4) .panel,.cc-all:not(.lay4) #band,.lay1 #status,.lay1 #band,.lay1 #clockPanel{background:linear-gradient(180deg,rgba(var(--cc),calc(.34*var(--co))),rgba(var(--cc),calc(.11*var(--co))));border:1.5px solid rgba(var(--cc),calc(.3 + .45*var(--co)))}
+.lay1 #clockPanel{background:linear-gradient(180deg,rgba(var(--cc),calc(.6*var(--co))),rgba(var(--cc),calc(.25*var(--co))))}
+.cc-all.lay4 #band{background:rgba(var(--cc),calc(.2*var(--co)))}
+.stage:not(.lay4) .panel,.stage:not(.lay4) #band{border:2px solid var(--gold2)!important;box-shadow:0 0 0 2px rgba(var(--ac2),.35),0 14px 44px rgba(0,0,0,.35)}
+/* شاشة الأذكار */
+#dkBack{position:fixed;inset:0;z-index:11;background:radial-gradient(90% 70% at 50% 0%,rgba(var(--ac),.22),transparent 82%),#050c0a;display:none}
+#dkBack.on{display:block}
+#dkStage{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px 130px;gap:34px;text-align:center}
+#dkTitle{font-family:'Amiri','Noto Naskh Arabic','Droid Arabic Naskh',serif;font-size:80px;color:var(--gold2);padding-bottom:18px;border-bottom:3px solid var(--gold);min-width:50%}
+#dkText{font-family:'Amiri','Noto Naskh Arabic','Droid Arabic Naskh',serif;line-height:1.7;color:var(--ink);flex:1;display:flex;align-items:center;justify-content:center;max-height:560px}
+#dkText.s1{font-size:76px}#dkText.s2{font-size:58px}#dkText.s3{font-size:46px}
+#dkNote{font-size:44px;color:var(--gold2);font-weight:700;min-height:56px}
+.dkfoot{position:absolute;left:60px;right:60px;bottom:30px;display:flex;justify-content:space-between;font-size:36px;color:var(--mut)}
+#dkClock{direction:ltr;font-weight:700}
+
+/* تحذير الساعة */
+#clockWarn{position:fixed;top:0;left:0;right:0;z-index:8;background:#a32b2b;color:#fff;text-align:center;padding:8px 16px;font-weight:700;font-size:20px;display:none}
+#clockWarn.on{display:block}
+
+/* شاشة الإعلان */
+#adBack{position:fixed;inset:0;z-index:12;background:radial-gradient(90% 70% at 50% 0%,#0f3b2f,#041510 80%);display:none}
+#adBack.on{display:block}
+#adStage{display:flex;flex-direction:column;z-index:13}
+.adbox{flex:1;display:flex;min-height:0}
+.adtxt{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:60px 80px;gap:40px}
+.adtxt h1{font-family:'Amiri','Noto Naskh Arabic','Droid Arabic Naskh',serif;color:var(--gold2);font-size:120px;line-height:1.2;padding-bottom:30px;border-bottom:3px solid var(--gold);min-width:60%}
+.adtxt p{font-size:58px;line-height:1.7;white-space:pre-wrap}
+.adimg{flex:1.1;background-size:cover;background-position:center}
+.adfoot{height:96px;display:flex;align-items:center;justify-content:center;background:rgba(var(--ac),.18);border-top:2px solid var(--gold);font-weight:700;font-size:44px;color:var(--gold2)}
+
+/* الشاشة السوداء */
+#blackout{position:fixed;inset:0;z-index:20;background:#000;display:none;align-items:center;justify-content:center}
+#blackout.on{display:flex}
+#blackout .peek{opacity:0;color:#555;font-size:90px;font-weight:700;direction:ltr;transition:opacity .3s}
+#blackout.peeking .peek{opacity:1}
+
+/* ترس الإعدادات */
+#btnSet{position:fixed;top:10px;left:10px;z-index:9;width:46px;height:46px;border-radius:50%;border:1.5px solid transparent;background:rgba(0,0,0,.35);color:var(--gold2);display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:.55;transition:opacity .3s,transform .3s}
+#btnSet svg{width:28px;height:28px}
+#btnSet:hover,#btnSet:focus,#btnSet.hot{opacity:1;border-color:var(--gold2);outline:none;transform:rotate(30deg)}
+#btnSet:focus{box-shadow:0 0 0 4px rgba(var(--ac2),.5)}
+.btn{font:600 16px 'Cairo';color:var(--ink);background:rgba(0,0,0,.6);border:1px solid var(--line);border-radius:10px;padding:8px 16px;cursor:pointer}
+.btn:hover,.btn:focus{background:rgba(var(--ac),.3);outline:3px solid var(--gold)}
+#settings :focus{outline:3px solid var(--gold2)!important;outline-offset:2px}
+.num:focus,.num:focus-within{outline:3px solid var(--gold2);outline-offset:2px;border-radius:10px}
+.num input{pointer-events:none;caret-color:transparent}
+.chk input:focus{box-shadow:0 0 0 4px rgba(var(--ac2),.5)}
+@media (min-width:1500px){#settings .box{zoom:1.3;height:min(calc(96vh / 1.3),860px);width:min(1100px,calc(100vw / 1.3 - 20px))}}
+.btn.primary{background:var(--gold);color:#1a1405;border-color:var(--gold)}
+.btn.danger{background:#7a2323}
+.btn.sm{padding:5px 10px;font-size:14px}
+
+/* الإعدادات */
+#settings{position:fixed;inset:0;background:rgba(3,14,11,.92);display:none;align-items:center;justify-content:center;z-index:30;padding:1.5vh 1.5vw}
+#settings.open{display:flex}
+.box{width:min(1100px,100%);height:min(96vh,860px);display:flex;flex-direction:column;background:#0c2f25;border:1px solid var(--gold);border-radius:20px;overflow:hidden}
+.box h2{font-family:'Amiri','Noto Naskh Arabic','Droid Arabic Naskh',serif;color:var(--gold);font-size:28px;padding:16px 26px 6px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;padding:6px 20px 10px;border-bottom:1px solid var(--line)}
+.tab{font:600 16px 'Cairo';color:var(--mut);background:transparent;border:1px solid transparent;border-radius:10px;padding:7px 14px;cursor:pointer}
+.tab.on{background:var(--gold);color:#1a1405}
+.tab:focus{outline:2px solid var(--gold2)}
+.pages{flex:1;overflow:auto;padding:16px 26px}
+.page{display:none}.page.on{display:block}
+.foot{display:flex;gap:12px;padding:12px 26px;border-top:1px solid var(--line);align-items:center}
+.foot .msg{color:var(--gold2);font-size:14px;margin-inline-start:auto}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px}
+.grid .full{grid-column:1/-1}
+label{display:block;font-size:15px;color:var(--gold2);margin-bottom:5px}
+select,input[type=text],input[type=number],input[type=date],textarea{width:100%;font:600 17px 'Cairo';color:var(--ink);background:#06201a;border:1px solid var(--line);border-radius:10px;padding:9px 12px}
+textarea{min-height:90px;resize:vertical;font-weight:400}
+select:focus,input:focus,textarea:focus{outline:2px solid var(--gold)}
+h3{font-size:17px;color:var(--ink);margin:16px 0 10px;font-weight:700}
+h3:first-child{margin-top:0}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.row>div{flex:1;min-width:130px}
+.cols5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.cols6{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.cols5 label,.cols6 label{text-align:center;font-size:14px}
+.num{display:flex;gap:4px}
+.num input{text-align:center;padding:8px 2px}
+.num button{width:36px;border-radius:8px;border:1px solid var(--line);background:#06201a;color:var(--gold2);font-size:20px;cursor:pointer}
+.num button:focus{outline:2px solid var(--gold)}
+.chk{display:flex;align-items:center;gap:10px;font-size:17px;color:var(--ink);margin:8px 0;cursor:pointer}
+.chk input{width:22px;height:22px;accent-color:#e0b862}
+.note{margin-top:12px;font-size:13.5px;color:var(--mut);line-height:1.8}
+.status{font-size:14px;color:var(--gold2);margin-top:8px;line-height:1.7}
+.bgs{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.bgi{aspect-ratio:16/9;border-radius:10px;border:2px solid transparent;cursor:pointer;position:relative;background-size:cover;background-position:center;display:flex;align-items:flex-end;justify-content:center;padding:0;overflow:hidden;color:#fff;font:600 12px 'Cairo'}
+.bgi span{background:rgba(0,0,0,.55);width:100%;padding:2px;text-align:center}
+.bgi.on{border-color:var(--gold);box-shadow:0 0 0 2px rgba(224,184,98,.4)}
+.bgi:focus{outline:2px solid var(--gold2)}
+.bgi .x{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#a32b2b;color:#fff;text-align:center;line-height:22px;font-size:14px}
+.ad{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px;background:rgba(0,0,0,.2)}
+.ad .head{display:flex;gap:10px;align-items:center;margin-bottom:8px}
+.ad .head input[type=text]{flex:1}
+.thumb{height:50px;border-radius:6px;vertical-align:middle}
+@media (max-width:800px){.grid{grid-template-columns:1fr}.cols5{grid-template-columns:repeat(3,1fr)}.cols6{grid-template-columns:repeat(3,1fr)}.bgs{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div id="bg"></div><div id="scrim"></div>
+<div id="clockWarn"></div>
+
+<div id="stage" class="stage">
+  <header>
+    <div class="hl r"><b id="locW"></b><br><span id="locC"></span></div>
+    <div id="mosqueName">المسجد</div>
+    <div class="hl l"><b id="dayName"></b><br><span class="g" id="dateH"></span></div>
+  </header>
+  <main>
+    <section class="panel" id="clockPanel">
+      <div id="clock">00:00<small>:00</small></div>
+      <div id="dateG"></div>
+    </section>
+    <section class="panel" id="status">
+      <div id="ring">
+        <svg viewBox="0 0 400 400"><circle class="rbg" cx="200" cy="200" r="186"/><circle class="rfg" id="rfg" cx="200" cy="200" r="186" stroke-dasharray="1168.7" stroke-dashoffset="0"/></svg>
+        <div id="stCount">--:--</div>
+      </div>
+      <div id="stText">
+        <div id="stLabel">—</div>
+        <div id="stName">—</div>
+        <div class="chips" id="chips"></div>
+        <div id="stNote"></div>
+      </div>
+    </section>
+  </main>
+  <section id="band" class="hide"><div id="bandTxt"></div></section>
+  <section id="times"></section>
+</div>
+
+<div id="dkBack"><div id="dkStage" class="stage"><div id="dkTitle"></div><div id="dkText"></div><div id="dkNote"></div><div class="dkfoot"><span id="dkPos" style="direction:ltr"></span><span id="dkClock"></span></div></div></div>
+<div id="adBack"><div id="adStage" class="stage"></div></div>
+<div id="blackout"><div class="peek" id="peekClock"></div></div>
+
+<button id="btnSet" aria-label="الإعدادات" title="الإعدادات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1.03-1.56V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15 4.6a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.2.62.8 1.03 1.56 1.03H21a2 2 0 1 1 0 4h-.09c-.76 0-1.36.41-1.51 1.03z"/></svg></button>
+
+<div id="settings"><div class="box">
+  <h2>إعدادات شاشة المسجد</h2>
+  <div class="tabs" id="tabs"></div>
+  <div class="pages">
+
+    <div class="page" data-tab="عام">
+      <div class="grid">
+        <div class="full"><label for="inName">اسم المسجد</label><input type="text" id="inName" placeholder="مثال: مسجد الإمام مالك"></div>
+        <div><label for="selW">الولاية</label><select id="selW"></select></div>
+        <div><label for="selC">البلدية</label><select id="selC"></select></div>
+      </div>
+      <div class="status" id="geoStatus"></div>
+      <div class="row" style="margin-top:8px"><button class="btn sm" id="btnGeo">إعادة تحميل قائمة البلديات</button></div>
+      <h3>إحداثيات مخصصة (اختياري، لدقة أعلى)</h3>
+      <label class="chk"><input type="checkbox" id="cuOn"> استعمال إحداثيات المسجد الدقيقة بدل إحداثيات البلدية</label>
+      <div class="row">
+        <div><label>خط العرض (مثال: 36.1700)</label><input type="number" step="0.0001" id="cuLat"></div>
+        <div><label>خط الطول (مثال: 1.3300)</label><input type="number" step="0.0001" id="cuLng"></div>
+      </div>
+      <h3>التاريخ الهجري</h3>
+      <div class="row"><div><label>تعديل التاريخ الهجري (أيام)</label><div class="num" data-min="-2" data-max="2"><button>+</button><input type="number" id="inHijri"><button>−</button></div></div></div>
+      <p class="note">الحساب محلي بالكامل ولا يحتاج إنترنت، وفق معايير وزارة الشؤون الدينية والأوقاف الجزائرية: الفجر 18° والعشاء 17° والعصر بظل مثل الشيء (المذهب الجمهوري)، بتوقيت UTC+1. قد يختلف التقويم الرسمي بدقيقة؛ عدّل ذلك من تبويب «المواقيت».</p>
+    </div>
+
+    <div class="page" data-tab="المواقيت">
+      <h3>مدة رفع الأذان (دقائق)</h3>
+      <div class="row"><div><label>تظهر شاشة «يُرفع الآن أذان» خلال هذه المدة</label><div class="num" data-min="0" data-max="10"><button>+</button><input type="number" id="inAdhan"><button>−</button></div></div></div>
+      <h3>المدة بين الأذان والإقامة (دقائق)</h3>
+      <div class="cols5" id="gapInputs"></div>
+      <h3>تعديل وقت كل صلاة بزيادة أو إنقاص دقائق</h3>
+      <div class="cols6" id="tuneInputs"></div>
+      <p class="note">أدخل قيمة موجبة لتأخير الوقت، وسالبة لتقديمه (مثلاً -1 يقدّم الوقت دقيقة واحدة). التعديل يشمل الشروق أيضًا.</p>
+    </div>
+
+    <div class="page" data-tab="الشاشة السوداء">
+      <label class="chk"><input type="checkbox" id="bkOn"> إقفال الشاشة (شاشة سوداء) وقت الصلاة</label>
+      <div class="row">
+        <div><label>تبدأ بعد الإقامة بـ (دقائق)</label><div class="num" data-min="0" data-max="30"><button>+</button><input type="number" id="bkOff"><button>−</button></div></div>
+        <div><label>مدة الإقفال (دقائق)</label><div class="num" data-min="1" data-max="90"><button>+</button><input type="number" id="bkDur"><button>−</button></div></div>
+      </div>
+      <h3>يوم الجمعة</h3>
+      <label class="chk"><input type="checkbox" id="bkFri"> تبدأ الشاشة السوداء من الأذان في صلاة الجمعة (الخطبة)</label>
+      <div class="row"><div><label>مدة الإقفال يوم الجمعة (دقائق)</label><div class="num" data-min="1" data-max="120"><button>+</button><input type="number" id="bkFriDur"><button>−</button></div></div></div>
+      <h3>مدة عبارة «الصلاة قائمة» (عند تعطيل الإقفال)</h3>
+      <div class="row"><div><label>دقائق</label><div class="num" data-min="1" data-max="60"><button>+</button><input type="number" id="inPray"><button>−</button></div></div></div>
+      <p class="note">أثناء الإقفال تكون الشاشة سوداء تمامًا. اضغط أي زر في جهاز التحكم لإظهار الساعة 8 ثوانٍ.</p>
+      <div style="margin-top:12px"><button class="btn" id="btnTestBlack">تجربة الشاشة السوداء (6 ثوانٍ)</button></div>
+    </div>
+
+    <div class="page" data-tab="الأذكار">
+      <label class="chk"><input type="checkbox" id="dkOn"> عرض شريط الأذكار</label>
+      <div class="row"><div><label>مدة عرض كل ذكر (ثوانٍ)</label><div class="num" data-min="4" data-max="120"><button>+</button><input type="number" id="dkSec"><button>−</button></div></div></div>
+      <h3>أذكار بعد الصلاة وأذكار الصباح والمساء</h3>
+      <label class="chk"><input type="checkbox" id="dkPost"> أذكار بعد الصلاة (شاشة كاملة بعد انتهاء الصلاة)</label>
+      <label class="chk"><input type="checkbox" id="dkMor"> أذكار الصباح (بعد صلاة الفجر)</label>
+      <label class="chk"><input type="checkbox" id="dkEve"> أذكار المساء (بعد صلاة العصر)</label>
+      <div class="row">
+        <div><label>مدة أذكار بعد الصلاة (دقائق)</label><div class="num" data-min="0" data-max="30"><button>+</button><input type="number" id="dkPostMin"><button>−</button></div></div>
+        <div><label>مدة أذكار الصباح (دقائق)</label><div class="num" data-min="1" data-max="60"><button>+</button><input type="number" id="dkMorMin"><button>−</button></div></div>
+        <div><label>مدة أذكار المساء (دقائق)</label><div class="num" data-min="1" data-max="60"><button>+</button><input type="number" id="dkEveMin"><button>−</button></div></div>
+        <div><label>مدة عرض كل ذكر (ثوانٍ)</label><div class="num" data-min="8" data-max="120" data-step="1"><button>+</button><input type="number" id="dkScr"><button>−</button></div></div>
+      </div>
+      <div class="row"><button class="btn" id="btnTestPost">تجربة بعد الصلاة (10 ث)</button><button class="btn" id="btnTestMor">تجربة الصباح</button><button class="btn" id="btnTestEve">تجربة المساء</button></div>
+      <p class="note">تظهر بعد انتهاء الصلاة (وبعد الشاشة السوداء إن وُجدت)؛ أذكار الصباح بعد أذكار الفجر، والمساء بعد أذكار العصر. يُرجى مراجعة النصوص مع إمام المسجد.</p>
+      <h3>أذكار إضافية من عندك (ذكر في كل سطر)</h3>
+      <textarea id="dkCustom" placeholder="اكتب ذكرًا أو دعاءً في كل سطر"></textarea>
+      <p class="note">يتضمن التطبيق مجموعة من الأذكار والأدعية القصيرة تتناوب على الشريط، ويُضاف إليها ما تكتبه هنا والإعلانات المحددة كـ«شريط». يختفي الشريط أثناء الإقفال وشاشة الإعلان.</p>
+    </div>
+
+    <div class="page" data-tab="الإعلانات">
+      <label class="chk"><input type="checkbox" id="adOn"> تفعيل الإعلانات</label>
+      <div class="row">
+        <div><label>تظهر كل (دقائق)</label><div class="num" data-min="1" data-max="120"><button>+</button><input type="number" id="adInt"><button>−</button></div></div>
+        <div><label>مدة العرض (ثوانٍ)</label><div class="num" data-min="5" data-max="300"><button>+</button><input type="number" id="adDur"><button>−</button></div></div>
+        <div><label>لا تُعرض قبل الإقامة بـ (دقائق)</label><div class="num" data-min="0" data-max="30"><button>+</button><input type="number" id="adNo"><button>−</button></div></div>
+      </div>
+      <p class="note">«نافذة كاملة»: تملأ الشاشة في أول المدة المحددة من كل دورة، وتتناوب الإعلانات عليها، وتبقى مدة الأذان/الإقامة ظاهرة أسفلها. «شريط»: تظهر ضمن شريط الأذكار. لا تظهر الإعلانات أثناء الصلاة أو الإقفال.</p>
+      <div id="adList"></div>
+      <div class="row"><button class="btn" id="btnAddAd">+ إعلان جديد</button><button class="btn" id="btnTestAd">تجربة العرض (8 ثوانٍ)</button></div>
+    </div>
+
+    <div class="page" data-tab="التصميم">
+      <h3>تصميم الشاشة الرئيسية</h3>
+      <div class="row" id="layRow"></div>
+      <h3>الثيم (اللون العام)</h3>
+      <div class="row" id="themeRow"></div>
+      <h3>لون البطاقات</h3>
+      <div class="row" id="ccRow"></div>
+      <h3>شفافية البطاقات واللوحات</h3>
+      <div class="row"><div><label>الشفافية % (كلما زادت ظهرت الخلفية أكثر)</label><div class="num" data-min="0" data-max="90" data-step="5"><button>+</button><input type="number" id="inTr"><button>−</button></div></div></div>
+      <div class="row"><button class="btn" id="btnPreview">معاينة الشاشة (6 ثوانٍ)</button></div>
+      <p class="note">اختر التصميم والثيم والشفافية ثم اضغط «معاينة» لرؤية الشاشة، وتعود النافذة تلقائياً. اضغط «حفظ وعرض» لتثبيت الاختيار.</p>
+    </div>
+
+    <div class="page" data-tab="الخلفيات">
+      <div class="bgs" id="bgGrid"></div>
+      <div class="row" style="margin-top:14px">
+        <div><label>تعتيم الخلفية لوضوح النص (%)</label><div class="num" data-min="0" data-max="85"><button>+</button><input type="number" id="bgDim"><button>−</button></div></div>
+        <div><label>رفع خلفية من الجهاز</label><input type="file" id="bgFile" accept="image/*"></div>
+      </div>
+      <p class="note">20 خلفية جاهزة، ويمكنك رفع صور خاصة بك (تُصغَّر تلقائيًا وتُحفظ على الجهاز). يُفضَّل أن تكون الصورة بنسبة 16:9.</p>
+    </div>
+
+    <div class="page" data-tab="الوقت">
+      <h3>ضبط وقت التطبيق يدويًا (بتوقيت الجزائر، نظام 24 ساعة)</h3>
+      <div class="cols5">
+        <div><label>السنة</label><div class="num" data-min="2024" data-max="2060"><button>+</button><input type="number" id="ckY"><button>−</button></div></div>
+        <div><label>الشهر</label><div class="num" data-min="1" data-max="12" data-wrap="1"><button>+</button><input type="number" id="ckM"><button>−</button></div></div>
+        <div><label>اليوم</label><div class="num" data-min="1" data-max="31" data-wrap="1"><button>+</button><input type="number" id="ckD"><button>−</button></div></div>
+        <div><label>الساعة</label><div class="num" data-min="0" data-max="23" data-wrap="1"><button>+</button><input type="number" id="ckH"><button>−</button></div></div>
+        <div><label>الدقيقة</label><div class="num" data-min="0" data-max="59" data-wrap="1"><button>+</button><input type="number" id="ckMi"><button>−</button></div></div>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnSetClock">ضبط الوقت</button>
+        <button class="btn" id="btnSyncNow">مزامنة من الإنترنت الآن</button>
+        <button class="btn" id="btnResetClock">إلغاء التعديل (ساعة الجهاز)</button>
+      </div>
+      <label class="chk" style="margin-top:14px"><input type="checkbox" id="ckAuto"> مزامنة الوقت تلقائيًا عند توفر الإنترنت</label>
+      <div class="status" id="clockStatus"></div>
+      <p class="note">بعض أجهزة التلفاز والصناديق لا تحتفظ بالوقت عند انقطاع الكهرباء. يتحقق التطبيق عند كل تشغيل: إن وجد أن الساعة رجعت إلى الوراء أو أصبحت قديمة ينبّهك بشريط أحمر، ويحاول المزامنة من الإنترنت، وإلا اضبط الوقت يدويًا من هنا. التعديل يخص ساعة التطبيق ولا يغيّر ساعة النظام.</p>
+    </div>
+
+    <div class="page" data-tab="الجهاز">
+      <div id="devAndroid" style="display:none">
+        <label class="chk"><input type="checkbox" id="dvAuto"> تشغيل التطبيق تلقائيًا عند تشغيل الجهاز</label>
+        <div class="status" id="dvOverlay"></div>
+        <div class="row" style="margin-top:10px"><button class="btn" id="btnOverlay">منح إذن «العرض فوق التطبيقات»</button><button class="btn danger" id="btnExit">إغلاق التطبيق</button></div>
+        <p class="note">في أندرويد 10 وما بعده لا يسمح النظام للتطبيق بالفتح تلقائيًا بعد الإقلاع إلا بعد منحه إذن «العرض فوق التطبيقات». امنحه مرة واحدة فقط من الزر أعلاه.</p>
+      </div>
+      <div id="devWeb" class="note" style="display:none">خيارات التشغيل التلقائي مع الجهاز تظهر عند تثبيت تطبيق أندرويد TV المرفق (ملف المشروع). في المتصفح يكفي فتح الصفحة على الشاشة.</div>
+    </div>
+
+  </div>
+  <div class="foot">
+    <button class="btn primary" id="btnSave">حفظ وعرض</button>
+    <button class="btn" id="btnCancel">إغلاق</button>
+    <span class="msg" id="saveMsg"></span>
+  </div>
+</div></div>
+
+<script>
+/* ===== تخزين آمن ===== */
+const mem={};
+const store={
+  get(k){try{const v=localStorage.getItem(k);return v===null?(mem[k]??null):v}catch(e){return mem[k]??null}},
+  set(k,v){mem[k]=v;try{localStorage.setItem(k,v);return true}catch(e){return false}}
+};
+const jget=(k,d)=>{try{const v=store.get(k);return v?JSON.parse(v):d}catch(e){return d}};
+const $=id=>document.getElementById(id);
+const p2=n=>String(n).padStart(2,"0");
+
+/* ===== قاعدة احتياطية للولايات (تُستبدل بالقائمة الكاملة 1541 بلدية عند توفرها) ===== */
+const W=[
+["أدرار",27.87,-0.29,[["رقان",26.71,0.29],["أولف",29.00,-0.25]]],
+["الشلف",36.17,1.33,[["تنس",36.51,1.30],["بوقادير",36.07,1.13],["وادي الفضة",36.18,1.53]]],
+["الأغواط",33.80,2.88,[["أفلو",34.11,2.10],["حاسي الرمل",32.93,3.27]]],
+["أم البواقي",35.88,7.11,[["عين البيضاء",35.80,7.40],["عين مليلة",36.04,6.57]]],
+["باتنة",35.56,6.17,[["بريكة",35.64,5.37],["عين التوتة",35.38,5.90],["مروانة",35.63,5.77],["أريس",35.30,6.36]]],
+["بجاية",36.75,5.08,[["أقبو",36.46,4.57],["خراطة",36.49,5.27],["سيدي عيش",36.61,4.69]]],
+["بسكرة",34.85,5.73,[["طولقة",34.65,5.37],["سيدي عقبة",34.75,5.88]]],
+["بشار",31.62,-2.22,[["العبادلة",30.92,-2.73],["القنادسة",31.55,-2.43],["بني ونيف",32.04,-1.25]]],
+["البليدة",36.47,2.83,[["بوفاريك",36.57,2.91],["الأربعاء",36.58,3.15],["العفرون",36.47,2.62]]],
+["البويرة",36.37,3.90,[["لخضرية",36.56,3.59],["سور الغزلان",36.12,3.69]]],
+["تمنراست",22.79,5.52,[]],
+["تبسة",35.40,8.12,[["الشريعة",35.27,7.75],["بئر العاتر",34.75,8.06],["الونزة",35.95,8.12]]],
+["تلمسان",34.88,-1.32,[["مغنية",34.85,-1.73],["الغزوات",35.10,-1.85],["ندرومة",35.01,-1.75],["سبدو",34.64,-1.33]]],
+["تيارت",35.37,1.32,[["السوقر",35.18,1.50],["فرندة",35.07,1.05],["قصر الشلالة",35.17,2.32]]],
+["تيزي وزو",36.71,4.05,[["ذراع بن خدة",36.73,3.96],["عزازقة",36.74,4.37],["ذراع الميزان",36.53,3.83]]],
+["الجزائر",36.75,3.06,[["باب الوادي",36.79,3.05],["بوزريعة",36.77,3.00],["سيدي امحمد",36.76,3.06],["الحراش",36.72,3.13],["باب الزوار",36.72,3.18],["الدار البيضاء",36.70,3.21],["براقي",36.67,3.10],["بئر مراد رايس",36.74,3.05]]],
+["الجلفة",34.67,3.26,[["حاسي بحبح",34.93,3.03],["عين وسارة",35.45,2.90],["مسعد",34.17,3.49]]],
+["جيجل",36.82,5.77,[["الطاهير",36.77,5.90],["الميلية",36.75,6.26]]],
+["سطيف",36.19,5.41,[["العلمة",36.00,5.75],["عين ولمان",36.00,5.30],["بوقاعة",36.37,5.07]]],
+["سعيدة",34.83,0.15,[["عين الحجر",34.77,0.07]]],
+["سكيكدة",36.88,6.90,[["عزابة",36.74,7.10],["القل",36.90,6.57]]],
+["سيدي بلعباس",35.19,-0.63,[]],
+["عنابة",36.90,7.76,[["البوني",36.88,7.74],["الحجار",36.87,7.82]]],
+["قالمة",36.46,7.43,[["هيليوبوليس",36.50,7.33],["وادي الزناتي",36.32,7.17]]],
+["قسنطينة",36.37,6.61,[["الخروب",36.27,6.70],["عين سمارة",36.26,6.50],["الحامة بوزيان",36.42,6.60],["ديدوش مراد",36.45,6.64]]],
+["المدية",36.26,2.75,[["البرواقية",36.30,2.60],["قصر البخاري",35.88,2.75]]],
+["مستغانم",35.93,0.09,[["سيدي علي",36.10,0.42]]],
+["المسيلة",35.70,4.54,[["بوسعادة",35.21,4.18]]],
+["معسكر",35.40,0.14,[["سيق",35.52,0.19],["المحمدية",35.58,0.07]]],
+["ورقلة",31.95,5.32,[["حاسي مسعود",31.68,6.07]]],
+["وهران",35.70,-0.63,[["السانية",35.64,-0.62],["أرزيو",35.84,-0.31],["عين الترك",35.74,-0.76]]],
+["البيض",33.68,1.02,[]],
+["إليزي",26.50,8.48,[]],
+["برج بوعريريج",36.07,4.76,[["رأس الوادي",35.95,5.04]]],
+["بومرداس",36.76,3.48,[["بودواو",36.72,3.42],["دلس",36.91,3.92],["الثنية",36.72,3.56]]],
+["الطارف",36.77,8.31,[["القالة",36.90,8.44],["بن مهيدي",36.76,7.85]]],
+["تندوف",27.67,-8.15,[]],
+["تيسمسيلت",35.61,1.81,[]],
+["الوادي",33.37,6.86,[["قمار",33.50,6.80]]],
+["خنشلة",35.43,7.14,[]],
+["سوق أهراس",36.29,7.95,[]],
+["تيبازة",36.59,2.45,[["القليعة",36.64,2.57],["شرشال",36.61,2.19],["بوإسماعيل",36.64,2.69]]],
+["ميلة",36.45,6.26,[["شلغوم العيد",36.16,6.17]]],
+["عين الدفلى",36.26,1.97,[["خميس مليانة",36.26,2.22],["العطاف",36.17,1.77]]],
+["النعامة",33.27,-0.31,[["مشرية",33.55,-0.30],["عين الصفراء",32.76,-0.59]]],
+["عين تموشنت",35.30,-1.14,[["حمام بوحجر",35.37,-0.96],["بني صاف",35.30,-1.38]]],
+["غرداية",32.49,3.67,[["متليلي",32.26,3.64],["القرارة",32.77,3.77]]],
+["غليزان",35.74,0.56,[["مازونة",36.12,0.88]]],
+["تيميمون",29.26,0.23,[]],
+["برج باجي مختار",21.33,0.95,[]],
+["أولاد جلال",34.42,5.07,[]],
+["بني عباس",30.13,-2.17,[]],
+["عين صالح",27.20,2.47,[]],
+["عين قزام",19.57,5.77,[]],
+["تقرت",33.10,6.07,[["تماسين",33.02,6.03],["جامعة",33.53,5.98]]],
+["جانت",24.55,9.48,[]],
+["المغير",33.95,5.92,[]],
+["المنيعة",30.58,2.88,[]]
+];
+let GEO=W.map((w,i)=>({code:i+1,n:w[0],lat:w[1],lng:w[2],c:[[w[0],w[1],w[2]],...(w[3]||[])]}));
+let GEO_SRC="قائمة مدمجة محدودة (أهم البلديات) — القائمة الكاملة (1541 بلدية) تُحمَّل من الإنترنت";
+let GEO_ERR="";
+
+/* ===== الإعدادات ===== */
+const PR=[["fajr","الفجر"],["dhuhr","الظهر"],["asr","العصر"],["maghrib","المغرب"],["isha","العشاء"]];
+const ORDER=[["fajr","الفجر"],["sunrise","الشروق"],["dhuhr","الظهر"],["asr","العصر"],["maghrib","المغرب"],["isha","العشاء"]];
+const DEF={
+  name:"المسجد", loc:{w:"الجزائر",c:"الجزائر",lat:36.75,lng:3.06},
+  gap:{fajr:25,dhuhr:15,asr:15,maghrib:10,isha:15},
+  tune:{fajr:0,sunrise:0,dhuhr:0,asr:0,maghrib:0,isha:0},
+  pray:10, hijri:0, adhan:2, theme:0, lay:0, tr:0, cardCol:0, dk:{post:true,postMin:5,morning:true,morMin:10,evening:true,eveMin:10,sec:25},
+  black:{on:true,off:0,dur:10,fri:true,friDur:40},
+  dhikr:{on:true,sec:12,custom:""},
+  ads:{on:true,interval:5,dur:30,noBefore:3,list:[]},
+  bg:{t:"p",i:0,c:0,dim:20},
+  clock:{auto:true}
+};
+function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==="object"&&!Array.isArray(b[k])&&a[k]&&typeof a[k]==="object")merge(a[k],b[k]);else a[k]=b[k]}return a}
+let cfg=JSON.parse(JSON.stringify(DEF));
+let firstRun=true;
+{const s=jget("mosque-cfg2",null);if(s){merge(cfg,s);firstRun=false}}
+let customBgs=jget("mosque-bgs",[]);
+const saveCfg=()=>store.set("mosque-cfg2",JSON.stringify(cfg));
+
+/* ===== 20 خلفية جاهزة ===== */
+const svg=s=>"url(\"data:image/svg+xml,"+encodeURIComponent(s)+"\")";
+const star=(c,o)=>svg(`<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'><g fill='none' stroke='${c}' stroke-width='1.2' opacity='${o}'><path d='M48 6l10 25 25-10-10 25 25 10-25 10 10 25-25-10-10 25-10-25-25 10 10-25-25-10 25-10-10-25 25 10z'/></g></svg>`);
+const arch=(c,o)=>svg(`<svg xmlns='http://www.w3.org/2000/svg' width='90' height='120' viewBox='0 0 90 120'><g fill='none' stroke='${c}' stroke-width='1.4' opacity='${o}'><path d='M0 120V55a45 45 0 0 1 90 0v65'/><path d='M18 120V58a27 27 0 0 1 54 0v62'/></g></svg>`);
+const diam=(c,o)=>svg(`<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><g fill='none' stroke='${c}' stroke-width='1.2' opacity='${o}'><path d='M32 0L64 32L32 64L0 32z'/><path d='M32 14L50 32L32 50L14 32z'/></g></svg>`);
+const hex=(c,o)=>svg(`<svg xmlns='http://www.w3.org/2000/svg' width='70' height='60' viewBox='0 0 70 60'><g fill='none' stroke='${c}' stroke-width='1.2' opacity='${o}'><path d='M17 0h36l17 30-17 30H17L0 30z'/></g></svg>`);
+const crescent=svg(`<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'><path d='M120 20a85 85 0 1 0 0 160 68 68 0 1 1 0-160z' fill='#e0b862' opacity='.85'/><circle cx='150' cy='60' r='5' fill='#f6dc99'/></svg>`);
+const stars="radial-gradient(1.6px 1.6px at 12% 18%,#fff,transparent),radial-gradient(1.2px 1.2px at 28% 62%,#fff,transparent),radial-gradient(1.8px 1.8px at 47% 25%,#fff,transparent),radial-gradient(1.2px 1.2px at 63% 71%,#fff,transparent),radial-gradient(1.6px 1.6px at 78% 15%,#fff,transparent),radial-gradient(1.2px 1.2px at 90% 55%,#fff,transparent),radial-gradient(1.4px 1.4px at 38% 88%,#fff,transparent),radial-gradient(1.4px 1.4px at 85% 90%,#fff,transparent)";
+const BGS=[
+ ["أخضر زمردي","radial-gradient(90% 60% at 50% -10%,rgba(224,184,98,.2),transparent 60%),"+star("#e0b862",.09)+",radial-gradient(120% 100% at 50% 0%,#0f4535 0%,#082a21 55%,#04140e 100%)"],
+ ["ليل أزرق","linear-gradient(160deg,#0a1a3a,#12326b)"],
+ ["ذهب وبني","linear-gradient(160deg,#2b1b0a,#5a3a12)"],
+ ["سماء الفجر","linear-gradient(180deg,#1b1740,#5a3a7a 60%,#b9694f)"],
+ ["غروب","linear-gradient(180deg,#1a1033,#6a2a52 60%,#b8562f)"],
+ ["تركوازي","linear-gradient(160deg,#052b33,#0b5f60)"],
+ ["بنفسجي ملكي","linear-gradient(160deg,#1c0f3a,#43246b)"],
+ ["أسود فحمي","linear-gradient(160deg,#070707,#1b1b1b)"],
+ ["رمادي أنيق","linear-gradient(160deg,#1c2024,#3a4148)"],
+ ["أخضر زيتوني","linear-gradient(160deg,#1c2410,#3d4a1f)"],
+ ["كحلي وذهب","radial-gradient(70% 60% at 50% 0%,rgba(224,184,98,.28),transparent 70%),linear-gradient(180deg,#0a1530,#050b1c)"],
+ ["نجمة على أخضر",star("#e0b862",.35)+",radial-gradient(120% 90% at 50% 0%,#0d3a2d,#06201a 75%)"],
+ ["نجمة على أزرق",star("#9ec5ff",.3)+",linear-gradient(160deg,#0a1a3a,#0c2554)"],
+ ["أقواس ذهبية",arch("#e0b862",.28)+",linear-gradient(160deg,#10281f,#0a1c16)"],
+ ["معينات على بني",diam("#e0b862",.3)+",linear-gradient(160deg,#2b1b0a,#431f12)"],
+ ["سداسيات فيروزية",hex("#7fe0d0",.25)+",linear-gradient(160deg,#052b33,#083f45)"],
+ ["ليل بالنجوم",stars+",linear-gradient(180deg,#050a1a,#0b1d44)"],
+ ["هلال ونجوم",crescent+" right 8% top 8%/190px no-repeat,"+stars+",linear-gradient(180deg,#07112b,#0e2257)"],
+ ["كثبان الصحراء","radial-gradient(110% 38% at 15% 105%,#7a4a22 0 60%,transparent 61%),radial-gradient(110% 42% at 90% 110%,#9a6330 0 60%,transparent 61%),linear-gradient(180deg,#1a1230,#5a3328 85%)"],
+ ["فجر أخضر هادئ","linear-gradient(180deg,#0b2a22,#1d5a46 80%,#2c7a5c)"]
+];
+
+function applyBg(){
+  const b=cfg.bg, el=$("bg");
+  if(b.t==="c"&&customBgs[b.c]) el.style.background="url("+customBgs[b.c]+") center/cover no-repeat";
+  else el.style.background=(BGS[b.i]||BGS[0])[1];
+  $("scrim").style.opacity=(b.dim||0)/100;
+  applyTheme();
+}
+
+/* ===== الوقت ===== */
+const TZ=1;
+let OFFSET=+store.get("mosque-offset")||0;
+const nowMs=()=>Date.now()+OFFSET;
+function algNow(){
+  const d=new Date(nowMs()+TZ*3600000);
+  return {y:d.getUTCFullYear(),m:d.getUTCMonth()+1,d:d.getUTCDate(),sec:d.getUTCHours()*3600+d.getUTCMinutes()*60+d.getUTCSeconds(),dow:d.getUTCDay(),date:d};
+}
+const hm=s=>{s=((s%86400)+86400)%86400;return p2(Math.floor(s/3600))+":"+p2(Math.floor(s/60)%60)};
+const cd=s=>{s=Math.max(0,s);const h=Math.floor(s/3600),m=Math.floor(s/60)%60,x=s%60;return (h?p2(h)+":":"")+p2(m)+":"+p2(x)};
+const DAYS=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+
+/* ===== حساب المواقيت ===== */
+const R=Math.PI/180;
+const sin=d=>Math.sin(d*R),cos=d=>Math.cos(d*R),tan=d=>Math.tan(d*R);
+const asin=x=>Math.asin(x)/R,acos=x=>Math.acos(x)/R,atan2=(y,x)=>Math.atan2(y,x)/R,acot=x=>Math.atan(1/x)/R;
+const fix=(a,b)=>{a=a-b*Math.floor(a/b);return a<0?a+b:a};
+function sunPos(jd){
+  const d=jd-2451545.0,g=fix(357.529+0.98560028*d,360),q=fix(280.459+0.98564736*d,360);
+  const L=fix(q+1.915*sin(g)+0.020*sin(2*g),360),e=23.439-0.00000036*d;
+  const RA=fix(atan2(cos(e)*sin(L),cos(L)),360)/15;
+  let eqt=q/15-fix(RA,24);if(eqt>12)eqt-=24;if(eqt<-12)eqt+=24;
+  return {decl:asin(sin(e)*sin(L)),eqt};
+}
+function hourAngle(angle,lat,decl){
+  const x=(-sin(angle)-sin(lat)*sin(decl))/(cos(lat)*cos(decl));
+  return (x>1||x<-1)?NaN:acos(x)/15;
+}
+function compute(y,m,d,lat,lng){
+  const jd=Date.UTC(y,m-1,d,12)/86400000+2440587.5-lng/360;
+  const {decl,eqt}=sunPos(jd);
+  const noon=12+TZ-lng/15-eqt;
+  const t=a=>hourAngle(a,lat,decl);
+  const aa=acot(1+tan(Math.abs(lat-decl)));
+  const xa=(sin(aa)-sin(lat)*sin(decl))/(cos(lat)*cos(decl));
+  const r={fajr:noon-t(18),sunrise:noon-t(0.833),dhuhr:noon,asr:noon+acos(xa)/15,maghrib:noon+t(0.833),isha:noon+t(17)};
+  const out={};
+  for(const k in r) out[k]=(Math.round(r[k]*60)+(+cfg.tune[k]||0))*60;
+  return out;
+}
+
+/* ===== واجهة البطاقات ===== */
+const cardsEl=$("times");
+ORDER.forEach(([k,n])=>{
+  const c=document.createElement("div");
+  c.className="card"+(k==="sunrise"?" sun":"");c.id="c-"+k;
+  c.innerHTML=`<div class="n">${n}</div><div class="a" id="a-${k}">--:--</div><div class="i" id="i-${k}">&nbsp;</div>`;
+  cardsEl.appendChild(c);
+});
+let today=null,tomorrow=null,dayKey="";
+function ensureTimes(n){
+  const key=n.y+"-"+n.m+"-"+n.d+"|"+cfg.loc.lat+"|"+cfg.loc.lng+"|"+JSON.stringify(cfg.tune)+JSON.stringify(cfg.gap)+cfg.name;
+  if(key===dayKey)return;
+  dayKey=key;
+  const L=cfg.loc;
+  today=compute(n.y,n.m,n.d,L.lat,L.lng);
+  const t=new Date(Date.UTC(n.y,n.m-1,n.d+1));
+  tomorrow=compute(t.getUTCFullYear(),t.getUTCMonth()+1,t.getUTCDate(),L.lat,L.lng);
+  ORDER.forEach(([k])=>{
+    $("a-"+k).textContent=hm(today[k]);
+    $("i-"+k).innerHTML=k==="sunrise"?"<small>نهاية وقت الفجر</small>":`الإقامة <b>${hm(today[k]+cfg.gap[k]*60)}</b><small>بعد ${cfg.gap[k]} دقيقة</small>`;
+  });
+  $("locW").textContent="ولاية "+L.w;$("locC").textContent="بلدية "+L.c;
+  const nm=cfg.name||"المسجد";const mn=$("mosqueName");mn.textContent=nm;
+  mn.style.fontSize=nm.length>40?"46px":nm.length>30?"56px":nm.length>22?"68px":"80px";
+}
+function hijri(date){
+  try{return new Intl.DateTimeFormat("ar-DZ-u-ca-islamic-umalqura-nu-latn",{day:"numeric",month:"long",year:"numeric",timeZone:"UTC"}).format(new Date(date.getTime()+cfg.hijri*86400000)).replace(/[\s\u200f\u200e]*ه[ـ]*\s*$/,"")+" هـ"}catch(e){return ""}
+}
+function greg(date){
+  try{return new Intl.DateTimeFormat("ar-DZ-u-nu-latn",{day:"numeric",month:"long",year:"numeric",timeZone:"UTC"}).format(date)}catch(e){return date.toISOString().slice(0,10)}
+}
+
+/* ===== الأذكار ===== */
+const ADHKAR=[
+"سُبْحَانَ اللَّهِ وَبِحَمْدِهِ، سُبْحَانَ اللَّهِ الْعَظِيمِ",
+"لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",
+"أَسْتَغْفِرُ اللَّهَ الْعَظِيمَ الَّذِي لَا إِلَهَ إِلَّا هُوَ الْحَيَّ الْقَيُّومَ وَأَتُوبُ إِلَيْهِ",
+"اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ",
+"لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ",
+"حَسْبِيَ اللَّهُ لَا إِلَهَ إِلَّا هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ",
+"اللَّهُمَّ أَعِنِّي عَلَى ذِكْرِكَ وَشُكْرِكَ وَحُسْنِ عِبَادَتِكَ",
+"رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ",
+"سُبْحَانَ اللَّهِ، وَالْحَمْدُ لِلَّهِ، وَلَا إِلَهَ إِلَّا اللَّهُ، وَاللَّهُ أَكْبَرُ",
+"قال رسول الله ﷺ: «سَوُّوا صُفُوفَكُمْ، فَإِنَّ تَسْوِيَةَ الصَّفِّ مِنْ تَمَامِ الصَّلَاةِ»",
+"اللَّهُمَّ أَنْتَ السَّلَامُ وَمِنْكَ السَّلَامُ، تَبَارَكْتَ يَا ذَا الْجَلَالِ وَالْإِكْرَامِ",
+"رَبِّ اجْعَلْنِي مُقِيمَ الصَّلَاةِ وَمِنْ ذُرِّيَّتِي"
+];
+let bandKey="";
+function updateBand(hidden){
+  const band=$("band");
+  const items=[];
+  if(cfg.dhikr.on){ADHKAR.forEach(t=>items.push({t,ad:false}));cfg.dhikr.custom.split("\n").map(x=>x.trim()).filter(Boolean).forEach(t=>items.push({t,ad:false}))}
+  activeAds("ticker").forEach(a=>items.push({t:(a.title?a.title+": ":"")+a.text,ad:true}));
+  if(hidden||!items.length){band.classList.add("hide");return}
+  band.classList.remove("hide");
+  const sec=Math.max(4,+cfg.dhikr.sec||12);
+  const idx=Math.floor(nowMs()/(sec*1000))%items.length;
+  const it=items[idx], key=idx+"|"+it.t;
+  if(key===bandKey)return;
+  bandKey=key;
+  const el=$("bandTxt");
+  el.classList.add("out");
+  setTimeout(()=>{el.textContent=it.t;el.classList.toggle("ad",it.ad);el.classList.remove("out")},350);
+}
+
+
+/* ===== أذكار بعد الصلاة والصباح والمساء ===== */
+const T3="ثلاث مرات";
+const KURSI="اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ  لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ  لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ  مَنْ ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلَّا بِإِذْنِهِ  يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ  وَلَا يُحِيطُونَ بِشَيْءٍ مِنْ عِلْمِهِ إِلَّا بِمَا شَاءَ  وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ  وَلَا يَئُودُهُ حِفْظُهُمَا  وَهُوَ الْعَلِيُّ الْعَظِيمُ";
+const IKHLAS="بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\nقُلْ هُوَ اللَّهُ أَحَدٌ • اللَّهُ الصَّمَدُ • لَمْ يَلِدْ وَلَمْ يُولَدْ • وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ";
+const FALAQ="بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\nقُلْ أَعُوذُ بِرَبِّ الْفَلَقِ • مِنْ شَرِّ مَا خَلَقَ • وَمِنْ شَرِّ غَاسِقٍ إِذَا وَقَبَ • وَمِنْ شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ • وَمِنْ شَرِّ حَاسِدٍ إِذَا حَسَدَ";
+const NAS="بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\nقُلْ أَعُوذُ بِرَبِّ النَّاسِ • مَلِكِ النَّاسِ • إِلَٰهِ النَّاسِ • مِنْ شَرِّ الْوَسْوَاسِ الْخَنَّاسِ • الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ • مِنَ الْجِنَّةِ وَالنَّاسِ";
+const TAHLIL="لَا إِلَٰهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَىٰ كُلِّ شَيْءٍ قَدِيرٌ";
+const AD_POST=[
+ {t:"أَسْتَغْفِرُ اللَّهَ، أَسْتَغْفِرُ اللَّهَ، أَسْتَغْفِرُ اللَّهَ",n:T3},
+ {t:"اللَّهُمَّ أَنْتَ السَّلَامُ وَمِنْكَ السَّلَامُ، تَبَارَكْتَ يَا ذَا الْجَلَالِ وَالْإِكْرَامِ"},
+ {t:TAHLIL+"، اللَّهُمَّ لَا مَانِعَ لِمَا أَعْطَيْتَ، وَلَا مُعْطِيَ لِمَا مَنَعْتَ، وَلَا يَنْفَعُ ذَا الْجَدِّ مِنْكَ الْجَدُّ"},
+ {t:"سُبْحَانَ اللَّهِ",n:"33 مرة"},
+ {t:"الْحَمْدُ لِلَّهِ",n:"33 مرة"},
+ {t:"اللَّهُ أَكْبَرُ",n:"33 مرة"},
+ {t:TAHLIL,n:"تمام المئة"},
+ {t:KURSI},
+ {t:IKHLAS},{t:FALAQ},{t:NAS},
+ {t:"اللَّهُمَّ أَعِنِّي عَلَى ذِكْرِكَ وَشُكْرِكَ وَحُسْنِ عِبَادَتِكَ"}
+];
+const AD_MS=(morn)=>[
+ {t:KURSI,n:"مرة واحدة"},
+ {t:IKHLAS,n:T3},{t:FALAQ,n:T3},{t:NAS,n:T3},
+ {t:morn?"أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَٰهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَىٰ كُلِّ شَيْءٍ قَدِيرٌ":"أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَٰهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَىٰ كُلِّ شَيْءٍ قَدِيرٌ"},
+ {t:morn?"اللَّهُمَّ بِكَ أَصْبَحْنَا وَبِكَ أَمْسَيْنَا وَبِكَ نَحْيَا وَبِكَ نَمُوتُ وَإِلَيْكَ النُّشُورُ":"اللَّهُمَّ بِكَ أَمْسَيْنَا وَبِكَ أَصْبَحْنَا وَبِكَ نَحْيَا وَبِكَ نَمُوتُ وَإِلَيْكَ الْمَصِيرُ"},
+ {t:"اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَٰهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَىٰ عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوءُ بِذَنْبِي فَاغْفِرْ لِي فَإِنَّهُ لَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ",n:"سيد الاستغفار"},
+ {t:"رَضِيتُ بِاللَّهِ رَبًّا، وَبِالْإِسْلَامِ دِينًا، وَبِمُحَمَّدٍ ﷺ نَبِيًّا",n:T3},
+ {t:"بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ",n:T3},
+ {t:"اللَّهُمَّ عَافِنِي فِي بَدَنِي، اللَّهُمَّ عَافِنِي فِي سَمْعِي، اللَّهُمَّ عَافِنِي فِي بَصَرِي، لَا إِلَٰهَ إِلَّا أَنْتَ",n:T3},
+ {t:"حَسْبِيَ اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ",n:"سبع مرات"},
+ {t:"أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ",n:T3},
+ {t:"يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ، أَصْلِحْ لِي شَأْنِي كُلَّهُ، وَلَا تَكِلْنِي إِلَىٰ نَفْسِي طَرْفَةَ عَيْنٍ"},
+ {t:"سُبْحَانَ اللَّهِ وَبِحَمْدِهِ",n:"مئة مرة"},
+ {t:"اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَىٰ نَبِيِّنَا مُحَمَّدٍ",n:"عشر مرات"}
+];
+const AD_MOR=AD_MS(true),AD_EVE=AD_MS(false);
+let forceDk=null,dkKey="";
+function dkWindow(n,t){
+  if(forceDk&&forceDk.until>Date.now())return forceDk.mode;
+  const d=cfg.dk,b=cfg.black;
+  for(const [k] of PR){
+    const fri=(k==="dhuhr"&&n.dow===5);
+    const iq=t[k]+cfg.gap[k]*60;
+    let st=iq+cfg.pray*60;
+    if(b.on){const bs=(fri&&b.fri)?t[k]:iq+b.off*60;st=Math.max(st,bs+(fri?b.friDur:b.dur)*60)}
+    if(d.post&&d.postMin>0){if(n.sec>=st&&n.sec<st+d.postMin*60)return "post";st+=d.postMin*60}
+    if(k==="fajr"&&d.morning&&n.sec>=st&&n.sec<st+d.morMin*60)return "morning";
+    if(k==="asr"&&d.evening&&n.sec>=st&&n.sec<st+d.eveMin*60)return "evening";
+  }
+  return null;
+}
+function updateDk(mode,s){
+  const el=$("dkBack");
+  if(!mode){el.classList.remove("on");dkKey="";return}
+  el.classList.add("on");
+  $("dkClock").textContent=hm(s)+":"+p2(s%60);
+  const list=mode==="post"?AD_POST:mode==="morning"?AD_MOR:AD_EVE;
+  const sec=Math.max(8,+cfg.dk.sec||25);
+  const idx=Math.floor(nowMs()/(sec*1000))%list.length;
+  const key=mode+idx;if(key===dkKey)return;dkKey=key;
+  const it=list[idx];
+  $("dkTitle").textContent=mode==="post"?"أذكار بعد الصلاة":mode==="morning"?"أذكار الصباح":"أذكار المساء";
+  const tx=$("dkText");tx.textContent=it.t;tx.style.whiteSpace="pre-line";
+  tx.className=it.t.length>260?"s3":it.t.length>140?"s2":"s1";
+  $("dkNote").textContent=it.n||"";
+  $("dkPos").textContent=(idx+1)+" / "+list.length;
+}
+
+/* ===== الإعلانات ===== */
+function dateStr(n){return n.y+"-"+p2(n.m)+"-"+p2(n.d)}
+let ctxNow=null;
+function activeAds(mode){
+  if(!cfg.ads.on||!ctxNow)return [];
+  const n=ctxNow;
+  return cfg.ads.list.filter(a=>{
+    if(a.off||a.mode!==mode||!(a.text||a.title||a.img))return false;
+    const ds=dateStr(n);
+    if(a.from&&ds<a.from)return false;
+    if(a.to&&ds>a.to)return false;
+    if(a.when==="friday"&&n.dow!==5)return false;
+    if(a.when==="after"&&!ctxNow.afterPrayer)return false;
+    return true;
+  });
+}
+let adKey="",forceAd=0;
+function updateAd(show,footText){
+  const back=$("adBack"),ov=$("adStage");
+  if(!show){back.classList.remove("on");adKey="";return}
+  const list=activeAds("overlay");
+  if(!list.length){back.classList.remove("on");adKey="";return}
+  const slot=Math.floor(nowMs()/(Math.max(1,cfg.ads.interval)*60000));
+  const a=list[slot%list.length];
+  const key=slot+"|"+a.title+a.text+(a.img?a.img.length:0);
+  if(key!==adKey){
+    adKey=key;
+    ov.innerHTML=`<div class="adbox"><div class="adtxt">${a.title?`<h1></h1>`:""}${a.text?`<p></p>`:""}</div>${a.img?`<div class="adimg"></div>`:""}</div><div class="adfoot" id="adFoot"></div>`;
+    if(a.title)ov.querySelector("h1").textContent=a.title;
+    if(a.text)ov.querySelector("p").textContent=a.text;
+    if(a.img)ov.querySelector(".adimg").style.backgroundImage="url("+a.img+")";
+  }
+  const f=$("adFoot");if(f)f.textContent=footText;
+  back.classList.add("on");
+}
+
+/* ===== الشاشة السوداء ===== */
+let peekUntil=0,forceBlack=0;
+function inBlack(n,t){
+  if(forceBlack>Date.now())return true;
+  const b=cfg.black;if(!b.on)return false;
+  for(const [k] of PR){
+    const fri=(k==="dhuhr"&&n.dow===5);
+    const start=(fri&&b.fri)?t[k]:t[k]+cfg.gap[k]*60+b.off*60;
+    const end=start+(fri?b.friDur:b.dur)*60;
+    if(n.sec>=start&&n.sec<end)return true;
+  }
+  return false;
+}
+
+/* ===== الحلقة الرئيسية ===== */
+const CIRC=1168.7;
+function tick(){
+  const n=algNow();ensureTimes(n);
+  const s=n.sec;
+  $("clock").innerHTML=hm(s)+"<small>:"+p2(s%60)+"</small>";
+  $("dayName").textContent=DAYS[n.dow];
+  $("dateG").textContent=hijri(n.date);
+  $("dateH").textContent=greg(n.date);
+
+  const list=PR.map(([k,name])=>({k,name:(k==="dhuhr"&&n.dow===5)?"الجمعة":name,a:today[k],i:today[k]+cfg.gap[k]*60}));
+  list.push({k:"fajr",name:"الفجر",a:tomorrow.fajr+86400,i:tomorrow.fajr+86400+cfg.gap.fajr*60,tom:true});
+  const holdEnd=x=>x.i+cfg.pray*60;
+  let ph=null,cur=null,idx=0;
+  for(let q=0;q<list.length;q++){
+    const x=list[q];
+    if(s<x.a){ph="wait";cur=x;idx=q;break}
+    if(s<x.a+cfg.adhan*60&&s<x.i){ph="adhan";cur=x;idx=q;break}
+    if(s<x.i){ph="iqama";cur=x;idx=q;break}
+    if(s<holdEnd(x)){ph="pray";cur=x;idx=q;break}
+  }
+  if(!cur){ph="wait";cur=list[5];idx=5}
+
+  const st=$("status");
+  st.className="panel"+(ph==="iqama"?" iqama":ph==="adhan"?" adhan":ph==="pray"?" prayer":"");
+  let foot="",frac=1,cnt="";
+  const chips=(a,i)=>`<span class="chip">الأذان <b>${hm(a)}</b></span><span class="chip">الإقامة <b>${hm(i)}</b></span>`;
+  if(ph==="wait"){
+    const prev=idx>0?list[idx-1].i:today.isha-86400+cfg.gap.isha*60;
+    frac=(cur.a-s)/Math.max(1,cur.a-prev);
+    cnt=cd(cur.a-s);
+    $("stLabel").textContent="الصلاة القادمة";$("stName").textContent=cur.name;
+    $("chips").innerHTML=chips(cur.a,cur.i);
+    $("stNote").textContent="المتبقي على الأذان";
+    foot="صلاة "+cur.name+" — الأذان بعد "+cd(cur.a-s);
+  }else if(ph==="adhan"){
+    const ae=Math.min(cur.a+cfg.adhan*60,cur.i);
+    frac=(ae-s)/Math.max(1,ae-cur.a);
+    cnt=cd(cur.i-s);
+    $("stLabel").textContent="يُرفَع الآن أذان";$("stName").textContent="صلاة "+cur.name;
+    $("chips").innerHTML=chips(cur.a,cur.i);
+    $("stNote").textContent="رَدِّدُوا مع المؤذن · العد: الإقامة";
+    foot="الأذان الآن — صلاة "+cur.name;
+  }else if(ph==="iqama"){
+    frac=(cur.i-s)/Math.max(1,cur.i-cur.a);
+    cnt=cd(cur.i-s);
+    $("stLabel").textContent="الوقت المتبقي للإقامة";$("stName").textContent="صلاة "+cur.name;
+    $("chips").innerHTML=chips(cur.a,cur.i);
+    $("stNote").textContent="بين الأذان والإقامة "+Math.round((cur.i-cur.a)/60)+" دقيقة";
+    foot="صلاة "+cur.name+" — الإقامة بعد "+cd(cur.i-s);
+  }else{
+    $("stLabel").textContent="صلاة "+cur.name;$("stName").textContent="الصلاة قائمة";
+    $("stNote").textContent="سَوُّوا صُفُوفَكُم · أَغلِقُوا هَوَاتِفَكُم";
+  }
+  if(cnt){
+    const c=$("stCount");c.textContent=cnt;c.classList.toggle("long",cnt.length>5);
+    $("rfg").style.strokeDashoffset=String(CIRC*(1-Math.max(0,Math.min(1,frac))));
+  }
+  ORDER.forEach(([k])=>{
+    let cls="card"+(k==="sunrise"?" sun":"");
+    const act=(!cur.tom&&cur.k===k)||(cur.tom&&k==="fajr");
+    if(act)cls+=" active";
+    $("c-"+k).className=cls;
+  });
+
+  // بعد الصلاة (للإعلانات)
+  let last=-1;PR.forEach(([k])=>{const e=today[k]+cfg.gap[k]*60+cfg.pray*60;if(e<=s&&e>last)last=e});
+  ctxNow=Object.assign({},n,{afterPrayer:last>=0&&s-last<=20*60});
+
+  const black=inBlack(n,today);
+  const dkm=black?null:dkWindow(n,today);
+  updateDk(dkm,s);
+  const peeking=Date.now()<peekUntil;
+  const bo=$("blackout");
+  bo.classList.toggle("on",black);
+  bo.classList.toggle("peeking",black&&peeking);
+  if(black)$("peekClock").textContent=hm(s)+":"+p2(s%60);
+
+  // إعلان نافذة كاملة
+  let showAd=false;
+  if(!black&&!dkm&&ph!=="pray"&&ph!=="adhan"&&cfg.ads.on){
+    const slotLen=Math.max(1,cfg.ads.interval)*60;
+    const within=(nowMs()/1000)%slotLen<Math.max(5,cfg.ads.dur);
+    const nearIq=ph==="adhan"||(ph==="iqama"&&cur.i-s<=cfg.ads.noBefore*60)||(ph==="wait"&&cur.a-s<=0);
+    showAd=(within||forceAd>Date.now())&&!nearIq;
+  }
+  updateAd(showAd,foot);
+  updateBand(black||showAd||!!dkm||ph==="pray"||ph==="adhan");
+
+  // تحذير الساعة
+  $("clockWarn").classList.toggle("on",clockBad);
+}
+function fit(){document.documentElement.style.setProperty("--s",Math.min(innerWidth/1920,innerHeight/1080))}
+addEventListener("resize",fit);fit();
+setInterval(tick,250);
+
+/* ===== الساعة: مزامنة وكشف انقطاع الكهرباء ===== */
+let clockBad=false;
+function clockStatusText(){
+  const o=Math.round(OFFSET/1000);
+  const t=o===0?"ساعة التطبيق = ساعة الجهاز.":"فرق ساعة التطبيق عن الجهاز: "+(o>0?"+":"")+o+" ثانية.";
+  return t+(lastSync?" آخر مزامنة ناجحة: "+lastSync+".":"")+(clockBad?" ⚠ يُشتبه بأن الساعة غير صحيحة.":"");
+}
+let lastSync="";
+function checkClock(){
+  const last=+store.get("mosque-last")||0;
+  const t=nowMs();
+  const yr=new Date(t).getUTCFullYear();
+  if(yr<2025||(last&&t<last-120000)){
+    clockBad=true;
+    /* بدون إنترنت: نكمل من آخر وقت محفوظ بدل الاعتماد على ساعة جهاز أُعيد ضبطها */
+    if(last>1.7e12){OFFSET=last-Date.now();store.set("mosque-offset",String(OFFSET))}
+  }
+}
+function saveLast(){ if(!clockBad) store.set("mosque-last",String(nowMs())); }
+function applyTrueTime(t,src){
+  if(!(t>1.7e12))return false;
+  const off=t-Date.now();
+  if(Math.abs(off-OFFSET)>1500){OFFSET=off;store.set("mosque-offset",String(OFFSET))}
+  clockBad=false;store.set("mosque-last",String(nowMs()));
+  const n=new Date();lastSync=p2(n.getHours())+":"+p2(n.getMinutes())+" ("+src+")";
+  refreshClockUI();return true;
+}
+window.setNativeTime=ms=>{if(cfg.clock.auto)applyTrueTime(+ms,"الجهاز")};
+const wt=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error("timeout")),ms))]);
+async function netTime(){
+  const tries=[
+    async()=>{const r=await fetch("https://worldtimeapi.org/api/timezone/Africa/Algiers",{cache:"no-store"});const j=await r.json();return j.unixtime*1000},
+    async()=>{const r=await fetch("https://timeapi.io/api/Time/current/zone?timeZone=Africa/Algiers",{cache:"no-store"});const j=await r.json();return Date.UTC(j.year,j.month-1,j.day,j.hour-TZ,j.minute,j.seconds)}
+  ];
+  for(const f of tries){try{const t=await wt(f(),7000);if(t>1.7e12)return t}catch(e){}}
+  return null;
+}
+async function syncNow(manual){
+  if(window.Android&&Android.syncTime){try{Android.syncTime()}catch(e){}}
+  const t=await netTime();
+  if(t)applyTrueTime(t,"الإنترنت");
+  else if(manual){$("clockStatus").textContent="تعذّرت المزامنة من الإنترنت. "+clockStatusText()}
+}
+function refreshClockUI(){ if($("clockStatus"))$("clockStatus").textContent=clockStatusText();updateWarn() }
+function updateWarn(){
+  $("clockWarn").textContent="⚠ انقطعت الكهرباء — الوقت المعروض تقريبي (آخر وقت محفوظ). اضغط OK ثم «الوقت» لضبطه يدوياً";
+}
+checkClock();updateWarn();
+setInterval(saveLast,20000);
+setInterval(()=>{if(cfg.clock.auto)syncNow(false)},3600000);
+
+/* ===== أدوات التحكم ===== */
+let hideT;
+function showTools(){document.body.classList.add("show-tools");clearTimeout(hideT);hideT=setTimeout(()=>document.body.classList.remove("show-tools"),5000)}
+["mousemove","click","touchstart","keydown"].forEach(e=>document.addEventListener(e,()=>{showTools();peekUntil=Date.now()+8000},{passive:true}));
+// ملء الشاشة تلقائيًا عند أول ضغطة (التطبيق مخصص لشاشات المساجد)
+let fsTried=false;
+function tryFs(){if(fsTried)return;fsTried=true;try{const r=document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();if(r&&r.catch)r.catch(()=>{})}catch(e){}}
+["click","keydown","touchstart"].forEach(ev=>document.addEventListener(ev,tryFs,{once:true,passive:true}));
+$("btnSet").onclick=openSettings;
+$("btnCancel").onclick=closeSettings;
+function closeSettings(){$("settings").classList.remove("open");applyBg();$("btnSet").focus()}
+let hotT;
+function hotGear(){const g=$("btnSet");g.classList.add("hot");clearTimeout(hotT);hotT=setTimeout(()=>g.classList.remove("hot"),5000)}
+
+/* ===== التحكم بالريموت (أسهم + OK + رجوع) ===== */
+function focusables(){
+  return [...$("settings").querySelectorAll('button:not([tabindex="-1"]),input:not([type=hidden]):not([readonly]):not([type=file]),select,textarea,[tabindex="0"]')]
+    .filter(el=>!el.disabled&&el.offsetParent!==null);
+}
+function moveFocus(dir){
+  const list=focusables(),a=document.activeElement;
+  if(!list.includes(a)){if(list[0])list[0].focus();return}
+  const r=a.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+  let best=null,bs=1e9;
+  for(const el of list){
+    if(el===a)continue;
+    const q=el.getBoundingClientRect(),dx=q.left+q.width/2-cx,dy=q.top+q.height/2-cy;
+    let ok,p,s;
+    if(dir==="ArrowUp"){ok=dy<-4;p=-dy;s=Math.abs(dx)}
+    else if(dir==="ArrowDown"){ok=dy>4;p=dy;s=Math.abs(dx)}
+    else if(dir==="ArrowLeft"){ok=dx<-4;p=-dx;s=Math.abs(dy)}
+    else{ok=dx>4;p=dx;s=Math.abs(dy)}
+    if(!ok)continue;
+    const sc=p+s*2.5;if(sc<bs){bs=sc;best=el}
+  }
+  if(best){best.focus();try{best.scrollIntoView({block:"nearest"})}catch(e){}}
+}
+function stepNum(w,d){
+  const inp=w.querySelector("input");
+  const mn=+w.dataset.min,mx=+w.dataset.max;
+  let v=(+inp.value||0)+d*(+w.dataset.step||1);
+  if(w.dataset.wrap){if(v>mx)v=mn;if(v<mn)v=mx}else v=Math.max(mn,Math.min(mx,v));
+  inp.value=v;
+  inp.dispatchEvent(new Event("input"));
+}
+function settingsKey(e){
+  const k=e.key,a=document.activeElement;
+  if(k==="Escape"||k==="GoBack"||k==="BrowserBack"){e.preventDefault();closeSettings();return}
+  if(!["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Enter"].includes(k))return;
+  const isNum=a&&a.classList&&a.classList.contains("num");
+  const tag=a&&a.tagName;
+  if(isNum&&(k==="ArrowLeft"||k==="ArrowRight")){e.preventDefault();stepNum(a,k==="ArrowRight"?1:-1);return}
+  if(k==="Enter"){
+    if(tag==="INPUT"&&a.type==="checkbox"){e.preventDefault();a.click()}
+    else if(tag==="SELECT"){e.preventDefault();try{a.showPicker()}catch(x){}}
+    return; // الأزرار تعمل بـ Enter تلقائيًا
+  }
+  const text=tag==="TEXTAREA"||(tag==="INPUT"&&["text","number"].includes(a.type));
+  if(text&&(k==="ArrowLeft"||k==="ArrowRight"))return; // تحريك المؤشر داخل النص
+  if(tag==="TEXTAREA"){
+    if(k==="ArrowUp"&&a.selectionStart>0)return;
+    if(k==="ArrowDown"&&a.selectionEnd<a.value.length)return;
+  }
+  e.preventDefault();moveFocus(k);
+}
+document.addEventListener("keydown",e=>{
+  const open=$("settings").classList.contains("open");
+  if(open){settingsKey(e);return}
+  const blackNow=$("blackout").classList.contains("on");
+  if(e.key==="ContextMenu"||e.key==="F1"||e.key==="s"||e.key==="S"||(e.key==="Enter"&&!blackNow)){e.preventDefault();openSettings();return}
+  if(e.key.startsWith("Arrow"))hotGear();
+});
+
+/* ===== عناصر الإعدادات ===== */
+const TABS=[...document.querySelectorAll(".page")].map(p=>p.dataset.tab);
+TABS.forEach((t,i)=>{const b=document.createElement("button");b.className="tab"+(i?"":" on");b.textContent=t;b.onclick=()=>showTab(t);b.onfocus=()=>showTab(t);b.dataset.t=t;$("tabs").appendChild(b)});
+function showTab(t){
+  document.querySelectorAll(".page").forEach(p=>p.classList.toggle("on",p.dataset.tab===t));
+  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
+  if(t==="الوقت")fillClockInputs();
+  if(t==="الجهاز")refreshDevice();
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest(".num button");if(!b)return;
+  const w=b.parentElement,inp=w.querySelector("input");
+  const mn=w.dataset.min!==undefined?+w.dataset.min:-999,mx=w.dataset.max!==undefined?+w.dataset.max:999;
+  stepNum(w,b.textContent.trim()==="+"?1:-1);
+});
+function numCtl(id,min,max){return `<div class="num" data-min="${min}" data-max="${max}"><button>+</button><input type="number" id="${id}"><button>−</button></div>`}
+function initNums(){document.querySelectorAll(".num").forEach(w=>{w.tabIndex=0;w.querySelectorAll("button").forEach(b=>b.tabIndex=-1);const i=w.querySelector("input");i.readOnly=true;i.setAttribute("inputmode","none")})}
+PR.forEach(([k,n])=>$("gapInputs").insertAdjacentHTML("beforeend",`<div><label>${n}</label>${numCtl("g-"+k,0,90)}</div>`));
+ORDER.forEach(([k,n])=>$("tuneInputs").insertAdjacentHTML("beforeend",`<div><label>${n}</label>${numCtl("t-"+k,-60,60)}</div>`));
+
+initNums();
+/* ===== الولاية والبلدية ===== */
+const selW=$("selW"),selC=$("selC");
+const nz=s=>(s||"").replace(/[ً-ْـ]/g,"").replace(/[أإآٱ]/g,"ا").replace(/ى/g,"ي").replace(/ة/g,"ه").replace(/\s+/g," ").trim();
+function fillW(){
+  selW.innerHTML="";
+  GEO.forEach((w,i)=>{const o=document.createElement("option");o.value=i;o.textContent=p2(w.code)+" - "+w.n;selW.appendChild(o)});
+}
+function fillC(wi,sel){
+  selC.innerHTML="";
+  const cs=GEO[wi].c.slice().sort((a,b)=>a[0].localeCompare(b[0],"ar"));
+  cs.forEach(c=>{const o=document.createElement("option");o.value=JSON.stringify(c);o.textContent=c[0];selC.appendChild(o)});
+  let k=cs.findIndex(c=>nz(c[0])===nz(sel));
+  if(k<0)k=cs.findIndex(c=>nz(c[0])===nz(GEO[wi].n));
+  selC.selectedIndex=Math.max(0,k);
+}
+function selectLoc(){
+  fillW();
+  let wi=GEO.findIndex(w=>nz(w.n)===nz(cfg.loc.w));
+  if(wi<0)wi=GEO.findIndex(w=>nz(w.n)==="الجزائر");
+  selW.value=Math.max(0,wi);
+  fillC(+selW.value,cfg.loc.c);
+  $("geoStatus").textContent="قاعدة البيانات: "+GEO.length+" ولاية · "+GEO.reduce((a,w)=>a+w.c.length,0)+" بلدية — "+GEO_SRC+(GEO_ERR&&GEO.length<60?" (تعذّر التحميل: "+GEO_ERR+")":"");
+  $("cuOn").checked=!!cfg.loc.custom;$("cuLat").value=cfg.loc.custom?cfg.loc.lat:"";$("cuLng").value=cfg.loc.custom?cfg.loc.lng:"";
+}
+selW.onchange=()=>fillC(+selW.value,"");
+
+/* تحميل القائمة الكاملة */
+function okc(v,a,b){return typeof v==="number"&&isFinite(v)&&v>=a&&v<=b}
+function normGeo(j){
+  const arr=Array.isArray(j)?j:(j&&(j.wilayas||Object.values(j)))||[];
+  const out=[];
+  for(const w of arr){
+    if(!w)continue;
+    // الصيغة المدمجة: [رمز, اسم, عرض, طول, [[بلدية, عرض, طول],...]]
+    const compact=Array.isArray(w);
+    const name=compact?w[1]:w.name_ar; if(!name)continue;
+    let lat=compact?+w[2]:+w.latitude,lng=compact?+w[3]:+w.longitude;
+    if(!okc(lat,18,38)||!okc(lng,-9,12)){lat=36.75;lng=3.06}
+    const cs=[];
+    for(const c of (compact?w[4]:(w.communes||[]))){
+      if(!c)continue;
+      const cn=Array.isArray(c)?c[0]:c.name_ar; if(!cn)continue;
+      let cl=Array.isArray(c)?+c[1]:+c.latitude,cg=Array.isArray(c)?+c[2]:+c.longitude;
+      if(!okc(cl,18,38)||!okc(cg,-9,12)){cl=lat;cg=lng}
+      cs.push([cn,+cl.toFixed(4),+cg.toFixed(4)]);
+    }
+    out.push({code:+(compact?w[0]:w.code)||out.length+1,n:name,lat:+lat.toFixed(4),lng:+lng.toFixed(4),c:cs.length?cs:[[name,lat,lng]]});
+  }
+  out.sort((a,b)=>a.code-b.code);
+  return out.length>=58?out:null;
+}
+async function getJson(u){
+  try{const r=await wt(fetch(u,{cache:"force-cache"}),20000);if(r.ok)return await r.json();GEO_ERR="HTTP "+r.status}catch(e){GEO_ERR="fetch: "+(e&&e.message||e)}
+  if(u.startsWith("http")){
+    // استيراد JSON كوحدة: يعمل حتى عندما تمنع سياسة الأمان طلبات fetch
+    try{const m=await wt(import(u,{with:{type:"json"},assert:{type:"json"}}),30000);return m.default}catch(e){GEO_ERR+=" | import: "+(e&&e.message||e)}
+  }
+  return null;
+}
+async function loadGeo(){
+  const cached=jget("mosque-geo",null);
+  if(Array.isArray(cached)&&cached.length>=58){GEO=cached;GEO_SRC="القائمة الكاملة (محفوظة على الجهاز)";}
+  const urls=["algeria.json","https://cdn.jsdelivr.net/npm/geoalgeria/data/algeria.json"];
+  for(const u of urls){
+    const j=await getJson(u);
+    const g=j&&normGeo(j);
+    if(g){GEO=g;GEO_ERR="";GEO_SRC=u.startsWith("http")?"القائمة الكاملة (تم تحميلها من الإنترنت)":"القائمة الكاملة (مدمجة مع التطبيق)";store.set("mosque-geo",JSON.stringify(g));break}
+  }
+  if($("settings").classList.contains("open"))selectLoc();
+}
+$("btnGeo").onclick=async()=>{$("geoStatus").textContent="جارٍ تحميل القائمة…";await loadGeo();selectLoc()};
+
+
+/* ===== الثيمات ===== */
+const THEMES=[
+  {n:"زمرد وذهب",ac:"217,183,101",ac2:"243,223,166",gold:"#d9b765",gold2:"#f3dfa6",ink:"#f6f1e3",mut:"#a9c2b7",glass:"rgba(6,26,20,.6)",box:"#0c2f25",bg:"فجر أخضر هادئ"},
+  {n:"ليل أزرق",ac:"126,184,255",ac2:"207,228,255",gold:"#7eb8ff",gold2:"#cfe4ff",ink:"#eef4ff",mut:"#9fb6d6",glass:"rgba(6,16,40,.62)",box:"#0b1a38",bg:"نجمة على أزرق"},
+  {n:"فيروزي",ac:"127,224,208",ac2:"199,247,239",gold:"#7fe0d0",gold2:"#c7f7ef",ink:"#effcf9",mut:"#9fd0c8",glass:"rgba(4,32,38,.6)",box:"#083038",bg:"تركوازي"},
+  {n:"عنبر دافئ",ac:"240,170,90",ac2:"255,214,160",gold:"#f0aa5a",gold2:"#ffd6a0",ink:"#fff4e6",mut:"#d1b595",glass:"rgba(34,18,6,.62)",box:"#2e1a0b",bg:"ذهب وبني"},
+  {n:"بنفسجي ملكي",ac:"205,165,255",ac2:"232,214,255",gold:"#cda5ff",gold2:"#e8d6ff",ink:"#f6f0ff",mut:"#b7a6d6",glass:"rgba(22,10,48,.62)",box:"#25134a",bg:"بنفسجي ملكي"}
+];
+const CARDCOLS=[{n:"حسب الثيم"},{n:"ذهبي",c:"217,183,101"},{n:"أخضر",c:"60,170,110"},{n:"أزرق",c:"70,140,230"},{n:"فيروزي",c:"40,190,190"},{n:"بنفسجي",c:"150,100,220"},{n:"عنابي",c:"170,50,70"},{n:"برتقالي",c:"230,130,50"},{n:"رمادي",c:"120,125,135"},{n:"أسود",c:"0,0,0"},{n:"أبيض",c:"255,255,255"}];
+function applyTheme(){
+  const t=THEMES[cfg.theme]||THEMES[0],r=document.documentElement.style;
+  r.setProperty("--ac",t.ac);r.setProperty("--ac2",t.ac2);r.setProperty("--gold",t.gold);r.setProperty("--gold2",t.gold2);
+  r.setProperty("--ink",t.ink);r.setProperty("--mut",t.mut);r.setProperty("--glass",t.glass);
+  const m=t.glass.match(/rgba\((\d+),(\d+),(\d+),([\d.]+)\)/);
+  if(m){r.setProperty("--gl",m[1]+","+m[2]+","+m[3]);r.setProperty("--gla",m[4])}
+  r.setProperty("--cc",(CARDCOLS[cfg.cardCol]||{}).c||t.ac);
+  r.setProperty("--co",String(1-Math.max(0,Math.min(90,cfg.tr||0))/100));
+  $("stage").className="stage lay"+(cfg.lay||0)+((cfg.cardCol||0)>0?" cc-all":"");
+  const b=document.querySelector(".box");if(b)b.style.background=t.box;
+}
+function renderThemes(){
+  const row=$("themeRow");row.innerHTML="";
+  THEMES.forEach((t,i)=>{
+    const b=document.createElement("button");b.className="btn"+(cfg.theme===i?" primary":"");
+    b.textContent=t.n;b.style.borderColor=t.gold;
+    b.onclick=()=>{
+      cfg.theme=i;const bi=BGS.findIndex(x=>x[0]===t.bg);
+      if(bi>=0){cfg.bg.t="p";cfg.bg.i=bi}
+      applyTheme();applyBg();renderThemes();renderBgs();
+    };
+    row.appendChild(b);
+  });
+}
+
+
+function renderCC(){
+  const row=$("ccRow");row.innerHTML="";
+  CARDCOLS.forEach((c,i)=>{
+    const b=document.createElement("button");b.className="btn"+((cfg.cardCol||0)===i?" primary":"");
+    b.textContent=c.n;if(c.c&&(cfg.cardCol||0)!==i)b.style.borderColor="rgb("+c.c+")";
+    b.onclick=()=>{cfg.cardCol=i;applyTheme();renderCC()};row.appendChild(b);
+  });
+}
+const LAYS=["كلاسيكي","مركزي","جانبي","علوي","بسيط"];
+function renderLays(){
+  const row=$("layRow");row.innerHTML="";
+  LAYS.forEach((n,i)=>{
+    const b=document.createElement("button");b.className="btn"+((cfg.lay||0)===i?" primary":"");b.textContent=(i+1)+" · "+n;
+    b.onclick=()=>{cfg.lay=i;applyTheme();renderLays()};row.appendChild(b);
+  });
+}
+$("inTr").oninput=()=>{cfg.tr=Math.max(0,Math.min(90,+$("inTr").value||0));applyTheme()};
+const testDk=m=>{forceDk={mode:m,until:Date.now()+(m==="post"?10000:12000)};$("settings").classList.remove("open");setTimeout(()=>{forceDk=null;openSettings(true)},(m==="post"?10200:12200))};
+$("btnPreview").onclick=()=>{$("settings").classList.remove("open");setTimeout(()=>openSettings(true),6000)};
+$("btnTestPost").onclick=()=>testDk("post");$("btnTestMor").onclick=()=>testDk("morning");$("btnTestEve").onclick=()=>testDk("evening");
+
+/* ===== الخلفيات ===== */
+function renderBgs(){
+  const g=$("bgGrid");g.innerHTML="";
+  BGS.forEach((b,i)=>{
+    const d=document.createElement("button");d.className="bgi"+(cfg.bg.t==="p"&&cfg.bg.i===i?" on":"");
+    d.style.background=b[1];d.innerHTML=`<span>${b[0]}</span>`;
+    d.onclick=()=>{cfg.bg.t="p";cfg.bg.i=i;applyBg();renderBgs()};g.appendChild(d);
+  });
+  customBgs.forEach((u,i)=>{
+    const d=document.createElement("button");d.className="bgi"+(cfg.bg.t==="c"&&cfg.bg.c===i?" on":"");
+    d.style.backgroundImage="url("+u+")";d.innerHTML=`<span>صورتي ${i+1}</span><i class="x">×</i>`;
+    d.onclick=e=>{
+      if(e.target.classList.contains("x")){customBgs.splice(i,1);store.set("mosque-bgs",JSON.stringify(customBgs));if(cfg.bg.t==="c"){cfg.bg.t="p";cfg.bg.i=0}applyBg();renderBgs();return}
+      cfg.bg.t="c";cfg.bg.c=i;applyBg();renderBgs();
+    };g.appendChild(d);
+  });
+}
+function resizeImg(file,maxW,q){
+  return new Promise((res,rej)=>{
+    const fr=new FileReader();
+    fr.onload=()=>{
+      const im=new Image();
+      im.onload=()=>{
+        const k=Math.min(1,maxW/im.width);
+        const c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
+        c.getContext("2d").drawImage(im,0,0,c.width,c.height);
+        res(c.toDataURL("image/jpeg",q));
+      };
+      im.onerror=rej;im.src=fr.result;
+    };
+    fr.onerror=rej;fr.readAsDataURL(file);
+  });
+}
+$("bgFile").onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  try{
+    const u=await resizeImg(f,1600,.78);
+    customBgs.push(u);
+    if(!store.set("mosque-bgs",JSON.stringify(customBgs))){msg("تعذّر حفظ الصورة (المساحة ممتلئة). احذف صورة قديمة.");customBgs.pop();return}
+    cfg.bg.t="c";cfg.bg.c=customBgs.length-1;applyBg();renderBgs();msg("تمت إضافة الخلفية");
+  }catch(err){msg("تعذّر قراءة الصورة")}
+  e.target.value="";
+};
+$("bgDim").oninput=()=>{cfg.bg.dim=+$("bgDim").value||0;applyBg()};
+
+/* ===== الإعلانات (المحرر) ===== */
+let adDraft=[];
+function renderAds(){
+  const L=$("adList");L.innerHTML="";
+  adDraft.forEach((a,i)=>{
+    const d=document.createElement("div");d.className="ad";
+    d.innerHTML=`<div class="head"><input type="checkbox" ${a.off?"":"checked"} data-f="on" title="مفعّل"><input type="text" data-f="title" placeholder="عنوان الإعلان"><button class="btn sm danger" data-del="1">حذف</button></div>
+    <textarea data-f="text" placeholder="نص الإعلان"></textarea>
+    <div class="row" style="margin-top:8px">
+      <div><label>طريقة العرض</label><select data-f="mode"><option value="overlay">نافذة كاملة</option><option value="ticker">شريط</option></select></div>
+      <div><label>متى يظهر</label><select data-f="when"><option value="always">دائمًا</option><option value="after">بعد الصلاة (20 دقيقة)</option><option value="friday">يوم الجمعة فقط</option></select></div>
+      <div><label>من تاريخ (YYYY-MM-DD)</label><input type="text" inputmode="numeric" placeholder="2026-12-01" data-f="from"></div>
+      <div><label>إلى تاريخ (YYYY-MM-DD)</label><input type="text" inputmode="numeric" placeholder="2026-12-31" data-f="to"></div>
+    </div>
+    <div class="row" style="margin-top:8px"><div><label>صورة (اختياري)</label><input type="file" accept="image/*" data-img="1"></div><div>${a.img?`<img class="thumb" src="${a.img}"> <button class="btn sm" data-rmimg="1">إزالة الصورة</button>`:""}</div></div>`;
+    d.querySelector('[data-f="title"]').value=a.title||"";
+    d.querySelector('[data-f="text"]').value=a.text||"";
+    d.querySelector('[data-f="mode"]').value=a.mode||"overlay";
+    d.querySelector('[data-f="when"]').value=a.when||"always";
+    d.querySelector('[data-f="from"]').value=a.from||"";
+    d.querySelector('[data-f="to"]').value=a.to||"";
+    d.addEventListener("input",e=>{
+      const f=e.target.dataset.f;if(!f)return;
+      if(f==="on")a.off=!e.target.checked;else a[f]=e.target.value;
+    });
+    d.addEventListener("change",async e=>{
+      if(e.target.dataset.f==="on")a.off=!e.target.checked;
+      else if(e.target.dataset.f)a[e.target.dataset.f]=e.target.value;
+      if(e.target.dataset.img&&e.target.files[0]){try{a.img=await resizeImg(e.target.files[0],1280,.75);renderAds()}catch(x){msg("تعذّر قراءة الصورة")}}
+    });
+    d.addEventListener("click",e=>{
+      if(e.target.dataset.del){adDraft.splice(i,1);renderAds()}
+      if(e.target.dataset.rmimg){a.img="";renderAds()}
+    });
+    L.appendChild(d);
+  });
+  if(!adDraft.length)L.innerHTML='<p class="note">لا توجد إعلانات بعد. اضغط «إعلان جديد».</p>';
+}
+$("btnAddAd").onclick=()=>{adDraft.push({title:"",text:"",mode:"overlay",when:"always",from:"",to:"",img:"",off:false});renderAds()};
+$("btnTestAd").onclick=()=>{
+  // تجربة بالإعلانات الحالية في المحرر
+  const keep=cfg.ads.list;cfg.ads.list=adDraft;cfg.ads.on=true;
+  forceAd=Date.now()+8000;$("settings").classList.remove("open");
+  setTimeout(()=>{cfg.ads.list=keep;cfg.ads.on=savedAdsOn;forceAd=0;openSettings(true)},8200);
+};
+let savedAdsOn=true;
+$("btnTestBlack").onclick=()=>{forceBlack=Date.now()+6000;peekUntil=0;$("settings").classList.remove("open");setTimeout(()=>{forceBlack=0;openSettings(true)},6200)};
+
+/* ===== الوقت (واجهة) ===== */
+function fillClockInputs(){
+  const n=algNow();
+  $("ckY").value=n.y;$("ckM").value=n.m;$("ckD").value=n.d;
+  $("ckH").value=Math.floor(n.sec/3600);$("ckMi").value=Math.floor(n.sec/60)%60;
+  $("ckAuto").checked=!!cfg.clock.auto;
+  refreshClockUI();
+}
+$("btnSetClock").onclick=()=>{
+  const y=+$("ckY").value,m=+$("ckM").value,d=+$("ckD").value,h=+$("ckH").value,mi=+$("ckMi").value;
+  if(!(y>=2024&&m>=1&&m<=12&&d>=1&&d<=31&&h>=0&&h<=23&&mi>=0&&mi<=59)){$("clockStatus").textContent="قيم غير صحيحة.";return}
+  const target=Date.UTC(y,m-1,d,h-TZ,mi,0);
+  OFFSET=target-Date.now();store.set("mosque-offset",String(OFFSET));
+  clockBad=false;store.set("mosque-last",String(nowMs()));
+  dayKey="";refreshClockUI();msg("تم ضبط الوقت");
+};
+$("btnSyncNow").onclick=async()=>{$("clockStatus").textContent="جارٍ المزامنة…";await syncNow(true);dayKey="";refreshClockUI()};
+$("btnResetClock").onclick=()=>{OFFSET=0;store.set("mosque-offset","0");clockBad=false;store.set("mosque-last",String(nowMs()));dayKey="";refreshClockUI();fillClockInputs()};
+
+/* ===== جهاز أندرويد ===== */
+function refreshDevice(){
+  const has=!!window.Android;
+  $("devAndroid").style.display=has?"block":"none";
+  $("devWeb").style.display=has?"none":"block";
+  if(!has)return;
+  try{
+    $("dvAuto").checked=!!Android.getAutoStart();
+    $("dvOverlay").textContent=Android.canOverlay()?"إذن «العرض فوق التطبيقات»: ممنوح ✓":"إذن «العرض فوق التطبيقات»: غير ممنوح — مطلوب للتشغيل التلقائي في أندرويد 10+";
+  }catch(e){}
+}
+$("btnOverlay").onclick=()=>{try{Android.requestOverlay()}catch(e){}};
+$("btnExit").onclick=()=>{try{Android.exitApp()}catch(e){}};
+$("dvAuto").onchange=()=>{try{Android.setAutoStart($("dvAuto").checked)}catch(e){}};
+
+/* ===== فتح / حفظ ===== */
+function msg(t){$("saveMsg").textContent=t;setTimeout(()=>{if($("saveMsg").textContent===t)$("saveMsg").textContent=""},3500)}
+function openSettings(keepTab){
+  $("inName").value=cfg.name==="المسجد"?"":cfg.name;
+  selectLoc();
+  PR.forEach(([k])=>$("g-"+k).value=cfg.gap[k]);
+  ORDER.forEach(([k])=>$("t-"+k).value=cfg.tune[k]||0);
+  $("inHijri").value=cfg.hijri;$("inPray").value=cfg.pray;$("inAdhan").value=cfg.adhan;renderThemes();renderLays();renderCC();$("inTr").value=cfg.tr||0;const D=cfg.dk;$("dkPost").checked=D.post;$("dkMor").checked=D.morning;$("dkEve").checked=D.evening;$("dkPostMin").value=D.postMin;$("dkMorMin").value=D.morMin;$("dkEveMin").value=D.eveMin;$("dkScr").value=D.sec;
+  const b=cfg.black;$("bkOn").checked=b.on;$("bkOff").value=b.off;$("bkDur").value=b.dur;$("bkFri").checked=b.fri;$("bkFriDur").value=b.friDur;
+  $("dkOn").checked=cfg.dhikr.on;$("dkSec").value=cfg.dhikr.sec;$("dkCustom").value=cfg.dhikr.custom;
+  $("adOn").checked=cfg.ads.on;savedAdsOn=cfg.ads.on;$("adInt").value=cfg.ads.interval;$("adDur").value=cfg.ads.dur;$("adNo").value=cfg.ads.noBefore;
+  if(keepTab!==true)adDraft=JSON.parse(JSON.stringify(cfg.ads.list));
+  renderAds();$("bgDim").value=cfg.bg.dim;renderBgs();
+  $("settings").classList.add("open");
+  showTab(keepTab===true?(document.querySelector(".tab.on")||{}).dataset?.t||TABS[0]:TABS[0]);
+  refreshDevice();
+  const tb=document.querySelector(".tab.on");if(tb)tb.focus();
+}
+$("btnSave").onclick=()=>{
+  cfg.name=$("inName").value.trim()||"المسجد";
+  try{
+    const c=JSON.parse(selC.value),w=GEO[+selW.value];cfg.loc={w:w.n,c:c[0],lat:c[1],lng:c[2]};
+    const la=parseFloat($("cuLat").value),lg=parseFloat($("cuLng").value);
+    if($("cuOn").checked&&okc(la,18,38)&&okc(lg,-9,12)){cfg.loc.lat=la;cfg.loc.lng=lg;cfg.loc.custom=true}
+  }catch(e){}
+  PR.forEach(([k])=>cfg.gap[k]=Math.max(0,+$("g-"+k).value||0));
+  ORDER.forEach(([k])=>cfg.tune[k]=+$("t-"+k).value||0);
+  cfg.adhan=Math.max(0,Math.min(10,+$("inAdhan").value));cfg.tr=Math.max(0,Math.min(90,+$("inTr").value||0));{const D=cfg.dk;D.post=$("dkPost").checked;D.morning=$("dkMor").checked;D.evening=$("dkEve").checked;D.postMin=Math.max(0,+$("dkPostMin").value||0);D.morMin=Math.max(1,+$("dkMorMin").value||10);D.eveMin=Math.max(1,+$("dkEveMin").value||10);D.sec=Math.max(8,+$("dkScr").value||25)}cfg.hijri=+$("inHijri").value||0;cfg.pray=Math.max(1,+$("inPray").value||10);
+  const b=cfg.black;b.on=$("bkOn").checked;b.off=Math.max(0,+$("bkOff").value||0);b.dur=Math.max(1,+$("bkDur").value||10);b.fri=$("bkFri").checked;b.friDur=Math.max(1,+$("bkFriDur").value||40);
+  cfg.dhikr.on=$("dkOn").checked;cfg.dhikr.sec=Math.max(4,+$("dkSec").value||12);cfg.dhikr.custom=$("dkCustom").value;
+  cfg.ads.on=$("adOn").checked;cfg.ads.interval=Math.max(1,+$("adInt").value||5);cfg.ads.dur=Math.max(5,+$("adDur").value||30);cfg.ads.noBefore=Math.max(0,+$("adNo").value||0);
+  cfg.ads.list=adDraft.filter(a=>a.title||a.text||a.img);
+  cfg.clock.auto=$("ckAuto").checked;
+  cfg.bg.dim=+$("bgDim").value||0;
+  if(!saveCfg()){msg("تعذّر الحفظ في المتصفح (قد تكون الصور كبيرة)");return}
+  dayKey="";bandKey="";adKey="";
+  applyBg();$("settings").classList.remove("open");tick();
+};
+
+/* ===== بدء التشغيل ===== */
+applyBg();tick();loadGeo();
+if(cfg.clock.auto)setTimeout(()=>syncNow(false),3000);
+if(firstRun)openSettings();
+</script>
+</body>
+</html>
