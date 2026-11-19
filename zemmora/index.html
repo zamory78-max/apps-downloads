@@ -6,6 +6,7 @@
 <meta name="apple-mobile-web-app-title" content="زمورة">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#2563eb">
@@ -507,16 +508,17 @@ function botHTML(p){return `<span class="e">${esc(p.en)}</span>${p.ar?`<span cla
 function chat(){C.active?convo():picker()}
 function picker(){
   app.innerHTML=`<h2>💬 اختر سيناريو المحادثة</h2>
-  <div class="note" style="margin:-6px 0 8px">${HAS_AI?"المدرّس يفهم الدارجة ويصحّح لك ويقترح عليك ردوداً.":"وضع التدريب بدون إنترنت: حوارات تختلف بحسب مستواك (A1–A2 أساسي، B1–B2 متوسط، C1 متقدّم)، تختار فيها الرد الأنسب أو تكتبه بنفسك ويُقيَّم."} اختر مستواك:</div><div class="note" id="pn" style="color:#b45309;font-weight:600"></div>
+  <div class="note" style="margin:-6px 0 8px">${(HAS_AI||geminiOn())?"المدرّس يفهم الدارجة ويصحّح لك ويقترح عليك ردوداً.":"وضع التدريب بدون إنترنت: حوارات تختلف بحسب مستواك (A1–A2 أساسي، B1–B2 متوسط، C1 متقدّم)، تختار فيها الرد الأنسب أو تكتبه بنفسك ويُقيَّم."} اختر مستواك:</div><div class="note" id="pn" style="color:#b45309;font-weight:600"></div>
   <div class="chips" id="lvc">${LEVELS.map(l=>`<button class="chip ${C.lv===l.id?"on":""}" data-v="${l.id}">${l.ic} ${l.id}</button>`).join("")}</div>
-  <div class="grid2">${SCEN.map(s=>`<div class="card sc" data-v="${s[0]}"><div style="font-size:34px">${s[1]}</div><b>${s[2]}</b><small>🎯 ${s[3]}</small></div>`).join("")}</div>`;
+  ${HAS_AI?"":`<div class="card" id="aib" style="cursor:pointer;display:flex;gap:10px;align-items:center;margin-bottom:10px;${geminiOn()?"border-color:#16a34a":""}"><div style="font-size:30px">🤖</div><div><b>${geminiOn()?"المدرّس الذكي Gemini: مفعّل ✅":"فعّل المدرّس الذكي (Gemini مجاناً)"}</b><div class="note" style="margin:2px 0 0">${geminiOn()?"محادثة حرة بلا نهاية، تفهم الدارجة. اضغط للإعدادات.":"محادثة حرة تفهم الدارجة. تحتاج مفتاحاً مجانياً من Google."}</div></div></div>`}<div class="grid2">${SCEN.map(s=>`<div class="card sc" data-v="${s[0]}"><div style="font-size:34px">${s[1]}</div><b>${s[2]}</b><small>🎯 ${s[3]}</small></div>`).join("")}</div>`;
   $("#lvc").onclick=e=>{const v=e.target.dataset.v;if(v){C.lv=v;picker()}};
-  app.querySelectorAll(".sc").forEach(e=>e.onclick=()=>{if(!HAS_AI&&!CS[e.dataset.v]){$("#pn").textContent="🤖 هذا السيناريو يحتاج المدرّس الذكي ويعمل داخل Claude فقط. جرّب السيناريوهات غير الباهتة.";return}C.sc=e.dataset.v;C.script=null;C.active=true;C.hist=[];C.started=false;C.done=false;render();scrollTo(0,0)});
+  const ab=$("#aib");if(ab)ab.onclick=aiSettings;
+  app.querySelectorAll(".sc").forEach(e=>e.onclick=()=>{if(!HAS_AI&&!CS[e.dataset.v]){$("#pn").textContent="🤖 هذا السيناريو يحتاج المدرّس الذكي ويعمل داخل Claude فقط. جرّب السيناريوهات غير الباهتة.";return}C.sc=e.dataset.v;C.script=null;C.forceOff=false;C.active=true;C.hist=[];C.started=false;C.done=false;render();scrollTo(0,0)});
 }
 function convo(){
   const s=sc();
   app.innerHTML=`<div class="convo">
-   <div class="ctop"><button class="cb2" id="cbk">→</button><div style="flex:1"><b>${s[1]} ${s[2]}</b><small>المستوى ${C.lv}${useScript()?" · تدريب بدون إنترنت":""}</small></div><button class="chip ${C.showAr?"on":""}" id="tg">🇩🇿 ترجمة</button></div>
+   <div class="ctop"><button class="cb2" id="cbk">→</button><div style="flex:1"><b>${s[1]} ${s[2]}</b><small>المستوى ${C.lv}${useScript()?" · تدريب بدون إنترنت":geminiOn()?" · Gemini ✨":""}</small></div><button class="chip ${C.showAr?"on":""}" id="tg">🇩🇿 ترجمة</button></div>
    <div class="mission" id="ms">🎯 المهمة: ${s[3]}</div>
    <div class="chat ${C.showAr?"":"hidear"}" id="cb"></div>
    <div class="sug" id="sg"></div>
@@ -544,7 +546,9 @@ async function ask(){
   const sm=await getSample();const sg=$("#sg");if(sg)sg.innerHTML="";
   const bubble=document.createElement("div");bubble.className="msg bot";bubble.innerHTML='<span class="a">… يكتب</span>';$("#cb").appendChild(bubble);$("#cb").scrollTop=1e9;
   let txt="";
-  try{
+  if(!sm&&geminiOn()){
+    try{txt=await gemini(C.hist)}catch(e){bubble.remove();showAIError(e);return}
+  }else try{
     if(!sm)throw{code:"none"};
     const r=await sm(C.hist,{cache:false,modelTier:"quick",onText:({text})=>{txt=text;const p=parseBot(text);bubble.innerHTML=botHTML(p);$("#cb").scrollTop=1e9}});
     txt=r.text||txt;
@@ -800,10 +804,60 @@ news:[
  T("So what would you recommend?","فماذا توصي؟","I'd advocate investing in retraining schemes to ease the transition.","Give money, train, people.","Advocate I retrain scheme.","I'd advocate ... = أدعو إلى ...")]]
 });
 
+/* ---------- GEMINI (user's own free key) ---------- */
+const AI={get(){try{return JSON.parse(localStorage.getItem("zemmora_ai")||"{}")}catch(e){return{}}},set(o){try{localStorage.setItem("zemmora_ai",JSON.stringify(o))}catch(e){}}};
+const geminiOn=()=>!HAS_AI&&!!AI.get().key;
+async function gemini(hist,maxTok){
+  const a=AI.get(),model=a.model||"gemini-flash-latest";
+  const h=hist.length>18?[hist[0],...hist.slice(-16)]:hist;
+  const contents=h.map(m=>({role:m.role==="assistant"?"model":"user",parts:[{text:m.content}]}));
+  let r;
+  try{r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":a.key},body:JSON.stringify({contents,generationConfig:{temperature:.8,maxOutputTokens:maxTok||1024}})})}
+  catch(e){throw{code:"net"}}
+  if(!r.ok){let m="";try{m=(await r.json()).error.message}catch(e){}throw{code:r.status===429?"quota":(r.status===400||r.status===403)?"key":r.status===404?"model":"http",msg:m}}
+  const j=await r.json();const t=j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts&&j.candidates[0].content.parts.map(x=>x.text||"").join("");
+  if(!t)throw{code:"empty"};return t;
+}
+const AIERR={net:"📡 تعذّر الاتصال بالإنترنت.",quota:"⏳ بلغتَ الحدّ المجاني المؤقت لـ Gemini (عدد الطلبات). انتظر قليلاً أو دقيقة ثم أعد المحاولة.",key:"🔑 المفتاح غير صحيح أو غير مفعّل. تحقّق منه في الإعدادات.",model:"❓ اسم النموذج غير موجود. غيّره في الإعدادات إلى gemini-flash-latest.",http:"⚠️ حدث خطأ من خدمة Gemini.",empty:"⚠️ لم يرد Gemini بنتيجة. أعد المحاولة."};
+function showAIError(e){
+  const d=document.createElement("div");d.className="msg bot";
+  d.innerHTML=`<span class="a" style="color:#111;font-size:15px">${AIERR[e.code]||AIERR.http}${e.msg?`<br><small style="color:#6b7488;direction:ltr;display:block">${esc(e.msg.slice(0,140))}</small>`:""}</span><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn" id="ar1">🔁 أعد المحاولة</button><button class="btn sec" id="ar2">📚 تدريب بدون إنترنت</button><button class="btn sec" id="ar3">⚙️ الإعدادات</button></div>`;
+  $("#cb").appendChild(d);$("#cb").scrollTop=1e9;
+  $("#ar1").onclick=async()=>{d.remove();C.busy=true;await ask();C.busy=false};
+  $("#ar2").onclick=()=>{C.forceOff=true;C.hist=[];C.started=false;convo()};
+  $("#ar3").onclick=()=>aiSettings();
+}
+function aiSettings(){
+  const a=AI.get();
+  app.innerHTML=`<button class="back" id="ab">→ رجوع</button><h2>🤖 المدرّس الذكي (Gemini)</h2>
+  ${HAS_AI?`<div class="card">أنت داخل Claude: المدرّس الذكي يعمل تلقائياً ولا تحتاج مفتاحاً.</div>`:`
+  <div class="card"><b>كيف تحصل على مفتاح مجاني (دقيقة واحدة)</b>
+  <ol style="padding-inline-start:20px;line-height:1.9;margin:8px 0">
+  <li>افتح <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:#2563eb;font-weight:700">aistudio.google.com/apikey</a> وسجّل بحساب Google.</li>
+  <li>اضغط <b>Create API key</b> وانسخ المفتاح.</li>
+  <li>الصقه هنا واضغط «حفظ واختبار».</li></ol>
+  <div class="note">🔒 يُحفظ المفتاح في هاتفك فقط، ولا يُرسل إلا إلى Google. الباقة المجانية لها حدّ يومي وحدّ لعدد الطلبات في الدقيقة، وإذا انتهت يعود التطبيق لتدريب بدون إنترنت.</div></div>
+  <div class="card"><label style="font-weight:700">مفتاح Gemini</label>
+  <input id="ak" type="password" autocomplete="off" placeholder="AIza..." value="${esc(a.key||"")}" style="width:100%;padding:12px;margin:6px 0 10px;border:2px solid var(--line);border-radius:12px;font:600 15px monospace;direction:ltr;background:#fff;color:#1d2433">
+  <label style="font-weight:700">اسم النموذج</label>
+  <input id="am" value="${esc(a.model||"gemini-flash-latest")}" style="width:100%;padding:12px;margin:6px 0 10px;border:2px solid var(--line);border-radius:12px;font:600 15px monospace;direction:ltr;background:#fff;color:#1d2433">
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="asv">💾 حفظ واختبار</button>${a.key?`<button class="btn sec" id="adel">🗑️ حذف المفتاح</button>`:""}</div>
+  <div id="ast" style="margin-top:10px;font-weight:700"></div></div>`}`;
+  $("#ab").onclick=()=>{C.active=false;picker()};
+  if(HAS_AI)return;
+  $("#asv").onclick=async()=>{
+    const key=$("#ak").value.trim(),model=$("#am").value.trim()||"gemini-flash-latest";
+    if(!key){$("#ast").textContent="الصق المفتاح أولاً";return}
+    AI.set({key,model});$("#ast").style.color="#6b7488";$("#ast").textContent="… جاري الاختبار";
+    try{await gemini([{role:"user",content:"Reply with the single word: OK"}],64);$("#ast").style.color="#16a34a";$("#ast").textContent="✅ يعمل! ارجع واختر سيناريو.";sfx(true)}
+    catch(e){$("#ast").style.color="#dc2626";$("#ast").textContent=AIERR[e.code]||AIERR.http;sfx(false)}
+  };
+  const dl=$("#adel");if(dl)dl.onclick=()=>{AI.set({});aiSettings()};
+}
 /* ---------- OFFLINE ROLE-PLAY ENGINE ---------- */
 const HAS_AI=!!(window.claude&&typeof window.claude.use==="function");
 const tierOf=()=>({A1:0,A2:0,B1:1,B2:1,C1:2}[C.lv]);
-function useScript(){return !HAS_AI&&!!CS[C.sc]}
+function useScript(){return !HAS_AI&&(!geminiOn()||C.forceOff)&&!!CS[C.sc]}
 function addBotP(en,ar){const d=document.createElement("div");d.className="msg bot";d.innerHTML=botHTML({en,ar,fix:"",sug:[]})+`<br><button class="spk" style="width:36px;height:36px;font-size:15px;margin-top:6px">🔊</button>`;d.querySelector(".spk").onclick=()=>say(en,{rate:.85});$("#cb").appendChild(d);$("#cb").scrollTop=1e9;return d}
 function startScript(){
   C.started=true;C.script=CS[C.sc][tierOf()];C.turn=0;C.score=0;C.reveal=false;C.busy=false;C.done=false;
