@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#2563eb">
@@ -516,7 +517,7 @@ function picker(){
   app.querySelectorAll(".sc").forEach(e=>e.onclick=()=>{if(!HAS_AI&&!CS[e.dataset.v]){$("#pn").textContent="🤖 هذا السيناريو يحتاج المدرّس الذكي ويعمل داخل Claude فقط. جرّب السيناريوهات غير الباهتة.";return}C.sc=e.dataset.v;C.script=null;C.forceOff=false;C.active=true;C.hist=[];C.started=false;C.done=false;render();scrollTo(0,0)});
 }
 function convo(){
-  const s=sc();
+  C.busy=false;const s=sc();
   app.innerHTML=`<div class="convo">
    <div class="ctop"><button class="cb2" id="cbk">→</button><div style="flex:1"><b>${s[1]} ${s[2]}</b><small>المستوى ${C.lv}${useScript()?" · تدريب بدون إنترنت":geminiOn()?" · Gemini ✨":""}</small></div><button class="chip ${C.showAr?"on":""}" id="tg">🇩🇿 ترجمة</button></div>
    <div class="mission" id="ms">🎯 المهمة: ${s[3]}</div>
@@ -543,11 +544,13 @@ function showSug(p){
 }
 async function getSample(){if(C.sample!==null)return C.sample;try{C.sample=(window.claude&&await claude.use("sample"))||false}catch(e){C.sample=false}return C.sample}
 async function ask(){
-  const sm=await getSample();const sg=$("#sg");if(sg)sg.innerHTML="";
-  const bubble=document.createElement("div");bubble.className="msg bot";bubble.innerHTML='<span class="a">… يكتب</span>';$("#cb").appendChild(bubble);$("#cb").scrollTop=1e9;
+  const my=C.rq=(C.rq||0)+1;const sm=await getSample();const sg=$("#sg");if(sg)sg.innerHTML="";
+  document.querySelectorAll(".typing").forEach(x=>x.remove());
+  const bubble=document.createElement("div");bubble.className="msg bot typing";bubble.innerHTML='<span class="a">… يكتب</span>';$("#cb").appendChild(bubble);$("#cb").scrollTop=1e9;
   let txt="";
   if(!sm&&geminiOn()){
-    try{txt=await gemini(C.hist)}catch(e){bubble.remove();showAIError(e);return}
+    try{txt=await gemini(C.hist,0,t=>{if(my!==C.rq)return;const p=parseBot(t);bubble.innerHTML=botHTML(p);$("#cb")&&($("#cb").scrollTop=1e9)})}catch(e){bubble.remove();if(my===C.rq)showAIError(e);return}
+    if(my!==C.rq){bubble.remove();return}
   }else try{
     if(!sm)throw{code:"none"};
     const r=await sm(C.hist,{cache:false,modelTier:"quick",onText:({text})=>{txt=text;const p=parseBot(text);bubble.innerHTML=botHTML(p);$("#cb").scrollTop=1e9}});
@@ -571,9 +574,9 @@ async function start(){
 }
 async function send(t){
   if(C.script)return scriptReply(t);
-  if(C.busy)return;t=(t||"").trim();if(!t)return;
+  t=(t||"").trim();if(!t||C.busy)return;
   C.busy=true;const inp=$("#ci");if(inp)inp.value="";C.hist.push({role:"user",content:t});addMsg("user",t);addXP(1);
-  await ask();C.busy=false;
+  try{await ask()}finally{C.busy=false}
 }
 async function initDict(){
   try{
@@ -807,23 +810,38 @@ news:[
 /* ---------- GEMINI (user's own free key) ---------- */
 const AI={get(){try{return JSON.parse(localStorage.getItem("zemmora_ai")||"{}")}catch(e){return{}}},set(o){try{localStorage.setItem("zemmora_ai",JSON.stringify(o))}catch(e){}}};
 const geminiOn=()=>!HAS_AI&&!!AI.get().key;
-async function gemini(hist,maxTok){
+async function gemini(hist,maxTok,onText){
   const a=AI.get(),model=a.model||"gemini-flash-latest";
-  const h=hist.length>18?[hist[0],...hist.slice(-16)]:hist;
+  const h=hist.length>14?[hist[0],...hist.slice(-12)]:hist;
   const contents=h.map(m=>({role:m.role==="assistant"?"model":"user",parts:[{text:m.content}]}));
-  let r;
-  try{r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":a.key},body:JSON.stringify({contents,generationConfig:{temperature:.8,maxOutputTokens:maxTok||1024}})})}
-  catch(e){throw{code:"net"}}
-  if(!r.ok){let m="";try{m=(await r.json()).error.message}catch(e){}throw{code:r.status===429?"quota":(r.status===400||r.status===403)?"key":r.status===404?"model":"http",msg:m}}
-  const j=await r.json();const t=j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts&&j.candidates[0].content.parts.map(x=>x.text||"").join("");
-  if(!t)throw{code:"empty"};return t;
+  const url="https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":streamGenerateContent?alt=sse";
+  async function go(think){
+    const gc={temperature:.8,maxOutputTokens:maxTok||700};if(think)gc.thinkingConfig={thinkingBudget:0};
+    const ac=new AbortController();let tm=setTimeout(()=>ac.abort(),25000);
+    let r;
+    try{r=await fetch(url,{method:"POST",signal:ac.signal,headers:{"Content-Type":"application/json","x-goog-api-key":a.key},body:JSON.stringify({contents,generationConfig:gc})})}
+    catch(e){clearTimeout(tm);throw{code:"net"}}
+    if(!r.ok){clearTimeout(tm);let m="";try{m=(await r.json()).error.message}catch(e){}throw{code:r.status===429?"quota":(r.status===400||r.status===403)?"key":r.status===404?"model":"http",msg:m,st:r.status}}
+    let txt="";
+    const feed=l=>{l=l.trim();if(l.indexOf("data:")!==0)return;try{const j=JSON.parse(l.slice(5));const ps=j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts;if(ps){txt+=ps.map(x=>x.text||"").join("");if(onText)onText(txt)}}catch(e){}};
+    try{
+      if(r.body&&r.body.getReader){const rd=r.body.getReader(),dec=new TextDecoder();let buf="";
+        for(;;){const{done,value}=await rd.read();if(done)break;tm&&clearTimeout(tm);tm=setTimeout(()=>ac.abort(),25000);buf+=dec.decode(value,{stream:true});const ls=buf.split("\n");buf=ls.pop();ls.forEach(feed)}
+        feed(buf)}
+      else{(await r.text()).split("\n").forEach(feed)}
+    }catch(e){if(!txt){clearTimeout(tm);throw{code:"net"}}}
+    clearTimeout(tm);
+    if(!txt)throw{code:"empty"};return txt;
+  }
+  try{return await go(true)}
+  catch(e){if(e.st===400&&/think/i.test(e.msg||""))return await go(false);throw e}
 }
 const AIERR={net:"📡 تعذّر الاتصال بالإنترنت.",quota:"⏳ بلغتَ الحدّ المجاني المؤقت لـ Gemini (عدد الطلبات). انتظر قليلاً أو دقيقة ثم أعد المحاولة.",key:"🔑 المفتاح غير صحيح أو غير مفعّل. تحقّق منه في الإعدادات.",model:"❓ اسم النموذج غير موجود. غيّره في الإعدادات إلى gemini-flash-latest.",http:"⚠️ حدث خطأ من خدمة Gemini.",empty:"⚠️ لم يرد Gemini بنتيجة. أعد المحاولة."};
 function showAIError(e){
   const d=document.createElement("div");d.className="msg bot";
   d.innerHTML=`<span class="a" style="color:#111;font-size:15px">${AIERR[e.code]||AIERR.http}${e.msg?`<br><small style="color:#6b7488;direction:ltr;display:block">${esc(e.msg.slice(0,140))}</small>`:""}</span><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn" id="ar1">🔁 أعد المحاولة</button><button class="btn sec" id="ar2">📚 تدريب بدون إنترنت</button><button class="btn sec" id="ar3">⚙️ الإعدادات</button></div>`;
   $("#cb").appendChild(d);$("#cb").scrollTop=1e9;
-  $("#ar1").onclick=async()=>{d.remove();C.busy=true;await ask();C.busy=false};
+  $("#ar1").onclick=async()=>{d.remove();C.busy=true;try{await ask()}finally{C.busy=false}};
   $("#ar2").onclick=()=>{C.forceOff=true;C.hist=[];C.started=false;convo()};
   $("#ar3").onclick=()=>aiSettings();
 }
