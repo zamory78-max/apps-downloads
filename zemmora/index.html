@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#2563eb">
@@ -123,6 +124,13 @@ body.inchat header,body.inchat nav{display:none}body.inchat #shell{padding-botto
 .dctin{width:100%;border:2px solid var(--line);border-radius:14px;padding:12px;font:18px system-ui}.dctin:focus{outline:none;border-color:var(--pri)}
 .sc.dim{opacity:.45}
 .sug.w{flex-wrap:wrap;max-height:34vh;overflow-y:auto}.sug.w .chip{white-space:normal;text-align:left;direction:ltr;border-radius:14px;padding:8px 12px}
+.mem{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.mc{position:relative;height:84px;border:2px solid var(--line);border-radius:14px;background:#e8eefc;font:700 16px Cairo;cursor:pointer;padding:2px;color:var(--ink)}.mc .mb{display:none;line-height:1.2}.mc.up,.mc.ok{background:#fff}.mc.up .mf,.mc.ok .mf{display:none}.mc.up .mb,.mc.ok .mb{display:block}.mc.ok{background:#dcfce7;border-color:var(--ok)}
+.slots{display:flex;gap:6px;justify-content:center;margin:14px 0;direction:ltr;flex-wrap:wrap}.sl{width:36px;height:44px;border-bottom:3px solid var(--pri);font:800 24px Cairo;display:flex;align-items:center;justify-content:center;color:var(--ink)}.slots.good .sl{color:var(--ok);border-color:var(--ok)}.slots.bad .sl{color:var(--bad);border-color:var(--bad)}
+.lts{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;direction:ltr}.lt{width:46px;height:50px;border:2px solid var(--line);border-radius:12px;background:#fff;font:800 22px Cairo;cursor:pointer;color:var(--ink)}.lt:disabled{opacity:.25}
+.rh{display:flex;justify-content:space-around;margin-bottom:8px;font-size:18px}
+.sb{min-height:52px;border:2px dashed var(--line);border-radius:14px;padding:8px;display:flex;flex-wrap:wrap;gap:6px;direction:ltr;justify-content:center;align-items:center;margin-bottom:10px}.sb.good{border-color:var(--ok);background:#dcfce7}.sb.bad{border-color:var(--bad);background:#fee2e2}.sb.pool{border:0}
+.wd{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 12px;font:700 17px Cairo;cursor:pointer;color:var(--ink)}.wd.p{background:#e8eefc}
+nav button{padding:4px 2px}
 .hide{display:none!important}
 .win{text-align:center;padding:20px}.win .big{font-size:80px}
 .vid-links a{display:inline-block;margin:4px;padding:8px 12px;background:#fee2e2;color:#b91c1c;border-radius:12px;text-decoration:none;font-weight:700;font-size:14px}
@@ -140,6 +148,7 @@ body.inchat header,body.inchat nav{display:none}body.inchat #shell{padding-botto
   <button data-v="read"><span>📖</span>قراءة</button>
   <button data-v="listen"><span>🎧</span>استماع</button>
   <button data-v="chat"><span>💬</span>محادثة</button>
+  <button data-v="games"><span>🎮</span>ألعاب</button>
   <button data-v="prog"><span>📈</span>تقدّمي</button>
 </nav>
 
@@ -327,10 +336,10 @@ const L=[
 ];
 
 /* ---------- STATE ---------- */
-const S={view:"home",lv:null,les:null,tab:"cards",card:0,xp:0,done:{},streak:0,last:"",stories:{},saved:[],dl:"A1",sid:null,mode:"read",drill:"dict"};
-const tabOf=v=>({lessons:"home",lesson:"home",story:S.mode==="listen"?"listen":"read",drill:"listen"}[v]||v);
+const S={view:"home",lv:null,les:null,tab:"cards",card:0,xp:0,done:{},streak:0,last:"",stories:{},saved:[],dl:"A1",sid:null,mode:"read",drill:"dict",hs:{},gl:"A1",game:null};
+const tabOf=v=>({lessons:"home",lesson:"home",story:S.mode==="listen"?"listen":"read",drill:"listen",game:"games"}[v]||v);
 try{Object.assign(S,JSON.parse(localStorage.getItem("zemmora")||"{}"))}catch(e){}
-const save=()=>{try{localStorage.setItem("zemmora",JSON.stringify({xp:S.xp,done:S.done,streak:S.streak,last:S.last,stories:S.stories,saved:S.saved,dl:S.dl}))}catch(e){}};
+const save=()=>{try{localStorage.setItem("zemmora",JSON.stringify({xp:S.xp,done:S.done,streak:S.streak,last:S.last,stories:S.stories,saved:S.saved,dl:S.dl,hs:S.hs,gl:S.gl}))}catch(e){}};
 (function streak(){const t=new Date().toDateString();if(S.last!==t){const y=new Date(Date.now()-864e5).toDateString();S.streak=S.last===y?S.streak+1:1;S.last=t;save()}})();
 const $=s=>document.querySelector(s),app=$("#app");
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -361,7 +370,7 @@ function say(text,{rate=.9,pitch=1}={}){
 /* ---------- ROUTER ---------- */
 function go(v,o={}){stopVideo();Object.assign(S,{view:v},o);document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===tabOf(v)));render();scrollTo(0,0)}
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>go(b.dataset.v,{lv:null,les:null}));
-function render(){head();document.body.classList.toggle("inchat",S.view==="chat"&&C.active);({home,lessons,lesson,chat,prog,read,listen,story,drill})[S.view]()}
+function render(){head();document.body.classList.toggle("inchat",S.view==="chat"&&C.active);gStop();({home,lessons,lesson,chat,prog,read,listen,story,drill,games,game})[S.view]()}
 
 /* ---------- HOME ---------- */
 function lvPct(id){const ls=L.filter(l=>l.lv===id);return Math.round(100*ls.filter(l=>S.done[l.id]).length/ls.length)}
@@ -807,6 +816,129 @@ news:[
  T("So what would you recommend?","فماذا توصي؟","I'd advocate investing in retraining schemes to ease the transition.","Give money, train, people.","Advocate I retrain scheme.","I'd advocate ... = أدعو إلى ...")]]
 });
 
+/* ---------- GAMES ---------- */
+const G={t:null,tok:0};
+function gStop(){clearInterval(G.t);G.t=null;G.tok++}
+function gWords(){const i=LEVELS.findIndex(l=>l.id===S.gl);return L.filter(l=>{const k=LEVELS.findIndex(x=>x.id===l.lv);return k===i||k===i-1}).flatMap(l=>l.w.map(w=>({en:w[0],ar:w[1],ic:w[2],ex:w[3],exAr:w[4]}))).filter((x,k,a)=>a.findIndex(y=>y.en===x.en)===k)}
+function gSents(){const i=LEVELS.findIndex(l=>l.id===S.gl);const out=[];L.filter(l=>{const k=LEVELS.findIndex(x=>x.id===l.lv);return k===i||k===i-1}).forEach(l=>{l.w.forEach(w=>out.push([w[3],w[4]]));(l.d||[]).forEach(x=>out.push([x[1],x[2]]))});return out.filter((x,k,a)=>a.findIndex(y=>y[0]===x[0])===k&&x[0].split(" ").length>=3&&x[0].split(" ").length<=10)}
+const GAMES=[
+ ["memory","🧠","لعبة الذاكرة","اقلب البطاقات وطابق الكلمة بمعناها","أقل حركات"],
+ ["scramble","🔤","رتّب الحروف","كوّن الكلمة من حروف مبعثرة","نقاط"],
+ ["race","⚡","سباق 60 ثانية","أجب بأسرع ما يمكن واصنع سلسلة نقاط","نقاط"],
+ ["sentence","🧩","رتّب الجملة","ركّب الجملة الصحيحة من كلمات مبعثرة","نقاط"],
+ ["picture","🖼️","خمّن الصورة","شاهد الرمز واختر الكلمة الإنجليزية","نقاط"]
+];
+function games(){
+  gStop();const n=gWords().length;
+  app.innerHTML=`<h2>🎮 الألعاب</h2><div class="note" style="margin:-6px 0 8px">تعلّم وأنت تلعب! الكلمات من دروس مستواك. كل لعبة تمنحك نقاطاً.</div>
+  <div class="chips" id="glv">${LEVELS.map(l=>`<button class="chip ${S.gl===l.id?"on":""}" data-v="${l.id}">${l.ic} ${l.id}</button>`).join("")}</div>
+  <div class="grid2">${GAMES.map(g=>{const b=S.hs[g[0]+S.gl];return `<div class="card sc" data-g="${g[0]}"><div style="font-size:36px">${g[1]}</div><b>${g[2]}</b><small>${g[3]}</small>${b!=null?`<div class="pill" style="margin-top:6px;background:#fef3c7;color:#92400e">🏆 ${g[0]==="memory"?b+" حركة":b}</div>`:""}</div>`}).join("")}</div>
+  <div class="note">عدد كلمات هذا المستوى: ${n}</div>`;
+  $("#glv").onclick=e=>{const v=e.target.dataset.v;if(v){S.gl=v;save();games()}};
+  app.querySelectorAll("[data-g]").forEach(c=>c.onclick=()=>go("game",{game:c.dataset.g}));
+}
+function game(){gStop();({memory:gMemory,scramble:gScramble,race:gRace,sentence:gSentence,picture:gPicture})[S.game]()}
+function gShell(title,html){app.innerHTML=`<button class="back">→ رجوع</button><h2>${title} · ${E(S.gl)}</h2>${html}`;$(".back").onclick=()=>{gStop();go("games")}}
+function gEnd(title,big,line,key,score,low,xp){
+  gStop();const old=S.hs[key+S.gl];let rec=false;
+  if(old==null||(low?score<old:score>old)){S.hs[key+S.gl]=score;rec=true}
+  if(xp>0)addXP(xp);else save();
+  sfx(true);
+  app.innerHTML=`<div class="card win"><div class="big">${big}</div><h2>${title}</h2><div style="font-size:18px;margin:6px 0">${line}</div>${rec?`<div class="pill" style="display:inline-block;background:#fef3c7;color:#92400e;margin:6px 0">🏆 رقم قياسي جديد!</div>`:""}<div style="margin:6px 0">+${xp} نقطة</div><button class="btn" id="ga">🔁 العب مجدداً</button> <button class="btn sec" id="gb">الألعاب</button></div>`;
+  $("#ga").onclick=()=>game();$("#gb").onclick=()=>go("games");
+}
+function gNeed(n,len){const w=gWords();if(w.length<len){app.innerHTML=`<div class="card">لا توجد كلمات كافية في هذا المستوى بعد. جرّب مستوى آخر.</div>`;return null}return w}
+/* 1. memory */
+function gMemory(){
+  const w=gNeed(6,6);if(!w)return;
+  const P=shuffle(w).slice(0,6);
+  const cards=shuffle(P.flatMap((x,i)=>[{p:i,t:"en",h:E(x.en)},{p:i,t:"ar",h:`<span style="font-size:22px">${x.ic}</span><br><span style="font-size:13px">${esc(x.ar.split("/")[0].trim())}</span>`}]));
+  let open=[],moves=0,found=0,lock=false;
+  gShell("🧠 لعبة الذاكرة",`<div class="note" style="text-align:center">الحركات: <b id="mv">0</b> · الأزواج: <b id="fd">0</b>/6</div><div class="mem" id="mm">${cards.map((c,i)=>`<button class="mc" data-i="${i}"><span class="mf">❓</span><span class="mb">${c.h}</span></button>`).join("")}</div>`);
+  app.querySelectorAll(".mc").forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.i;if(lock||b.classList.contains("up")||b.classList.contains("ok"))return;
+    b.classList.add("up");if(cards[i].t==="en")say(P[cards[i].p].en,{rate:.85});open.push(i);
+    if(open.length===2){moves++;$("#mv").textContent=moves;const[a,c]=open;open=[];
+      if(cards[a].p===cards[c].p&&a!==c){sfx(true);found++;$("#fd").textContent=found;[a,c].forEach(k=>{const e=app.querySelectorAll(".mc")[k];e.classList.add("ok")});
+        if(found===6){const st=moves<=9?3:moves<=14?2:1;setTimeout(()=>gEnd("أنهيت اللعبة!","🧠","حركاتك: "+moves+" "+"⭐".repeat(st),"memory",moves,true,10+st*5),700)}}
+      else{sfx(false);lock=true;setTimeout(()=>{[a,c].forEach(k=>app.querySelectorAll(".mc")[k].classList.remove("up"));lock=false},800)}}
+  });
+}
+/* 2. scramble */
+function gScramble(){
+  const w=gNeed(5,6);if(!w)return;
+  let P=shuffle(w.filter(x=>/^[A-Za-z]{3,9}$/.test(x.en))).slice(0,8);if(P.length<4){P=shuffle(w.filter(x=>/^[A-Za-z' ]{3,12}$/.test(x.en))).slice(0,8)}
+  let i=0,sc=0,pick=[],hints=0,order=[];
+  const draw=()=>{
+    if(i>=P.length)return gEnd("انتهت اللعبة!","🔤",`صحيح: ${sc} / ${P.length}`,"scramble",sc,false,sc*4+5);
+    const x=P[i],word=x.en.toUpperCase().replace(/ /g,"");let L2=word.split("");let sh=shuffle(L2.map((c,k)=>k));if(L2.length>1&&sh.every((v,k)=>v===k))sh.reverse();order=sh;pick=[];hints=0;
+    const rd=()=>{
+      $("#sl").innerHTML=word.split("").map((c,k)=>`<span class="sl ${pick[k]!=null?"f":""}">${pick[k]!=null?L2[order[pick[k]]]:""}</span>`).join("");
+      $("#lt").innerHTML=order.map((k,j)=>`<button class="lt" data-j="${j}" ${pick.includes(j)?"disabled":""}>${L2[k]}</button>`).join("");
+      $("#lt").querySelectorAll(".lt").forEach(b=>b.onclick=()=>{pick.push(+b.dataset.j);rd();if(pick.length===word.length){const got=pick.map(j=>L2[order[j]]).join("");if(got===word){sfx(true);if(!hints)sc++;say(x.en);$("#sl").classList.add("good");setTimeout(()=>{i++;draw()},900)}else{sfx(false);$("#sl").classList.add("bad");setTimeout(()=>{pick=[];rd()},700)}}});
+      $("#sl").classList.remove("bad");
+    };
+    gShell("🔤 رتّب الحروف",`<div class="note" style="text-align:center">${i+1} / ${P.length} · النقاط ${sc}</div><div class="card" style="text-align:center"><div style="font-size:60px">${x.ic}</div><div style="font-weight:700;font-size:20px">${esc(x.ar)}</div><div class="slots" id="sl"></div><div class="lts" id="lt"></div><div style="display:flex;gap:8px;justify-content:center;margin-top:10px"><button class="btn sec" id="gu">↩ تراجع</button><button class="btn sec" id="gh">💡 تلميح</button><button class="btn sec" id="gk">⏭ تخطّي</button></div></div>`);
+    rd();
+    $("#gu").onclick=()=>{pick.pop();rd()};
+    $("#gh").onclick=()=>{hints++;const need=pick.length;const target=word[need];const j=order.findIndex((k,jj)=>L2[k]===target&&!pick.includes(jj));if(j>=0){const bt=$("#lt").querySelector(`[data-j="${j}"]`);if(bt)bt.click()}};
+    $("#gk").onclick=()=>{i++;draw()};
+  };
+  draw();
+}
+/* 3. race */
+function gRace(){
+  const w=gNeed(4,4);if(!w)return;
+  let sc=0,combo=0,t=60,best=0,cur=null,locked=false;const tok=G.tok;
+  gShell("⚡ سباق 60 ثانية",`<div class="rh"><b>⏱ <span id="tm">60</span></b><b>⭐ <span id="rs">0</span></b><b>🔥 x<span id="rc">1</span></b></div><div class="bar"><i id="tb" style="width:100%"></i></div><div id="rq"></div>`);
+  const q=()=>{
+    const x=w[Math.random()*w.length|0];cur=x;locked=false;
+    const others=shuffle(w.filter(y=>y.ar!==x.ar)).slice(0,3);const opts=shuffle([x,...others]);
+    $("#rq").innerHTML=`<div class="card" style="text-align:center"><div style="font-size:42px">${x.ic}</div><div style="font-size:28px;font-weight:800;direction:ltr">${esc(x.en)}</div><div class="opts">${opts.map(o=>`<button class="opt" style="font-size:15px">${esc(o.ar)}</button>`).join("")}</div></div>`;
+    $("#rq").querySelectorAll(".opt").forEach((b,k)=>b.onclick=()=>{
+      if(locked)return;locked=true;const ok=opts[k].ar===x.ar;sfx(ok);
+      if(ok){combo++;const m=Math.min(5,1+Math.floor(combo/3));sc+=10*m;b.classList.add("ok");$("#rc").textContent=m}
+      else{combo=0;b.classList.add("no");$("#rc").textContent=1;$("#rq").querySelectorAll(".opt").forEach((e,kk)=>{if(opts[kk].ar===x.ar)e.classList.add("ok")})}
+      $("#rs").textContent=sc;setTimeout(()=>{if(tok===G.tok)q()},ok?350:900);
+    });
+  };
+  q();
+  G.t=setInterval(()=>{t--;const e=$("#tm");if(!e){gStop();return}e.textContent=t;$("#tb").style.width=t/60*100+"%";
+    if(t<=0){gStop();gEnd("انتهى الوقت!","⚡",`نقاطك: ${sc}`,"race",sc,false,Math.min(60,Math.round(sc/10)))}},1000);
+}
+/* 4. sentence */
+function gSentence(){
+  const ss=gSents();if(ss.length<4){app.innerHTML=`<div class="card">لا توجد جمل كافية في هذا المستوى. جرّب مستوى آخر.</div>`;return}
+  const P=shuffle(ss).slice(0,6);let i=0,sc=0;
+  const draw=()=>{
+    if(i>=P.length)return gEnd("انتهت اللعبة!","🧩",`صحيح من أول مرة: ${sc} / ${P.length}`,"sentence",sc,false,sc*5+5);
+    const [en,ar]=P[i],words=en.split(" ");let pool=shuffle(words.map((x,k)=>k));if(pool.every((v,k)=>v===k))pool.reverse();let placed=[],tries=0;
+    gShell("🧩 رتّب الجملة",`<div class="note" style="text-align:center">${i+1} / ${P.length}</div><div class="card" style="text-align:center"><div style="font-weight:700;font-size:18px;margin-bottom:10px">${esc(ar)}</div><div class="sb" id="sa"></div><div class="sb pool" id="sp"></div><div style="display:flex;gap:8px;justify-content:center;margin-top:10px"><button class="btn sec" id="gl">🔊 اسمع</button><button class="btn sec" id="gk">⏭ تخطّي</button></div></div>`);
+    const rd=()=>{
+      $("#sa").innerHTML=placed.map((k,j)=>`<button class="wd" data-j="${j}">${esc(words[k])}</button>`).join("")||`<span class="note">اضغط الكلمات بالترتيب</span>`;
+      $("#sp").innerHTML=pool.filter(k=>!placed.includes(k)).map(k=>`<button class="wd p" data-k="${k}">${esc(words[k])}</button>`).join("");
+      $("#sa").querySelectorAll(".wd").forEach(b=>b.onclick=()=>{placed.splice(+b.dataset.j,1);rd()});
+      $("#sp").querySelectorAll(".wd").forEach(b=>b.onclick=()=>{placed.push(+b.dataset.k);rd();
+        if(placed.length===words.length){const ok=placed.map(k=>words[k]).join(" ")===en;sfx(ok);
+          if(ok){if(!tries)sc++;say(en,{rate:.85});$("#sa").classList.add("good");setTimeout(()=>{i++;draw()},1200)}
+          else{tries++;$("#sa").classList.add("bad");setTimeout(()=>{placed=[];rd();$("#sa").classList.remove("bad")},800)}}});
+    };
+    rd();$("#gl").onclick=()=>say(en,{rate:.8});$("#gk").onclick=()=>{i++;draw()};
+  };
+  draw();
+}
+/* 5. picture */
+function gPicture(){
+  const w0=gNeed(4,4);if(!w0)return;const w=w0.filter(x=>x.ic);if(w.length<4){app.innerHTML=`<div class="card">لا توجد رموز كافية في هذا المستوى.</div>`;return}
+  const P=shuffle(w).slice(0,10);let i=0,sc=0;
+  const draw=()=>{
+    if(i>=P.length)return gEnd("انتهت اللعبة!","🖼️",`صحيح: ${sc} / ${P.length}`,"picture",sc,false,sc*3+5);
+    const x=P[i],opts=shuffle([x,...shuffle(w.filter(y=>y.en!==x.en)).slice(0,3)]);
+    gShell("🖼️ خمّن الصورة",`<div class="note" style="text-align:center">${i+1} / ${P.length} · النقاط ${sc}</div><div class="card" style="text-align:center"><div class="big" style="font-size:90px">${x.ic}</div><div style="font-weight:700">${esc(x.ar)}</div><div class="opts">${opts.map(o=>`<button class="opt" style="direction:ltr">${esc(o.en)}</button>`).join("")}</div></div>`);
+    app.querySelectorAll(".opt").forEach((b,k)=>b.onclick=()=>{const ok=opts[k].en===x.en;sfx(ok);if(ok)sc++;app.querySelectorAll(".opt").forEach((e,kk)=>{e.disabled=true;if(opts[kk].en===x.en)e.classList.add("ok")});if(!ok)b.classList.add("no");say(x.en);setTimeout(()=>{i++;draw()},ok?900:1500)});
+  };
+  draw();
+}
 /* ---------- GEMINI (user's own free key) ---------- */
 const AI={get(){try{return JSON.parse(localStorage.getItem("zemmora_ai")||"{}")}catch(e){return{}}},set(o){try{localStorage.setItem("zemmora_ai",JSON.stringify(o))}catch(e){}}};
 const geminiOn=()=>!HAS_AI&&!!AI.get().key;
