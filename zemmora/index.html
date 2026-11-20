@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#2563eb">
@@ -826,7 +827,8 @@ const GAMES=[
  ["scramble","🔤","رتّب الحروف","كوّن الكلمة من حروف مبعثرة","نقاط"],
  ["race","⚡","سباق 60 ثانية","أجب بأسرع ما يمكن واصنع سلسلة نقاط","نقاط"],
  ["sentence","🧩","رتّب الجملة","ركّب الجملة الصحيحة من كلمات مبعثرة","نقاط"],
- ["picture","🖼️","خمّن الصورة","شاهد الرمز واختر الكلمة الإنجليزية","نقاط"]
+ ["picture","🖼️","خمّن الصورة","شاهد الرمز واختر الكلمة الإنجليزية","نقاط"],
+ ["speak","🎤","انطق","انطق الكلمة أو الجملة ويُقيَّم نطقك","نقاط"]
 ];
 function games(){
   gStop();const n=gWords().length;
@@ -837,7 +839,7 @@ function games(){
   $("#glv").onclick=e=>{const v=e.target.dataset.v;if(v){S.gl=v;save();games()}};
   app.querySelectorAll("[data-g]").forEach(c=>c.onclick=()=>go("game",{game:c.dataset.g}));
 }
-function game(){gStop();({memory:gMemory,scramble:gScramble,race:gRace,sentence:gSentence,picture:gPicture})[S.game]()}
+function game(){gStop();({memory:gMemory,scramble:gScramble,race:gRace,sentence:gSentence,picture:gPicture,speak:gSpeak})[S.game]()}
 function gShell(title,html){app.innerHTML=`<button class="back">→ رجوع</button><h2>${title} · ${E(S.gl)}</h2>${html}`;$(".back").onclick=()=>{gStop();go("games")}}
 function gEnd(title,big,line,key,score,low,xp){
   gStop();const old=S.hs[key+S.gl];let rec=false;
@@ -939,6 +941,50 @@ function gPicture(){
   };
   draw();
 }
+/* ---------- SPEECH RECOGNITION ENGINE + SPEAK GAME ---------- */
+const _stt={};let _sid=0,_gd=null;
+window.__stt=(id,t,err)=>{const f=_stt[id];if(f){delete _stt[id];f(t,err)}};
+function sttCan(){return !!(window.AndroidSTT||window.SpeechRecognition||window.webkitSpeechRecognition||HAS_AI)}
+async function listenOnce(){
+  return new Promise(async res=>{
+    let fin=false;const done=(t,e)=>{if(fin)return;fin=true;clearTimeout(tm);res({text:t||"",err:e||""})};
+    const tm=setTimeout(()=>done("","timeout"),15000);
+    try{
+      if(window.AndroidSTT){const id="s"+(++_sid);_stt[id]=(t,e)=>done(t,e);AndroidSTT.listen(id);return}
+      const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+      if(SR){const r=new SR();r.lang="en-US";r.maxAlternatives=3;r.onresult=e=>done(e.results[0][0].transcript,"");r.onerror=e=>done("",e.error||"x");r.onend=()=>done("","none");r.start();return}
+      if(HAS_AI){_gd=_gd||await claude.use("dictation");if(!_gd){done("","unsupported");return}
+        _gd.onFinal(({text})=>done(text,""));await _gd.start();return}
+      done("","unsupported");
+    }catch(e){done("","x")}
+  });
+}
+const STTERR={unsupported:"🎤 التعرّف على الصوت غير متاح هنا.",perm:"🎤 اسمح للتطبيق باستخدام الميكروفون من إعدادات الهاتف.","not-allowed":"🎤 اسمح للتطبيق باستخدام الميكروفون.",none:"لم أسمع شيئاً. اقترب من الميكروفون وأعد المحاولة.",timeout:"لم أسمع شيئاً. أعد المحاولة.","no-speech":"لم أسمع شيئاً. أعد المحاولة.",e7:"لم أفهم الكلام. أعد المحاولة.",e6:"لم أسمع شيئاً. أعد المحاولة.",e5:"تعذّر التعرّف. أعد المحاولة.",e2:"يحتاج التعرّف على الصوت اتصالاً بالإنترنت.",e3:"تعذّر الوصول لخدمة الصوت.",e9:"اسمح للتطبيق باستخدام الميكروفون.",e12:"تعذّر التعرّف. أعد المحاولة.",e13:"تعذّر التعرّف. أعد المحاولة."};
+function gSpeak(){
+  const w=gWords().filter(x=>x.en.split(" ").length<=3),ss=gSents().filter(x=>x[0].split(" ").length<=6);
+  const P=shuffle([...shuffle(w).slice(0,4).map(x=>[x.en,x.ar,x.ic]),...shuffle(ss).slice(0,4).map(x=>[x[0],x[1],"💬"])]);
+  if(P.length<4){app.innerHTML=`<div class="card">لا توجد عبارات كافية في هذا المستوى.</div>`;return}
+  let i=0,sc=0,tries=0,busy=false;
+  const draw=()=>{
+    if(i>=P.length)return gEnd("انتهت اللعبة!","🎤",`نطقك الصحيح: ${sc} / ${P.length}`,"speak",sc,false,sc*5+5);
+    const [en,ar,ic]=P[i];tries=0;
+    gShell("🎤 انطق",`<div class="note" style="text-align:center">${i+1} / ${P.length} · النقاط ${sc}</div><div class="card" style="text-align:center"><div style="font-size:50px">${ic}</div><div id="sx" style="font-size:26px;font-weight:800;direction:ltr;margin:6px 0">${esc(en)}</div><div style="font-weight:700;margin-bottom:10px">${esc(ar)}</div><div style="display:flex;gap:10px;justify-content:center"><button class="btn sec" id="sl2">🔊 اسمع</button><button class="btn" id="sm">🎤 انطق الآن</button></div><div id="sr" style="margin-top:12px;min-height:46px;font-weight:700"></div><button class="btn sec" id="sk" style="margin-top:8px">⏭ تخطّي</button></div>`);
+    if(!sttCan())$("#sr").innerHTML=`<span style="color:#b45309">${STTERR.unsupported} جرّب هذه اللعبة داخل تطبيق APK أو في متصفح Chrome.</span>`;
+    $("#sl2").onclick=()=>say(en,{rate:.8});$("#sk").onclick=()=>{if(!busy){i++;draw()}};
+    $("#sm").onclick=async()=>{
+      if(busy)return;busy=true;const sm=$("#sm");sm.textContent="🎙️ أسمعك…";sm.disabled=true;$("#sr").textContent="";
+      const r=await listenOnce();if(!$("#sm")){busy=false;return}sm.disabled=false;sm.textContent="🎤 انطق الآن";busy=false;
+      if(!r.text){$("#sr").innerHTML=`<span style="color:#dc2626">${STTERR[r.err]||"تعذّر التعرّف. أعد المحاولة."}</span>`;return}
+      const e=norm(en),h=norm(r.text),mk=lcsMarks(h,e),pct=e.length?mk.filter(Boolean).length/e.length:0,ok=pct>=.75;
+      sfx(ok);tries++;
+      $("#sx").innerHTML=e.map((x,k)=>`<span style="color:${mk[k]?"#16a34a":"#dc2626"}">${esc(x)}</span>`).join(" ");
+      $("#sr").innerHTML=`<div style="color:#6b7488;font-weight:600;direction:ltr">${esc(r.text)}</div>${ok?`<div style="color:#16a34a">✅ نطق ممتاز!</div>`:`<div style="color:#dc2626">❌ الكلمات الحمراء لم تُنطق بوضوح. ${tries<3?"أعد المحاولة ("+tries+"/3)":"ننتقل للتالي"}</div>`}`;
+      if(ok){if(tries===1)sc++;say(en,{rate:.85});busy=true;setTimeout(()=>{busy=false;i++;draw()},1400)}
+      else if(tries>=3){busy=true;setTimeout(()=>{busy=false;i++;draw()},1600)}
+    };
+  };
+  draw();
+}
 /* ---------- GEMINI (user's own free key) ---------- */
 const AI={get(){try{return JSON.parse(localStorage.getItem("zemmora_ai")||"{}")}catch(e){return{}}},set(o){try{localStorage.setItem("zemmora_ai",JSON.stringify(o))}catch(e){}}};
 const geminiOn=()=>!HAS_AI&&!!AI.get().key;
@@ -946,32 +992,41 @@ async function gemini(hist,maxTok,onText){
   const a=AI.get(),model=a.model||"gemini-flash-latest";
   const h=hist.length>14?[hist[0],...hist.slice(-12)]:hist;
   const contents=h.map(m=>({role:m.role==="assistant"?"model":"user",parts:[{text:m.content}]}));
-  const url="https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":streamGenerateContent?alt=sse";
-  async function go(think){
-    const gc={temperature:.8,maxOutputTokens:maxTok||700};if(think)gc.thinkingConfig={thinkingBudget:0};
-    const ac=new AbortController();let tm=setTimeout(()=>ac.abort(),25000);
+  const base="https://generativelanguage.googleapis.com/v1beta/models/";
+  const pick=j=>{const ps=j&&j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts;return ps?ps.map(x=>x.text||"").join(""):""};
+  async function go(mdl,mode){
+    const stream=mode!=="plain";const gc={temperature:.8,maxOutputTokens:maxTok||700};if(mode==="think0")gc.thinkingConfig={thinkingBudget:0};
+    const ac=new AbortController();let tm=setTimeout(()=>ac.abort(),40000);
     let r;
-    try{r=await fetch(url,{method:"POST",signal:ac.signal,headers:{"Content-Type":"application/json","x-goog-api-key":a.key},body:JSON.stringify({contents,generationConfig:gc})})}
-    catch(e){clearTimeout(tm);throw{code:"net"}}
-    if(!r.ok){clearTimeout(tm);let m="";try{m=(await r.json()).error.message}catch(e){}throw{code:r.status===429?"quota":(r.status===400||r.status===403)?"key":r.status===404?"model":"http",msg:m,st:r.status}}
+    try{r=await fetch(base+encodeURIComponent(mdl)+(stream?":streamGenerateContent?alt=sse":":generateContent"),{method:"POST",signal:ac.signal,headers:{"Content-Type":"application/json","x-goog-api-key":a.key},body:JSON.stringify({contents,generationConfig:gc})})}
+    catch(e){clearTimeout(tm);throw{code:"net",msg:String(e&&e.message||e)}}
+    if(!r.ok){clearTimeout(tm);let m="";try{m=(await r.json()).error.message}catch(e){}
+      const keyBad=/api key|API_KEY|permission|not valid/i.test(m);
+      throw{code:r.status===429?"quota":keyBad?"key":r.status===404?"model":"http",msg:m,st:r.status}}
     let txt="";
-    const feed=l=>{l=l.trim();if(l.indexOf("data:")!==0)return;try{const j=JSON.parse(l.slice(5));const ps=j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts;if(ps){txt+=ps.map(x=>x.text||"").join("");if(onText)onText(txt)}}catch(e){}};
     try{
-      if(r.body&&r.body.getReader){const rd=r.body.getReader(),dec=new TextDecoder();let buf="";
-        for(;;){const{done,value}=await rd.read();if(done)break;tm&&clearTimeout(tm);tm=setTimeout(()=>ac.abort(),25000);buf+=dec.decode(value,{stream:true});const ls=buf.split("\n");buf=ls.pop();ls.forEach(feed)}
-        feed(buf)}
-      else{(await r.text()).split("\n").forEach(feed)}
-    }catch(e){if(!txt){clearTimeout(tm);throw{code:"net"}}}
-    clearTimeout(tm);
-    if(!txt)throw{code:"empty"};return txt;
+      if(stream){
+        const feed=l=>{l=l.trim();if(l.indexOf("data:")!==0)return;try{txt+=pick(JSON.parse(l.slice(5)));if(onText)onText(txt)}catch(e){}};
+        if(r.body&&r.body.getReader){const rd=r.body.getReader(),dec=new TextDecoder();let buf="";
+          for(;;){const{done,value}=await rd.read();if(done)break;clearTimeout(tm);tm=setTimeout(()=>ac.abort(),40000);buf+=dec.decode(value,{stream:true});const ls=buf.split("\n");buf=ls.pop();ls.forEach(feed)}feed(buf)}
+        else{(await r.text()).split("\n").forEach(feed)}
+      }else{txt=pick(await r.json());if(txt&&onText)onText(txt)}
+    }catch(e){if(!txt){clearTimeout(tm);throw{code:"net",msg:String(e&&e.message||e)}}}
+    clearTimeout(tm);if(!txt)throw{code:"empty"};return txt;
   }
-  try{return await go(true)}
-  catch(e){if(e.st===400&&/think/i.test(e.msg||""))return await go(false);throw e}
+  const chain=[[model,"think0"],[model,"stream"],[model,"plain"]];
+  ["gemini-2.5-flash","gemini-2.0-flash"].forEach(m=>{if(m!==model)chain.push([m,"plain"])});
+  let last=null;
+  for(const[m,mode]of chain){
+    try{return await go(m,mode)}
+    catch(e){last=e;if(e.code==="quota"||e.code==="key")throw e}
+  }
+  throw last;
 }
 const AIERR={net:"📡 تعذّر الاتصال بالإنترنت.",quota:"⏳ بلغتَ الحدّ المجاني المؤقت لـ Gemini (عدد الطلبات). انتظر قليلاً أو دقيقة ثم أعد المحاولة.",key:"🔑 المفتاح غير صحيح أو غير مفعّل. تحقّق منه في الإعدادات.",model:"❓ اسم النموذج غير موجود. غيّره في الإعدادات إلى gemini-flash-latest.",http:"⚠️ حدث خطأ من خدمة Gemini.",empty:"⚠️ لم يرد Gemini بنتيجة. أعد المحاولة."};
 function showAIError(e){
   const d=document.createElement("div");d.className="msg bot";
-  d.innerHTML=`<span class="a" style="color:#111;font-size:15px">${AIERR[e.code]||AIERR.http}${e.msg?`<br><small style="color:#6b7488;direction:ltr;display:block">${esc(e.msg.slice(0,140))}</small>`:""}</span><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn" id="ar1">🔁 أعد المحاولة</button><button class="btn sec" id="ar2">📚 تدريب بدون إنترنت</button><button class="btn sec" id="ar3">⚙️ الإعدادات</button></div>`;
+  d.innerHTML=`<span class="a" style="color:#111;font-size:15px">${AIERR[e.code]||AIERR.http}<br><small style="color:#6b7488;direction:ltr;display:block">${esc((e.code+" "+(e.st||"")+" "+(e.msg||"")).slice(0,160))}</small></span><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn" id="ar1">🔁 أعد المحاولة</button><button class="btn sec" id="ar2">📚 تدريب بدون إنترنت</button><button class="btn sec" id="ar3">⚙️ الإعدادات</button></div>`;
   $("#cb").appendChild(d);$("#cb").scrollTop=1e9;
   $("#ar1").onclick=async()=>{d.remove();C.busy=true;try{await ask()}finally{C.busy=false}};
   $("#ar2").onclick=()=>{C.forceOff=true;C.hist=[];C.started=false;convo()};
@@ -1024,18 +1079,30 @@ function showOpts(){
   sg.innerHTML=C.opts.map(o=>`<button class="chip">${E(o)}</button>`).join("");
   sg.querySelectorAll(".chip").forEach((b,i)=>b.onclick=()=>scriptReply(C.opts[i]));
 }
+let _V=null;
+function vocab(){if(_V)return _V;const t=JSON.stringify([L,ST,CS]).toLowerCase();_V=new Set(t.match(/[a-z']{2,}/g)||[]);return _V}
+function lev(a,b){const m=a.length,n=b.length;let p=Array.from({length:n+1},(_,j)=>j);for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n]}
+function spellFix(tokens){const V=vocab(),out=[];tokens.forEach(w=>{if(w.length<4||V.has(w))return;let best=null,bd=3;V.forEach(v=>{if(Math.abs(v.length-w.length)>2||v[0]!==w[0])return;const d=lev(w,v);if(d<bd){bd=d;best=v}});if(best&&bd<=(w.length>=6?2:1))out.push([w,best])});return out}
 async function scriptReply(text){
   if(C.busy||!C.script)return;text=(text||"").trim();if(!text)return;C.busy=true;
   const t=C.script[C.turn],best=t[2].find(o=>o[1]===2)[0];
   addMsg("user",text);const inp=$("#ci");if(inp)inp.value="";const sg=$("#sg");if(sg)sg.innerHTML="";
-  let s;const ex=t[2].find(o=>o[0]===text);
-  if(ex)s=ex[1];else{const b=norm(best),a=norm(text);const pct=a.length?lcsMarks(a,b).filter(Boolean).length/b.length:0;s=pct>=.8?2:pct>=.5?1:0}
+  let s,typed=false,fixed="";const ex=t[2].find(o=>o[0]===text);
+  if(ex)s=ex[1];else{
+    typed=true;const b=norm(best),a=norm(text),sp=spellFix(a);
+    const pct=a.length?lcsMarks(a,b).filter(Boolean).length/b.length:0;
+    const wrongExact=t[2].some(o=>o[1]===0&&norm(o[0]).join(" ")===a.join(" "));
+    const frame=!wrongExact&&b[0]&&a[0]===b[0]&&a.length>=Math.min(3,b.length);
+    s=(pct>=.8||frame)?2:pct>=.5?1:0;
+    if(sp.length){fixed=text;sp.forEach(([x,y])=>{fixed=fixed.replace(new RegExp("\\b"+x+"\\b","i"),y)});if(s===2)s=1}
+  }
   C.score+=s;sfx(s===2);
-  const fb=s===2?"✅ ممتاز!":s===1?"👍 مقبول، لكن الأفضل أن تقول:":"❌ الأفضل أن تقول:";
+  const fb=s===2?(typed?"✅ جملة صحيحة! نموذج آخر ممكن:":"✅ ممتاز!"):fixed?"✏️ فهمتُ قصدك! صحّح الإملاء هكذا:":s===1?"👍 مقبول، لكن الأفضل أن تقول:":"❌ الأفضل أن تقول:";
   const f=document.createElement("div");f.className="msg bot";
-  f.innerHTML=`<span class="a" style="font-size:15px;color:#111">${fb}</span>`+(s<2?`<span class="e">${esc(best)}</span>`:"")+`<span class="f">💡 ${esc(t[3])}</span>`;
+  f.innerHTML=`<span class="a" style="font-size:15px;color:#111">${fb}</span>`+(fixed?`<span class="e">${esc(fixed)}</span>`:(s<2||typed)?`<span class="e">${esc(best)}</span>`:"")+`<span class="f">💡 ${esc(t[3])}</span>`;
   $("#cb").appendChild(f);$("#cb").scrollTop=1e9;
-  await say(s===2?text:best,{rate:.85});
+  await say(s===2?text:(fixed||best),{rate:.85});
+  if(C.turn+1<C.script.length){const R=s===2?["Great answer!","جواب ممتاز!"]:(s===1||fixed)?["Good try!","محاولة طيبة!"]:["No worries, let us continue.","ما كاين باس، نكملو."];addBotP(R[0],R[1])}
   C.turn++;
   if(C.turn>=C.script.length){finishScript()}else{await new Promise(r=>setTimeout(r,400));botTurn()}
   C.busy=false;
