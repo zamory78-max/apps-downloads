@@ -1091,7 +1091,7 @@ function islesson(){
   $("#tgl").onclick=()=>{S.islAr=S.islAr===false;ar()};
   app.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>say(x.ept[+b.dataset.p],{rate:.8}));
   $(".back").onclick=()=>{stopVideo();go("islam")};
-  app.querySelectorAll(".spk").forEach(b=>b.onclick=()=>say(x.en[+b.dataset.i][0].replace(/\s*\(.*\)/,""),{rate:.8}));
+  app.querySelectorAll(".spk[data-i]").forEach(b=>b.onclick=()=>say(x.en[+b.dataset.i][0].replace(/\s*\(.*\)/,""),{rate:.8}));
   let i=0,sc=0;
   const q=()=>{
     if(i>=x.q.length){const ok=sc>=2;if(ok&&!S.isl[x.id]){S.isl[x.id]=1;addXP(20)}else save();sfx(ok);
