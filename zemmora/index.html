@@ -337,10 +337,10 @@ const L=[
 ];
 
 /* ---------- STATE ---------- */
-const S={view:"home",lv:null,les:null,tab:"cards",card:0,xp:0,done:{},streak:0,last:"",stories:{},saved:[],dl:"A1",sid:null,mode:"read",drill:"dict",hs:{},gl:"A1",game:null};
-const tabOf=v=>({lessons:"home",lesson:"home",story:S.mode==="listen"?"listen":"read",drill:"listen",game:"games"}[v]||v);
+const S={view:"home",lv:null,les:null,tab:"cards",card:0,xp:0,done:{},streak:0,last:"",stories:{},saved:[],dl:"A1",sid:null,mode:"read",drill:"dict",hs:{},gl:"A1",game:null,isl:{},iid:null};
+const tabOf=v=>({lessons:"home",lesson:"home",story:S.mode==="listen"?"listen":"read",drill:"listen",game:"games",islam:"home",islesson:"home"}[v]||v);
 try{Object.assign(S,JSON.parse(localStorage.getItem("zemmora")||"{}"))}catch(e){}
-const save=()=>{try{localStorage.setItem("zemmora",JSON.stringify({xp:S.xp,done:S.done,streak:S.streak,last:S.last,stories:S.stories,saved:S.saved,dl:S.dl,hs:S.hs,gl:S.gl}))}catch(e){}};
+const save=()=>{try{localStorage.setItem("zemmora",JSON.stringify({xp:S.xp,done:S.done,streak:S.streak,last:S.last,stories:S.stories,saved:S.saved,dl:S.dl,hs:S.hs,gl:S.gl,isl:S.isl}))}catch(e){}};
 (function streak(){const t=new Date().toDateString();if(S.last!==t){const y=new Date(Date.now()-864e5).toDateString();S.streak=S.last===y?S.streak+1:1;S.last=t;save()}})();
 const $=s=>document.querySelector(s),app=$("#app");
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -371,15 +371,15 @@ function say(text,{rate=.9,pitch=1}={}){
 /* ---------- ROUTER ---------- */
 function go(v,o={}){stopVideo();Object.assign(S,{view:v},o);document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===tabOf(v)));render();scrollTo(0,0)}
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>go(b.dataset.v,{lv:null,les:null}));
-function render(){head();document.body.classList.toggle("inchat",S.view==="chat"&&C.active);gStop();({home,lessons,lesson,chat,prog,read,listen,story,drill,games,game})[S.view]()}
+function render(){head();document.body.classList.toggle("inchat",S.view==="chat"&&C.active);gStop();({home,lessons,lesson,chat,prog,read,listen,story,drill,games,game,islam,islesson})[S.view]()}
 
 /* ---------- HOME ---------- */
 function lvPct(id){const ls=L.filter(l=>l.lv===id);return Math.round(100*ls.filter(l=>S.done[l.id]).length/ls.length)}
 function nextCard(){const n=L.find(l=>!S.done[l.id]);return n?`<div class="card next" id="nxl" data-i="${n.id}"><div style="font-size:38px">${n.ic}</div><div style="flex:1"><small style="color:#92400e">▶ تابع من حيث توقفت</small><div><b>${n.t}</b> <span class="ex">${E(n.en)} · ${n.lv}</span></div></div><div style="font-size:22px">◀</div></div>`:`<div class="card">🏆 أنهيت كل الدروس!</div>`}
 function home(){
   app.innerHTML=`<div class="card"><h2>👋 مرحبا بيك!</h2><div style="line-height:1.9">اختار مستواك وابدأ. كل درس فيه: <b>بطاقات بالصور</b> 🖼️، <b>فيديو حواري متحرّك</b> 🎬، و<b>اختبار</b> 🎯. وفي تبويب <b>محادثة</b> 💬 تهدر مع مدرّس ذكي يفهم الدارجة ويصحّحلك.</div></div>
-  ${nextCard()}<div class="grid2" style="margin-bottom:14px"><div class="card sc" id="hr"><div style="font-size:34px">📖</div><b>قصص للقراءة</b><small>قصص ومقالات بالكلمات المسطّرة</small></div><div class="card sc" id="hl"><div style="font-size:34px">🎧</div><b>تدريب الاستماع</b><small>إملاء وحوارات وقصص</small></div></div><h2>📚 المستويات</h2><div class="levels">${LEVELS.map(l=>`<div class="card lv" data-l="${l.id}"><div class="ic" style="background:${l.c}">${l.ic}</div><div style="flex:1"><b>${l.name} · ${E(l.id)}</b><small>${E(l.en)}</small><div class="bar"><i style="width:${lvPct(l.id)}%"></i></div></div></div>`).join("")}</div>`;
-  app.querySelectorAll(".lv").forEach(e=>e.onclick=()=>go("lessons",{lv:e.dataset.l}));$("#hr").onclick=()=>go("read");$("#hl").onclick=()=>go("listen");const nx=$("#nxl");if(nx)nx.onclick=()=>go("lesson",{les:+nx.dataset.i,tab:"cards",card:0});
+  ${nextCard()}<div class="card sc" id="hi" style="margin-bottom:14px;display:flex;gap:12px;align-items:center;cursor:pointer;border:2px solid #16a34a"><div style="font-size:38px">🕌</div><div><b>أساسيات الإسلام</b><div class="note" style="margin:2px 0 0">الطهارة والصلاة والصيام والزكاة والأخلاق والأصول الثلاثة</div></div></div><div class="grid2" style="margin-bottom:14px"><div class="card sc" id="hr"><div style="font-size:34px">📖</div><b>قصص للقراءة</b><small>قصص ومقالات بالكلمات المسطّرة</small></div><div class="card sc" id="hl"><div style="font-size:34px">🎧</div><b>تدريب الاستماع</b><small>إملاء وحوارات وقصص</small></div></div><h2>📚 المستويات</h2><div class="levels">${LEVELS.map(l=>`<div class="card lv" data-l="${l.id}"><div class="ic" style="background:${l.c}">${l.ic}</div><div style="flex:1"><b>${l.name} · ${E(l.id)}</b><small>${E(l.en)}</small><div class="bar"><i style="width:${lvPct(l.id)}%"></i></div></div></div>`).join("")}</div>`;
+  app.querySelectorAll(".lv").forEach(e=>e.onclick=()=>go("lessons",{lv:e.dataset.l}));$("#hr").onclick=()=>go("read");$("#hi").onclick=()=>go("islam");$("#hl").onclick=()=>go("listen");const nx=$("#nxl");if(nx)nx.onclick=()=>go("lesson",{les:+nx.dataset.i,tab:"cards",card:0});
 }
 function lessons(){
   const lv=LEVELS.find(l=>l.id===S.lv);
@@ -984,6 +984,82 @@ function gSpeak(){
     };
   };
   draw();
+}
+/* ---------- ISLAM BASICS ---------- */
+const ISL=[
+{sec:"الطهارة",items:[
+{id:"i1",ic:"💧",t:"الوضوء",en:[["Purification","الطهارة"],["Ablution (wudu)","الوضوء"],["Water","ماء"],["Face","الوجه"],["Hands","اليدان"],["Feet","القدمان"]],
+ pts:["الطهارة شرط لصحة الصلاة، قال النبي ﷺ: «لا يقبل الله صلاة بغير طهور».","فروض الوضوء في القرآن أربعة: غسل الوجه، وغسل اليدين إلى المرفقين، ومسح الرأس، وغسل الرجلين إلى الكعبين.","يُسنّ أن يبدأ بالتسمية ثم غسل الكفين والمضمضة والاستنشاق، ويُرتّب الأعضاء ويتابع بينها.","نواقض الوضوء: ما خرج من السبيلين، والنوم العميق، وزوال العقل. وتختلف المذاهب في بعض النواقض فراجع أهل العلم."],
+ q:[["كم عدد فروض الوضوء المذكورة في القرآن؟",["اثنان","أربعة","ستة"],1],["أيّ مما يلي ينقض الوضوء؟",["شرب الماء","النوم العميق","المشي"],1],["الطهارة شرط لصحة...",["الصلاة","الأكل","السفر"],0]]},
+{id:"i2",ic:"🛁",t:"الغسل والتيمم",en:[["Ritual bath (ghusl)","الغسل"],["Dry ablution (tayammum)","التيمم"],["Clean earth","تراب طاهر"],["Impurity","النجاسة"]],
+ pts:["يجب الغسل بعد الجنابة، وانقطاع الحيض والنفاس.","الغسل الكامل: النية، ثم تعميم الجسد بالماء مع المضمضة والاستنشاق.","التيمم بدل عن الماء عند فقده أو العجز عن استعماله لمرض.","صفته: النية، ثم الضرب بالكفين على تراب طاهر، ومسح الوجه والكفين."],
+ q:[["متى يُشرع التيمم؟",["عند فقد الماء أو العجز عن استعماله","في كل صلاة","قبل الأكل"],0],["ما الذي يوجب الغسل؟",["الجنابة","الأكل","النوم"],0],["بِمَ نتيمم؟",["تراب طاهر","ماء ساخن","زيت"],0]]}]},
+{sec:"الصلاة",items:[
+{id:"i3",ic:"🕌",t:"الصلوات الخمس وأوقاتها",en:[["Prayer (salah)","الصلاة"],["Dawn prayer (Fajr)","الفجر"],["Noon prayer (Dhuhr)","الظهر"],["Afternoon prayer (Asr)","العصر"],["Sunset prayer (Maghrib)","المغرب"],["Night prayer (Isha)","العشاء"]],
+ pts:["الصلاة ثاني أركان الإسلام، وهي عمود الدين وأول ما يحاسب عليه العبد.","الصلوات المفروضة خمس في اليوم والليلة: الفجر ركعتان، الظهر أربع، العصر أربع، المغرب ثلاث، العشاء أربع.","لكل صلاة وقت: الفجر من الفجر الصادق إلى طلوع الشمس، والظهر من زوال الشمس، والعصر إذا صار ظل الشيء مثله، والمغرب من غروب الشمس، والعشاء من مغيب الشفق.","شروط الصلاة: الإسلام والعقل والتمييز، ودخول الوقت، والطهارة، وستر العورة، واستقبال القبلة، والنية."],
+ q:[["كم ركعة في صلاة المغرب؟",["اثنتان","ثلاث","أربع"],1],["كم عدد الصلوات المفروضة يومياً؟",["ثلاث","خمس","سبع"],1],["أيّ مما يلي من شروط الصلاة؟",["استقبال القبلة","الصيام","الحج"],0]]},
+{id:"i4",ic:"🧎",t:"كيف نصلّي؟",en:[["Standing (qiyam)","القيام"],["Bowing (ruku)","الركوع"],["Prostration (sujud)","السجود"],["Sitting (julus)","الجلوس"],["Qiblah","القبلة"],["Peace be upon you","السلام عليكم"]],
+ pts:["أركان الصلاة: القيام مع القدرة، تكبيرة الإحرام، قراءة الفاتحة، الركوع، الرفع منه، السجود، الجلوس بين السجدتين، التشهد الأخير، التسليم.","تبدأ بـ «الله أكبر» وتنتهي بالتسليم عن اليمين والشمال.","السجود على سبعة أعضاء: الجبهة مع الأنف، واليدان، والركبتان، وأطراف القدمين.","قال ﷺ: «صلّوا كما رأيتموني أصلّي»، فتعلّم الصلاة من عالم أو مصلٍّ متقن."],
+ q:[["بماذا تبدأ الصلاة؟",["بالسلام","بتكبيرة الإحرام","بالركوع"],1],["بماذا تنتهي الصلاة؟",["بالتسليم","بالسجود","بالفاتحة"],0],["الركن الذي يُقرأ فيه سورة الفاتحة هو...",["القيام","الركوع","الجلوس"],0]]}]},
+{sec:"الصيام",items:[
+{id:"i5",ic:"🌙",t:"صيام رمضان",en:[["Fasting (sawm)","الصيام"],["Ramadan","رمضان"],["Pre-dawn meal (suhoor)","السحور"],["Breaking the fast (iftar)","الإفطار"],["Intention","النية"],["Eid","العيد"]],
+ pts:["صيام رمضان ثالث أركان الإسلام، قال تعالى: ﴿يا أيها الذين آمنوا كُتب عليكم الصيام﴾.","يبدأ الصوم من طلوع الفجر الصادق إلى غروب الشمس، ويشترط له النية من الليل في الفرض.","مبطلاته: الأكل والشرب عمداً، والجماع، والقيء عمداً، وانقطاع دم الحيض والنفاس مع الحيض والنفاس نفسه.","يُسنّ السحور وتعجيل الفطر، والإكثار من القرآن والصدقة. ويُرخّص للمريض والمسافر الفطر مع القضاء."],
+ q:[["من أي وقت يبدأ الصوم؟",["طلوع الشمس","طلوع الفجر الصادق","الظهر"],1],["أيّ مما يلي يبطل الصوم؟",["الأكل عمداً","النوم","المشي"],0],["ما حكم المسافر في رمضان؟",["يُرخّص له الفطر ثم يقضي","يُمنع من الصيام","لا يقضي"],0]]}]},
+{sec:"الزكاة",items:[
+{id:"i6",ic:"🤲",t:"الزكاة ومصارفها",en:[["Almsgiving (zakat)","الزكاة"],["The poor","الفقراء"],["The needy","المساكين"],["Wealth","المال"],["Charity (sadaqah)","الصدقة"],["Threshold (nisab)","النصاب"]],
+ pts:["الزكاة رابع أركان الإسلام، وهي حق واجب في المال لأصناف معينة.","تجب إذا بلغ المال النصاب (ما يعادل 85 غراماً من الذهب تقريباً) وحال عليه الحول، وقدر زكاة النقود 2.5%.","مصارفها ثمانية بنص القرآن: الفقراء، المساكين، العاملون عليها، المؤلفة قلوبهم، وفي الرقاب، والغارمون، وفي سبيل الله، وابن السبيل.","زكاة الفطر صاع من طعام عن كل فرد قبل صلاة العيد، وهي طُهرة للصائم وطعمة للمساكين."],
+ q:[["ما نسبة زكاة النقود؟",["2.5%","10%","20%"],0],["كم مصرفاً للزكاة؟",["ثلاثة","خمسة","ثمانية"],2],["متى تُخرج زكاة الفطر؟",["قبل صلاة العيد","بعد العيد بشهر","في رجب"],0]]}]},
+{sec:"الآداب والأخلاق",items:[
+{id:"i7",ic:"🌟",t:"الأخلاق الحسنة",en:[["Honesty","الصدق"],["Kindness","اللطف"],["Patience","الصبر"],["Respect","الاحترام"],["Parents","الوالدان"],["Neighbour","الجار"]],
+ pts:["قال ﷺ: «إنما بُعثت لأتمم مكارم الأخلاق».","الصدق يهدي إلى البر، والكذب يهدي إلى الفجور. وأمانة الكلمة والعمل من الإيمان.","بر الوالدين من أعظم الواجبات، قال تعالى: ﴿وقضى ربك ألا تعبدوا إلا إياه وبالوالدين إحساناً﴾.","حق الجار عظيم، قال ﷺ: «من كان يؤمن بالله واليوم الآخر فليكرم جاره»."],
+ q:[["الصدق يهدي إلى...",["البر","الفجور","الغفلة"],0],["بعد عبادة الله مباشرة في الآية يأتي الأمر بـ...",["الإحسان إلى الوالدين","السفر","التجارة"],0],["حق الجار...",["عظيم","لا يهم","للأغنياء فقط"],0]]},
+{id:"i8",ic:"🍽️",t:"آداب يومية",en:[["Greeting (salam)","السلام"],["Eating with the right hand","الأكل باليمين"],["In the name of God","بسم الله"],["Thank God","الحمد لله"],["Visiting","الزيارة"]],
+ pts:["إفشاء السلام: «السلام عليكم ورحمة الله»، والرد بأحسن منها أو بمثلها.","آداب الطعام: التسمية في أوله، والأكل باليمين مما يليك، والحمد في آخره، وعدم الإسراف.","استئذان الدخول ثلاثاً، فإن أُذن لك وإلا رجعت.","عيادة المريض واتباع الجنازة وإجابة الدعوة من حقوق المسلم على أخيه."],
+ q:[["ماذا نقول قبل الأكل؟",["بسم الله","الحمد لله","سبحان الله"],0],["بأي يد نأكل؟",["اليمين","اليسار","كلتاهما"],0],["كم مرة نستأذن قبل الدخول؟",["ثلاثاً","عشراً","مرة واحدة فقط"],0]]}]},
+{sec:"العقيدة",items:[
+{id:"i9",ic:"☪️",t:"أركان الإسلام والإيمان",en:[["Faith (iman)","الإيمان"],["Islam","الإسلام"],["Oneness of God (tawhid)","التوحيد"],["Angels","الملائكة"],["Books","الكتب"],["Messengers","الرسل"],["Last Day","اليوم الآخر"],["Divine decree","القدر"]],
+ pts:["أركان الإسلام خمسة: الشهادتان، وإقام الصلاة، وإيتاء الزكاة، وصوم رمضان، وحج البيت لمن استطاع.","أركان الإيمان ستة: الإيمان بالله، وملائكته، وكتبه، ورسله، واليوم الآخر، والقدر خيره وشره.","الإحسان: «أن تعبد الله كأنك تراه، فإن لم تكن تراه فإنه يراك»، كما في حديث جبريل.","أصل الدين توحيد الله وإفراده بالعبادة، وهو معنى لا إله إلا الله."],
+ q:[["كم عدد أركان الإسلام؟",["خمسة","ستة","أربعة"],0],["كم عدد أركان الإيمان؟",["خمسة","ستة","سبعة"],1],["الإحسان أن تعبد الله...",["كأنك تراه","في السر فقط","وقت الفراغ"],0]]}]},
+{sec:"الأصول الثلاثة",items:[
+{id:"i10",ic:"❓",t:"الأصول الثلاثة: التعريف",en:[["Lord","الرب"],["Religion","الدين"],["Prophet","النبي"],["Knowledge","العلم"],["Action","العمل"]],
+ pts:["«الأصول الثلاثة وأدلتها» رسالة مختصرة للشيخ محمد بن عبد الوهاب (ت 1206هـ) رحمه الله.","موضوعها ثلاثة أسئلة يُسأل عنها كل عبد في قبره: من ربك؟ وما دينك؟ ومن نبيك؟","افتتحها بأربع مسائل يجب تعلمها: العلم، والعمل به، والدعوة إليه، والصبر على الأذى فيه.","ومعنى العلم هنا: معرفة الله ومعرفة نبيه ومعرفة دين الإسلام بالأدلة."],
+ q:[["كم سؤالاً تدور عليه الرسالة؟",["ثلاثة","خمسة","سبعة"],0],["أيّ مما يلي من المسائل الأربع؟",["العلم","التجارة","السفر"],0],["من هو مؤلف الأصول الثلاثة؟",["الشيخ محمد بن عبد الوهاب","ابن بطوطة","الغزالي"],0]]},
+{id:"i11",ic:"🕋",t:"الأصل الأول: معرفة الله",en:[["Creator","الخالق"],["Worship","العبادة"],["Supplication","الدعاء"],["Fear","الخوف"],["Hope","الرجاء"],["Trust in God","التوكل"]],
+ pts:["إذا قيل لك: من ربك؟ فقل: ربي الله الذي رباني وربى جميع العالمين بنعمه، وهو معبودي ليس لي معبود سواه.","ودليله: ﴿الحمد لله رب العالمين﴾. ونعرف الله بآياته ومخلوقاته: الليل والنهار والشمس والقمر والسماوات والأرض.","الله خلقنا لعبادته: ﴿وما خلقت الجن والإنس إلا ليعبدون﴾، والعبادة هي توحيده وطاعته.","من أنواع العبادة: الدعاء والخوف والرجاء والتوكل والرغبة والرهبة والاستعانة والذبح والنذر، وصرفها لغير الله شرك."],
+ q:[["لماذا خلقنا الله؟",["لعبادته","للهو","للتجارة"],0],["الدعاء من أنواع...",["العبادة","العادات","الألعاب"],0],["صرف العبادة لغير الله يسمى...",["شركاً","أدباً","سفراً"],0]]},
+{id:"i12",ic:"📜",t:"الأصل الثاني: معرفة الدين",en:[["Submission","الاستسلام"],["Obedience","الطاعة"],["Three levels","ثلاث مراتب"],["Excellence (ihsan)","الإحسان"]],
+ pts:["الدين: الاستسلام لله بالتوحيد والانقياد له بالطاعة والبراءة من الشرك وأهله.","للدين ثلاث مراتب: الإسلام، والإيمان، والإحسان، ولكل مرتبة أركان.","الإسلام خمسة أركان، والإيمان ستة، والإحسان ركن واحد: عبادة الله كأنك تراه.","هذه المراتب مأخوذة من حديث جبريل عليه السلام حين سأل النبي ﷺ عن الإسلام والإيمان والإحسان."],
+ q:[["كم مرتبة للدين؟",["ثلاث","اثنتان","أربع"],0],["عدد أركان الإحسان:",["واحد","ثلاثة","ستة"],0],["من أين أُخذت مراتب الدين؟",["حديث جبريل","قصة شعبية","مثل عربي"],0]]},
+{id:"i13",ic:"🌹",t:"الأصل الثالث: معرفة النبي ﷺ",en:[["Prophet Muhammad","النبي محمد"],["Mecca","مكة"],["Medina","المدينة"],["Migration (hijrah)","الهجرة"],["Messenger","الرسول"],["Seal of the prophets","خاتم النبيين"]],
+ pts:["هو محمد بن عبد الله بن عبد المطلب بن هاشم، من قريش، وقريش من العرب، والعرب من ذرية إسماعيل بن إبراهيم عليهما السلام.","عاش ثلاثاً وستين سنة: أربعين قبل النبوة، وثلاثاً وعشرين نبياً ورسولاً.","نُبّئ بـ «اقرأ» وأُرسل بـ «المدثر»، وبُعث بمكة وهاجر إلى المدينة، وأقام بمكة ثلاث عشرة سنة بعد النبوة.","أرسله الله بالنذارة عن الشرك والدعوة إلى التوحيد، وهو خاتم النبيين، وطاعته واجبة واتباعه سبيل الجنة."],
+ q:[["في أي مدينة بُعث النبي ﷺ؟",["مكة","المدينة","الشام"],0],["إلى أي مدينة هاجر؟",["المدينة","الطائف","القدس"],0],["كم عاش النبي ﷺ؟",["63 سنة","40 سنة","80 سنة"],0]]}]}
+];
+const ISL_ALL=ISL.flatMap(s=>s.items.map(x=>({...x,sec:s.sec})));
+function islam(){
+  const n=Object.keys(S.isl).length;
+  app.innerHTML=`<button class="back">→ رجوع</button><h2>🕌 أساسيات الإسلام</h2><div class="note" style="margin:-6px 0 8px">دروس مبسّطة بالعربية مع مفردات إنجليزية. أتممت ${n} / ${ISL_ALL.length}. تختلف المذاهب الفقهية في بعض التفاصيل، فراجع عالماً موثوقاً في الجزئيات.</div>`+
+  ISL.map(s=>`<h3 style="margin:14px 0 6px">${s.sec}</h3>`+s.items.map(x=>`<div class="card les" data-i="${x.id}"><div class="ic">${x.ic}</div><div><b>${x.t}</b><div class="ex">${S.isl[x.id]?"✅ أنجزته":x.en.length+" مفردات"}</div></div></div>`).join("")).join("");
+  $(".back").onclick=()=>go("home");
+  app.querySelectorAll(".les").forEach(e=>e.onclick=()=>go("islesson",{iid:e.dataset.i}));
+}
+function islesson(){
+  const x=ISL_ALL.find(y=>y.id===S.iid);
+  app.innerHTML=`<button class="back">→ رجوع</button><h2>${x.ic} ${x.t}</h2><div class="note" style="margin:-6px 0 8px">${x.sec}</div>
+  <div class="card"><ol style="padding-inline-start:20px;line-height:2;margin:0">${x.pts.map(p=>`<li>${esc(p)}</li>`).join("")}</ol></div>
+  <div class="card"><b>🔤 مفردات إنجليزية</b>${x.en.map((w,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)"><button class="spk" data-i="${i}" style="width:36px;height:36px;font-size:15px">🔊</button><span class="en" style="font-weight:700">${esc(w[0])}</span><span>${esc(w[1])}</span></div>`).join("")}</div>
+  <div class="card"><b>🎯 اختبر نفسك</b><div id="iq"></div></div>`;
+  $(".back").onclick=()=>{stopVideo();go("islam")};
+  app.querySelectorAll(".spk").forEach(b=>b.onclick=()=>say(x.en[+b.dataset.i][0].replace(/\s*\(.*\)/,""),{rate:.8}));
+  let i=0,sc=0;
+  const q=()=>{
+    if(i>=x.q.length){const ok=sc>=2;if(ok&&!S.isl[x.id]){S.isl[x.id]=1;addXP(20)}else save();sfx(ok);
+      $("#iq").innerHTML=`<div class="win"><div class="big">${ok?"🏆":"💪"}</div><h2>${sc} / ${x.q.length}</h2><div>${ok?"بارك الله فيك! (+20 نقطة)":"راجع الدرس وأعد المحاولة"}</div><button class="btn" id="ir" style="margin-top:8px">🔁 أعد</button> <button class="btn sec" id="il">الدروس</button></div>`;
+      $("#ir").onclick=()=>{i=0;sc=0;q()};$("#il").onclick=()=>go("islam");return}
+    const t=x.q[i],o=shuffle(t[1].map((v,k)=>k));
+    $("#iq").innerHTML=`<div style="margin:8px 0;font-weight:700">${i+1}. ${esc(t[0])}</div>`+o.map(k=>`<button class="opt" data-k="${k}" style="display:block;width:100%;margin-top:8px">${esc(t[1][k])}</button>`).join("");
+    $("#iq").querySelectorAll(".opt").forEach(b=>b.onclick=()=>{const good=+b.dataset.k===t[2];sfx(good);if(good)sc++;$("#iq").querySelectorAll(".opt").forEach(e=>{e.disabled=true;if(+e.dataset.k===t[2])e.classList.add("ok")});if(!good)b.classList.add("no");setTimeout(()=>{i++;q()},good?800:1500)});
+  };
+  q();
 }
 /* ---------- GEMINI (user's own free key) ---------- */
 const AI={get(){try{return JSON.parse(localStorage.getItem("zemmora_ai")||"{}")}catch(e){return{}}},set(o){try{localStorage.setItem("zemmora_ai",JSON.stringify(o))}catch(e){}}};
