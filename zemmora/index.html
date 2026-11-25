@@ -353,7 +353,16 @@ let voiceEN=null;
 function pickVoice(){try{const v=speechSynthesis.getVoices();voiceEN=v.find(x=>/en[-_]US/i.test(x.lang))||v.find(x=>/^en/i.test(x.lang))||null}catch(e){}}
 try{speechSynthesis.onvoiceschanged=pickVoice;pickVoice()}catch(e){}
 let _tid=0;const _tcb={};window.__ttsDone=id=>{if(_tcb[id])_tcb[id]()};
-function say(text,{rate=.9,pitch=1}={}){
+let _sayTok=0;
+async function say(text,o={}){
+  const tok=++_sayTok;
+  text=String(text).replace(/ﷺ/g," peace be upon him").replace(/[\u0600-\u06FF\u0750-\u077F]+/g," ").replace(/[«»“”"]/g," ").replace(/[’‘]/g,"'").replace(/\s+/g," ").trim();
+  if(!text)return;
+  const parts=text.length<=110?[text]:(text.match(/[^.!?;:]+[.!?;:]?/g)||[text]).map(x=>x.trim()).filter(Boolean);
+  const chunks=[];let cur="";parts.forEach(x=>{if((cur+" "+x).length>110&&cur){chunks.push(cur);cur=x}else cur=(cur+" "+x).trim()});if(cur)chunks.push(cur);
+  for(let i=0;i<chunks.length;i++){if(tok!==_sayTok)return;await say1(chunks[i],o)}
+}
+function say1(text,{rate=.9,pitch=1}={}){
   return new Promise(res=>{
     const guess=Math.max(1200,text.length*75);
     if(window.AndroidTTS){const id="u"+(++_tid);let d=false;const fin=()=>{if(!d){d=true;delete _tcb[id];res()}};_tcb[id]=fin;setTimeout(fin,guess+8000);try{AndroidTTS.speak(text,rate,pitch,id)}catch(e){fin()}return}
