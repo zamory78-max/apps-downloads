@@ -4,12 +4,6 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-title" content="زمورة">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#2563eb">
@@ -133,13 +127,14 @@ body.inchat header,body.inchat nav{display:none}body.inchat #shell{padding-botto
 .wd{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 12px;font:700 17px Cairo;cursor:pointer;color:var(--ink)}.wd.p{background:#e8eefc}
 nav button{padding:4px 2px}
 .hide{display:none!important}
+@media print{body.printcert #shell>*:not(#x),body.printcert nav{display:none!important}body.printcert #cm{position:static!important;background:#fff!important;padding:0!important}body.printcert #cm .card>*:not(#cimg){display:none!important}body.printcert #cm .card{box-shadow:none;border:0}body.printcert #cimg{width:100%!important;border:0!important}@page{size:A4 landscape;margin:0}}
 .win{text-align:center;padding:20px}.win .big{font-size:80px}
 .vid-links a{display:inline-block;margin:4px;padding:8px 12px;background:#fee2e2;color:#b91c1c;border-radius:12px;text-decoration:none;font-weight:700;font-size:14px}
 </style>
 </head>
 <body>
 <div id="shell"><header>
-  <h1>🎓 زمورة تعلم اللغات <span class="en" style="font-weight:600;font-size:15px">Zemmora</span></h1>
+  <h1>🎓 زمورة تعلم اللغات <span class="en" style="font-weight:600;font-size:15px">Zemmora</span> <button id="lg" class="pill" style="border:0;cursor:pointer;font:700 13px Cairo;float:left;color:#1e3a8a">🇬🇧 EN</button></h1>
   <p>تعلّم الإنجليزية من المبتدئ إلى المتقدّم — بالدارجة الجزائرية 🇩🇿</p>
   <div class="stats"><div class="pill">⭐ <span id="xp">0</span> نقطة</div><div class="pill">✅ <span id="dn">0</span>/30 درس</div><div class="pill">🔥 <span id="st">0</span> يوم</div></div>
 </header>
@@ -163,7 +158,7 @@ const LEVELS=[
  {id:"C1",name:"متقدّم",en:"Advanced",ic:"👑",c:"#fef3c7"}
 ];
 // words: [en, darija, emoji, example, exampleDarija]
-const L=[
+const LEN=[
 {id:1,lv:"A1",t:"التحيات",en:"Greetings",ic:"👋",g:["#4f46e5","#06b6d4"],chars:["🧑","👩"],names:["Amine","Sara"],
  w:[["Hello","السلام / أهلا","👋","Hello, my name is Amine.","أهلا، سميتي أمين."],
  ["Goodbye","بصحتك / سلام","🤚","Goodbye, see you tomorrow!","بصحتك، نشوفك غدوة!"],
@@ -336,21 +331,23 @@ const L=[
  tip:"القلب (inversion) للتأكيد: «Not only does it...» «Rarely have we seen...». بعد الظرف السلبي يتقدم المساعد على الفاعل."}
 ];
 
+let L=LEN,ST=null,LFR=null,STFR=null;
 /* ---------- STATE ---------- */
-const S={view:"home",lv:null,les:null,tab:"cards",card:0,xp:0,done:{},streak:0,last:"",stories:{},saved:[],dl:"A1",sid:null,mode:"read",drill:"dict",hs:{},gl:"A1",game:null,isl:{},iid:null};
+const S={view:"home",lv:null,les:null,tab:"cards",card:0,xp:0,done:{},streak:0,last:"",stories:{},saved:[],dl:"A1",sid:null,mode:"read",drill:"dict",hs:{},gl:"A1",game:null,isl:{},iid:null,lang:"en",name:""};
 const tabOf=v=>({lessons:"home",lesson:"home",story:S.mode==="listen"?"listen":"read",drill:"listen",game:"games",islam:"home",islesson:"home"}[v]||v);
 try{Object.assign(S,JSON.parse(localStorage.getItem("zemmora")||"{}"))}catch(e){}
-const save=()=>{try{localStorage.setItem("zemmora",JSON.stringify({xp:S.xp,done:S.done,streak:S.streak,last:S.last,stories:S.stories,saved:S.saved,dl:S.dl,hs:S.hs,gl:S.gl,isl:S.isl}))}catch(e){}};
+const save=()=>{try{localStorage.setItem("zemmora",JSON.stringify({xp:S.xp,done:S.done,streak:S.streak,last:S.last,stories:S.stories,saved:S.saved,dl:S.dl,hs:S.hs,gl:S.gl,isl:S.isl,lang:S.lang,name:S.name}))}catch(e){}};
 (function streak(){const t=new Date().toDateString();if(S.last!==t){const y=new Date(Date.now()-864e5).toDateString();S.streak=S.last===y?S.streak+1:1;S.last=t;save()}})();
 const $=s=>document.querySelector(s),app=$("#app");
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const E=s=>`<span class="en">${esc(s)}</span>`;
-function head(){$("#xp").textContent=S.xp;$("#dn").textContent=Object.keys(S.done).length;$("#st").textContent=S.streak}
+function head(){$("#xp").textContent=S.xp;$("#dn").textContent=doneCount();$("#st").textContent=S.streak}
 function addXP(n){S.xp+=n;save();head()}
 
 /* ---------- SPEECH ---------- */
 let voiceEN=null;
-function pickVoice(){try{const v=speechSynthesis.getVoices();voiceEN=v.find(x=>/en[-_]US/i.test(x.lang))||v.find(x=>/^en/i.test(x.lang))||null}catch(e){}}
+let voiceFR=null;
+function pickVoice(){try{const v=speechSynthesis.getVoices();voiceFR=v.find(x=>/fr[-_]FR/i.test(x.lang))||v.find(x=>/^fr/i.test(x.lang))||null;voiceEN=v.find(x=>/en[-_]US/i.test(x.lang))||v.find(x=>/^en/i.test(x.lang))||null}catch(e){}}
 try{speechSynthesis.onvoiceschanged=pickVoice;pickVoice()}catch(e){}
 let _tid=0;const _tcb={};window.__ttsDone=id=>{if(_tcb[id])_tcb[id]()};
 let _sayTok=0;
@@ -365,11 +362,11 @@ async function say(text,o={}){
 function say1(text,{rate=.9,pitch=1}={}){
   return new Promise(res=>{
     const guess=Math.max(1200,text.length*75);
-    if(window.AndroidTTS){const id="u"+(++_tid);let d=false;const fin=()=>{if(!d){d=true;delete _tcb[id];res()}};_tcb[id]=fin;setTimeout(fin,guess+8000);try{AndroidTTS.speak(text,rate,pitch,id)}catch(e){fin()}return}
+    if(window.AndroidTTS){const id="u"+(++_tid);let d=false;const fin=()=>{if(!d){d=true;delete _tcb[id];res()}};_tcb[id]=fin;setTimeout(fin,guess+8000);try{if(AndroidTTS.speakL)AndroidTTS.speakL(text,rate,pitch,id,LN().tag);else AndroidTTS.speak(text,rate,pitch,id)}catch(e){fin()}return}
     try{
       if(!window.speechSynthesis)throw 0;
       speechSynthesis.cancel();
-      const u=new SpeechSynthesisUtterance(text);u.lang="en-US";u.rate=rate;u.pitch=pitch;if(voiceEN)u.voice=voiceEN;
+      const u=new SpeechSynthesisUtterance(text);u.lang=LN().tag;u.rate=rate;u.pitch=pitch;{const vv=S.lang==="fr"?voiceFR:voiceEN;if(vv)u.voice=vv}
       let done=false;const fin=()=>{if(!done){done=true;res()}};
       u.onend=fin;u.onerror=fin;setTimeout(fin,guess+4000);
       speechSynthesis.speak(u);
@@ -386,9 +383,9 @@ function render(){head();document.body.classList.toggle("inchat",S.view==="chat"
 function lvPct(id){const ls=L.filter(l=>l.lv===id);return Math.round(100*ls.filter(l=>S.done[l.id]).length/ls.length)}
 function nextCard(){const n=L.find(l=>!S.done[l.id]);return n?`<div class="card next" id="nxl" data-i="${n.id}"><div style="font-size:38px">${n.ic}</div><div style="flex:1"><small style="color:#92400e">▶ تابع من حيث توقفت</small><div><b>${n.t}</b> <span class="ex">${E(n.en)} · ${n.lv}</span></div></div><div style="font-size:22px">◀</div></div>`:`<div class="card">🏆 أنهيت كل الدروس!</div>`}
 function home(){
-  app.innerHTML=`<div class="card"><h2>👋 مرحبا بيك!</h2><div style="line-height:1.9">اختار مستواك وابدأ. كل درس فيه: <b>بطاقات بالصور</b> 🖼️، <b>فيديو حواري متحرّك</b> 🎬، و<b>اختبار</b> 🎯. وفي تبويب <b>محادثة</b> 💬 تهدر مع مدرّس ذكي يفهم الدارجة ويصحّحلك.</div></div>
+  app.innerHTML=`<div class="card"><h2>👋 مرحبا بيك ${esc(S.name||"")}!</h2><div style="line-height:1.9">اختار مستواك وابدأ. كل درس فيه: <b>بطاقات بالصور</b> 🖼️، <b>فيديو حواري متحرّك</b> 🎬، و<b>اختبار</b> 🎯. وفي تبويب <b>محادثة</b> 💬 تهدر مع مدرّس ذكي يفهم الدارجة ويصحّحلك.</div></div>
   ${nextCard()}<div class="card sc" id="hi" style="margin-bottom:14px;display:flex;gap:12px;align-items:center;cursor:pointer;border:2px solid #16a34a"><div style="font-size:38px">🕌</div><div><b>أساسيات الإسلام</b><div class="note" style="margin:2px 0 0">الطهارة والصلاة والصيام والزكاة والأخلاق والأصول الثلاثة</div></div></div><div class="grid2" style="margin-bottom:14px"><div class="card sc" id="hr"><div style="font-size:34px">📖</div><b>قصص للقراءة</b><small>قصص ومقالات بالكلمات المسطّرة</small></div><div class="card sc" id="hl"><div style="font-size:34px">🎧</div><b>تدريب الاستماع</b><small>إملاء وحوارات وقصص</small></div></div><h2>📚 المستويات</h2><div class="levels">${LEVELS.map(l=>`<div class="card lv" data-l="${l.id}"><div class="ic" style="background:${l.c}">${l.ic}</div><div style="flex:1"><b>${l.name} · ${E(l.id)}</b><small>${E(l.en)}</small><div class="bar"><i style="width:${lvPct(l.id)}%"></i></div></div></div>`).join("")}</div>`;
-  app.querySelectorAll(".lv").forEach(e=>e.onclick=()=>go("lessons",{lv:e.dataset.l}));$("#hr").onclick=()=>go("read");$("#hi").onclick=()=>go("islam");$("#hl").onclick=()=>go("listen");const nx=$("#nxl");if(nx)nx.onclick=()=>go("lesson",{les:+nx.dataset.i,tab:"cards",card:0});
+  app.querySelectorAll(".lv").forEach(e=>e.onclick=()=>go("lessons",{lv:e.dataset.l}));$("#hr").onclick=()=>go("read");$("#hi").onclick=()=>go("islam");$("#hl").onclick=()=>go("listen");if(S.lang==="fr"){const h=$("#hi");if(h)h.remove()}const nx=$("#nxl");if(nx)nx.onclick=()=>go("lesson",{les:+nx.dataset.i,tab:"cards",card:0});
 }
 function lessons(){
   const lv=LEVELS.find(l=>l.id===S.lv);
@@ -415,8 +412,8 @@ function cardsTab(l){
   <div class="row ex" style="margin:8px">${S.card+1} / ${l.w.length}</div>
   <div class="tip">💡 <b>نصيحة:</b> ${l.tip}</div>
   <div class="card" style="margin-top:12px"><b>🎥 فيديوهات حقيقية للمزيد:</b><div class="vid-links">
-   <a target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${encodeURIComponent("learn English "+l.en+" lesson")}">▶ ${esc(l.t)} على يوتيوب</a>
-   <a target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${encodeURIComponent("تعلم الانجليزية "+l.t+" بالدارجة")}">▶ شرح بالعربية</a></div></div>`;
+   <a target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${encodeURIComponent((S.lang==="fr"?"apprendre le français ":"learn English ")+l.en)}">▶ ${esc(l.t)} على يوتيوب</a>
+   <a target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${encodeURIComponent("تعلم "+LN().ar+" "+l.t+" بالدارجة")}">▶ شرح بالعربية</a></div></div>`;
   $("#fl").onclick=()=>{$("#fl").classList.toggle("flip");if($("#fl").classList.contains("flip"))say(w[0])};
   $("#sp").onclick=()=>say(w[0],{rate:.75});$("#sx").onclick=()=>say(w[3]);
   $("#pv").onclick=()=>{S.card--;cardsTab(l)};
@@ -461,14 +458,14 @@ function quizTab(l){
   const qs=shuffle(l.w).flatMap((w,i)=>{
     const t=i%3;
     const pool=(k,n)=>shuffle(all.filter(x=>x[k]!==w[k])).slice(0,n).map(x=>x[k]);
-    if(t===0)return[{p:`<div class="big" style="font-size:90px">${w[2]}</div><div class="q">ماذا تعني هذه الصورة بالإنجليزية؟</div>`,a:w[0],o:shuffle([w[0],...pool(0,3)]),en:true}];
+    if(t===0)return[{p:`<div class="big" style="font-size:90px">${w[2]}</div><div class="q">ماذا تعني هذه الصورة باللغة ${LN().ar}؟</div>`,a:w[0],o:shuffle([w[0],...pool(0,3)]),en:true}];
     if(t===1)return[{p:`<div class="q">ما معنى ${E(w[0])} بالدارجة؟</div>`,a:w[1],o:shuffle([w[1],...pool(1,3)]),en:false}];
     return[{p:`<div class="q">🔊 استمع واختر الكلمة الصحيحة</div><div class="row"><button class="spk" id="ql">🔊</button></div>`,a:w[0],o:shuffle([w[0],...pool(0,3)]),en:true,say:w[0]}];
   });
   let i=0,score=0;
   const show=()=>{
     if(i>=qs.length){const ok=score>=qs.length*0.6;if(ok){S.done[l.id]=1;addXP(score*5+20)}save();head();
-      $("#body").innerHTML=`<div class="card win"><div class="big">${ok?"🏆":"💪"}</div><h2>${score} / ${qs.length}</h2><div>${ok?"ممتاز! أنهيت الدرس وربحت نقاط ⭐":"قريب! راجع البطاقات وجرّب من جديد"}</div><div class="row" style="margin-top:14px"><button class="btn sec" id="rt">🔁 أعد</button><button class="btn" id="bk">القائمة</button></div></div>`;
+      $("#body").innerHTML=`<div class="card win"><div class="big">${ok?"🏆":"💪"}</div><h2>${score} / ${qs.length}</h2><div>${ok?"ممتاز! أنهيت الدرس وربحت نقاط ⭐"+(levelDone(l.lv)?`<div style="margin-top:12px"><button class="btn" id="cg" data-l="${l.lv}">🎓 أنهيت مستوى ${l.lv}! احصل على شهادتك</button></div>`:""):"قريب! راجع البطاقات وجرّب من جديد"}</div><div class="row" style="margin-top:14px"><button class="btn sec" id="rt">🔁 أعد</button><button class="btn" id="bk">القائمة</button></div></div>`;
       $("#rt").onclick=()=>quizTab(l);$("#bk").onclick=()=>go("lessons");return}
     const q=qs[i];
     $("#body").innerHTML=`<div class="card"><div class="ex" style="text-align:center">السؤال ${i+1} / ${qs.length}</div><div class="bar"><i style="width:${i/qs.length*100}%"></i></div>${q.p}<div class="opts">${q.o.map(o=>`<button class="opt">${q.en?E(o):esc(o)}</button>`).join("")}</div></div>`;
@@ -509,18 +506,19 @@ const SCEN=[
 ["news","📰","نقاش الأخبار","حلّل الأسباب والنتائج برسمية","You are a discussion partner about a current-affairs topic (pick one, e.g. AI in jobs). Mission: the student analyses causes and consequences using formal language."]
 ];
 const C={lv:"A1",sc:null,active:false,hist:[],sample:null,busy:false,started:false,dict:null,showAr:true,done:false};
-const LVHINT={A1:"Use only very simple words and short sentences (max 8 words). Present simple. Suggestions must be 2-4 words.",A2:"Use simple everyday vocabulary and short sentences.",B1:"Use clear natural English, some past/future forms.",B2:"Use natural fluent English, include some phrasal verbs and connectors.",C1:"Use sophisticated vocabulary, idioms and nuanced structures."};
+const LVHINT={A1:"(Write in the target language only.) Use only very simple words and short sentences (max 8 words). Present simple. Suggestions must be 2-4 words.",A2:"Use simple everyday vocabulary and short sentences.",B1:"Use clear natural English, some past/future forms.",B2:"Use natural fluent English, include some phrasal verbs and connectors.",C1:"Use sophisticated vocabulary, idioms and nuanced structures."};
 let _ac=null;function sfx(ok){try{_ac=_ac||new(window.AudioContext||window.webkitAudioContext)();if(_ac.state==="suspended")_ac.resume();const n=_ac.currentTime,seq=ok?[[660,0],[880,.13]]:[[220,0],[165,.16]];seq.forEach(([f,d])=>{const o=_ac.createOscillator(),g=_ac.createGain();o.type=ok?"sine":"square";o.frequency.value=f;g.gain.setValueAtTime(.0001,n+d);g.gain.exponentialRampToValueAtTime(ok?.25:.12,n+d+.02);g.gain.exponentialRampToValueAtTime(.0001,n+d+.18);o.connect(g);g.connect(_ac.destination);o.start(n+d);o.stop(n+d+.2)});if(!ok&&navigator.vibrate)navigator.vibrate(120)}catch(e){}}
 const sc=()=>SCEN.find(x=>x[0]===C.sc);
 function sysPrompt(){const s=sc();
-return `You are "Coach Yalla", a friendly English tutor for Algerian Arabic (Darija) speakers. The student's CEFR level: ${C.lv}. ${LVHINT[C.lv]}
+const LE=S.lang==="fr"?"French":"English";
+return `You are "Coach Yalla", a friendly ${LE} tutor for Algerian Arabic (Darija) speakers. The student's name is ${S.name||"the student"}. The student's CEFR level: ${C.lv}. ${LVHINT[C.lv]}
 Scenario: ${s[4]}
-Stay in your role and keep the conversation moving with ONE short reply and ONE question. The student may write in English, Arabic, Algerian Darija (Arabic script or Latin letters / arabizi like "nheb nechri khobz"), or a mix. Understand all of them. If they write in Darija/Arabic, tell them how to say it in English and continue.
+Stay in your role and keep the conversation moving with ONE short reply and ONE question. The student may write in ${LE}, Arabic, Algerian Darija (Arabic script or Latin letters / arabizi like "nheb nechri khobz"), or a mix. Understand all of them. If they write in Darija/Arabic, tell them how to say it in ${LE} and continue.
 ALWAYS reply in EXACTLY this format (no markdown, no extra text):
-EN: <your short in-role English reply, ending with a simple question>
+EN: <your short in-role ${LE} reply, ending with a simple question>
 AR: <natural translation of your EN reply in Algerian Darija, Arabic script>
-FIX: <only if the student made English mistakes or used Darija: the corrected English sentence + a one-line explanation in Darija. Otherwise write FIX: none>
-SUG: <three short possible student replies in English suited to level ${C.lv}, separated by | >
+FIX: <only if the student made ${LE} mistakes or used Darija: the corrected ${LE} sentence + a one-line explanation in Darija. Otherwise write FIX: none>
+SUG: <three short possible student replies in ${LE} suited to level ${C.lv}, separated by | >
 DONE: <yes only when the mission is clearly accomplished, otherwise no>`}
 function parseBot(t){const g=k=>{const m=t.match(new RegExp("(?:^|\\n)"+k+":\\s*([\\s\\S]*?)(?=\\n(?:EN|AR|FIX|SUG|DONE):|$)"));return m?m[1].trim():""};return{en:g("EN")||t.trim(),ar:g("AR"),fix:g("FIX"),sug:g("SUG").split("|").map(x=>x.trim()).filter(Boolean).slice(0,3),done:/^yes/i.test(g("DONE"))}}
 function botHTML(p){return `<span class="e">${esc(p.en)}</span>${p.ar?`<span class="a">🇩🇿 ${esc(p.ar)}</span>`:""}${p.fix&&!/^none/i.test(p.fix)?`<span class="f">✏️ ${esc(p.fix)}</span>`:""}`}
@@ -533,7 +531,7 @@ function picker(){
   ${HAS_AI?"":`<div class="card" id="aib" style="cursor:pointer;display:flex;gap:10px;align-items:center;margin-bottom:10px;${geminiOn()?"border-color:#16a34a":""}"><div style="font-size:30px">🤖</div><div><b>${geminiOn()?"المدرّس الذكي Gemini: مفعّل ✅":"فعّل المدرّس الذكي (Gemini مجاناً)"}</b><div class="note" style="margin:2px 0 0">${geminiOn()?"محادثة حرة بلا نهاية، تفهم الدارجة. اضغط للإعدادات.":"محادثة حرة تفهم الدارجة. تحتاج مفتاحاً مجانياً من Google."}</div></div></div>`}<div class="grid2">${SCEN.map(s=>`<div class="card sc" data-v="${s[0]}"><div style="font-size:34px">${s[1]}</div><b>${s[2]}</b><small>🎯 ${s[3]}</small></div>`).join("")}</div>`;
   $("#lvc").onclick=e=>{const v=e.target.dataset.v;if(v){C.lv=v;picker()}};
   const ab=$("#aib");if(ab)ab.onclick=aiSettings;
-  app.querySelectorAll(".sc").forEach(e=>e.onclick=()=>{if(!HAS_AI&&!CS[e.dataset.v]){$("#pn").textContent="🤖 هذا السيناريو يحتاج المدرّس الذكي ويعمل داخل Claude فقط. جرّب السيناريوهات غير الباهتة.";return}C.sc=e.dataset.v;C.script=null;C.forceOff=false;C.active=true;C.hist=[];C.started=false;C.done=false;render();scrollTo(0,0)});
+  app.querySelectorAll(".sc").forEach(e=>e.onclick=()=>{if(S.lang==="fr"&&!HAS_AI&&!geminiOn()){$("#pn").textContent="🤖 المحادثة بالفرنسية تحتاج المدرّس الذكي Gemini. فعّله من البطاقة أعلاه (مفتاح مجاني).";return}if(!HAS_AI&&!CS[e.dataset.v]){$("#pn").textContent="🤖 هذا السيناريو يحتاج المدرّس الذكي ويعمل داخل Claude فقط. جرّب السيناريوهات غير الباهتة.";return}C.sc=e.dataset.v;C.script=null;C.forceOff=false;C.active=true;C.hist=[];C.started=false;C.done=false;render();scrollTo(0,0)});
 }
 function convo(){
   C.busy=false;const s=sc();
@@ -542,7 +540,7 @@ function convo(){
    <div class="mission" id="ms">🎯 المهمة: ${s[3]}</div>
    <div class="chat ${C.showAr?"":"hidear"}" id="cb"></div>
    <div class="sug" id="sg"></div>
-   <div class="inp"><button class="mic hide" id="mic">🎤</button><input id="ci" placeholder="اكتب بالإنجليزية أو بالدارجة…" autocomplete="off"><button class="btn" id="cs">➤</button></div></div>`;
+   <div class="inp"><button class="mic hide" id="mic">🎤</button><input id="ci" placeholder="اكتب باللغة ${LN().ar} أو بالدارجة…" autocomplete="off"><button class="btn" id="cs">➤</button></div></div>`;
   $("#cbk").onclick=()=>{stopVideo();C.active=false;render()};
   $("#tg").onclick=()=>{C.showAr=!C.showAr;$("#tg").classList.toggle("on",C.showAr);$("#cb").classList.toggle("hidear",!C.showAr)};
   $("#cs").onclick=()=>send($("#ci").value);$("#ci").onkeydown=e=>{if(e.key==="Enter")send($("#ci").value)};
@@ -836,7 +834,7 @@ const GAMES=[
  ["scramble","🔤","رتّب الحروف","كوّن الكلمة من حروف مبعثرة","نقاط"],
  ["race","⚡","سباق 60 ثانية","أجب بأسرع ما يمكن واصنع سلسلة نقاط","نقاط"],
  ["sentence","🧩","رتّب الجملة","ركّب الجملة الصحيحة من كلمات مبعثرة","نقاط"],
- ["picture","🖼️","خمّن الصورة","شاهد الرمز واختر الكلمة الإنجليزية","نقاط"],
+ ["picture","🖼️","خمّن الصورة","شاهد الرمز واختر الكلمة الصحيحة","نقاط"],
  ["speak","🎤","انطق","انطق الكلمة أو الجملة ويُقيَّم نطقك","نقاط"]
 ];
 function games(){
@@ -878,7 +876,7 @@ function gMemory(){
 /* 2. scramble */
 function gScramble(){
   const w=gNeed(5,6);if(!w)return;
-  let P=shuffle(w.filter(x=>/^[A-Za-z]{3,9}$/.test(x.en))).slice(0,8);if(P.length<4){P=shuffle(w.filter(x=>/^[A-Za-z' ]{3,12}$/.test(x.en))).slice(0,8)}
+  let P=shuffle(w.filter(x=>/^[\p{L}]{3,9}$/u.test(x.en))).slice(0,8);if(P.length<4){P=shuffle(w.filter(x=>/^[\p{L}' -]{3,14}$/u.test(x.en))).slice(0,8)}
   let i=0,sc=0,pick=[],hints=0,order=[];
   const draw=()=>{
     if(i>=P.length)return gEnd("انتهت اللعبة!","🔤",`صحيح: ${sc} / ${P.length}`,"scramble",sc,false,sc*4+5);
@@ -959,9 +957,9 @@ async function listenOnce(){
     let fin=false;const done=(t,e)=>{if(fin)return;fin=true;clearTimeout(tm);res({text:t||"",err:e||""})};
     const tm=setTimeout(()=>done("","timeout"),15000);
     try{
-      if(window.AndroidSTT){const id="s"+(++_sid);_stt[id]=(t,e)=>done(t,e);AndroidSTT.listen(id);return}
+      if(window.AndroidSTT){const id="s"+(++_sid);_stt[id]=(t,e)=>done(t,e);if(AndroidSTT.listenL)AndroidSTT.listenL(id,LN().tag);else AndroidSTT.listen(id);return}
       const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-      if(SR){const r=new SR();r.lang="en-US";r.maxAlternatives=3;r.onresult=e=>done(e.results[0][0].transcript,"");r.onerror=e=>done("",e.error||"x");r.onend=()=>done("","none");r.start();return}
+      if(SR){const r=new SR();r.lang=LN().tag;r.maxAlternatives=3;r.onresult=e=>done(e.results[0][0].transcript,"");r.onerror=e=>done("",e.error||"x");r.onend=()=>done("","none");r.start();return}
       if(HAS_AI){_gd=_gd||await claude.use("dictation");if(!_gd){done("","unsupported");return}
         _gd.onFinal(({text})=>done(text,""));await _gd.start();return}
       done("","unsupported");
@@ -993,6 +991,95 @@ function gSpeak(){
     };
   };
   draw();
+}
+/* ---------- LANGUAGE / NAME / CERTIFICATE ---------- */
+const LANGS={en:{ar:"الإنجليزية",nm:"English",tag:"en-US",flag:"🇬🇧",sub:"تعلّم الإنجليزية من المبتدئ إلى المتقدّم — بالدارجة الجزائرية 🇩🇿",cert:"Certificate of Completion"},
+ fr:{ar:"الفرنسية",nm:"Français",tag:"fr-FR",flag:"🇫🇷",sub:"تعلّم الفرنسية من المبتدئ إلى المتقدّم — بالدارجة الجزائرية 🇩🇿",cert:"Certificat de réussite"}};
+const LN=()=>LANGS[S.lang||"en"];
+function setLang(l){
+  S.lang=l;L=l==="fr"?LFR:LEN;ST=l==="fr"?STFR:STEN;S.view="home";S.sid=null;C.active=false;C.script=null;C.hist=[];
+  save();applyLang();render();
+}
+function applyLang(){
+  const p=document.querySelector("header p");if(p)p.textContent=LN().sub;
+  const b=$("#lg");if(b)b.textContent=LN().flag+" "+(S.lang==="fr"?"FR":"EN");
+  const t=$("#ttl");if(t)t.textContent="🎓 زمورة تعلم اللغات";
+  head();
+}
+function levelLessons(lv){return L.filter(l=>l.lv===lv)}
+function levelDone(lv){const ls=levelLessons(lv);return ls.length>0&&ls.every(l=>S.done[l.id])}
+function doneCount(){return L.filter(l=>S.done[l.id]).length}
+function askName(force){
+  if(S.name&&!force)return;
+  const o=document.createElement("div");o.id="nm";o.style.cssText="position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:99;display:flex;align-items:center;justify-content:center;padding:16px";
+  o.innerHTML=`<div class="card" style="max-width:420px;width:100%;text-align:center"><div style="font-size:48px">👋</div><h2>مرحباً بك في زمورة!</h2><div class="note">اكتب اسمك ليظهر على شهاداتك وفي المحادثة:</div><input id="nmi" value="${esc(S.name||"")}" maxlength="40" placeholder="الاسم الكامل" style="width:100%;padding:12px;margin:10px 0;border:2px solid var(--line);border-radius:12px;font:600 17px Cairo;text-align:center;background:#fff;color:#1d2433">
+  ${force?"":`<div class="note">اختر اللغة التي تريد تعلّمها:</div><div style="display:flex;gap:8px;justify-content:center;margin:8px 0"><button class="btn ${S.lang!=="fr"?"":"sec"}" data-l="en">🇬🇧 English</button><button class="btn ${S.lang==="fr"?"":"sec"}" data-l="fr">🇫🇷 Français</button></div>`}
+  <button class="btn" id="nmo" style="width:100%">ابدأ ✔</button></div>`;
+  document.body.appendChild(o);
+  let pick=S.lang||"en";
+  o.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{pick=b.dataset.l;o.querySelectorAll("[data-l]").forEach(x=>x.classList.toggle("sec",x!==b))});
+  $("#nmo").onclick=()=>{const v=$("#nmi").value.trim();if(!v){$("#nmi").style.borderColor="#dc2626";return}S.name=v;save();o.remove();if(!force&&pick!==(S.lang||"en"))setLang(pick);else render()};
+}
+/* certificate */
+function certCanvas(lvId){
+  const lv=LEVELS.find(x=>x.id===lvId),W=1754,H=1240,c=document.createElement("canvas");c.width=W;c.height=H;const g=c.getContext("2d");
+  const F='Cairo,"Segoe UI","Noto Naskh Arabic",Tahoma,Arial,sans-serif';
+  const bg=g.createLinearGradient(0,0,W,H);bg.addColorStop(0,"#fffdf5");bg.addColorStop(1,"#eef4ff");g.fillStyle=bg;g.fillRect(0,0,W,H);
+  g.strokeStyle="#1e3a8a";g.lineWidth=14;g.strokeRect(40,40,W-80,H-80);g.strokeStyle="#d4a017";g.lineWidth=5;g.strokeRect(68,68,W-136,H-136);
+  g.strokeStyle="#d4a01766";g.lineWidth=2;g.strokeRect(86,86,W-172,H-172);
+  const T=(t,x,y,font,color,dir)=>{g.font=font;g.fillStyle=color;g.textAlign="center";g.direction=dir||"rtl";g.fillText(t,x,y)};
+  T("🎓",W/2,250,"110px "+F,"#1e3a8a");
+  T("شهادة إتمام مستوى",W/2,370,"800 100px "+F,"#1e3a8a");
+  T(LN().cert,W/2,440,"italic 700 46px Georgia, serif","#92400e","ltr");
+  g.strokeStyle="#d4a017";g.lineWidth=4;g.beginPath();g.moveTo(W/2-260,480);g.lineTo(W/2+260,480);g.stroke();
+  T("تشهد منصة «زمورة تعلم اللغات» بأنّ",W/2,570,"600 46px "+F,"#334155");
+  T(S.name||"الطالب",W/2,700,"800 112px "+F,"#0f172a");
+  g.strokeStyle="#94a3b8";g.lineWidth=2;g.beginPath();g.moveTo(W/2-480,730);g.lineTo(W/2+480,730);g.stroke();
+  T(`قد أتمّ بنجاح جميع دروس مستوى «${lv.name}» (${lv.id})`,W/2,820,"700 52px "+F,"#1e293b");
+  T(`في تعلّم اللغة ${LN().ar}`,W/2,895,"700 52px "+F,"#1e293b");
+  const n=levelLessons(lvId).length;
+  T(`عدد الدروس المنجزة: ${n}  ·  مجموع النقاط: ${S.xp}`,W/2,975,"600 38px "+F,"#475569");
+  // badge
+  g.beginPath();g.arc(W-290,H-290,110,0,Math.PI*2);g.fillStyle="#1e3a8a";g.fill();g.lineWidth=8;g.strokeStyle="#d4a017";g.stroke();
+  T(lv.id,W-290,H-265,"800 84px Georgia, serif","#fff","ltr");
+  const d=new Date().toLocaleDateString("ar-DZ-u-nu-latn",{year:"numeric",month:"long",day:"numeric"});
+  T("التاريخ: "+d,330,H-210,"600 38px "+F,"#334155");
+  g.strokeStyle="#334155";g.lineWidth=2;g.beginPath();g.moveTo(560,H-170);g.lineTo(W-560,H-170);g.stroke();
+  T("زمورة تعلم اللغات · Zemmora",W/2,H-120,"700 36px "+F,"#64748b");
+  return c;
+}
+function pdfFromJpeg(jpg,w,h){
+  const enc=s=>new TextEncoder().encode(s),parts=[],off=[];let len=0;
+  const push=b=>{parts.push(b);len+=b.length};
+  push(enc("%PDF-1.4\n"));
+  const obj=(n,body)=>{off[n]=len;push(enc(n+" 0 obj\n"));push(typeof body==="string"?enc(body):body);push(enc("\nendobj\n"))};
+  obj(1,"<</Type/Catalog/Pages 2 0 R>>");obj(2,"<</Type/Pages/Kids[3 0 R]/Count 1>>");
+  obj(3,"<</Type/Page/Parent 2 0 R/MediaBox[0 0 841.89 595.28]/Resources<</XObject<</Im0 4 0 R>>>>/Contents 5 0 R>>");
+  off[4]=len;push(enc(`4 0 obj\n<</Type/XObject/Subtype/Image/Width ${w}/Height ${h}/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length ${jpg.length}>>\nstream\n`));push(jpg);push(enc("\nendstream\nendobj\n"));
+  const cs="q 841.89 0 0 595.28 0 0 cm /Im0 Do Q";obj(5,`<</Length ${cs.length}>>\nstream\n${cs}\nendstream`);
+  const x=len;let xr="xref\n0 6\n0000000000 65535 f \n";for(let i=1;i<=5;i++)xr+=String(off[i]).padStart(10,"0")+" 00000 n \n";
+  push(enc(xr+`trailer\n<</Size 6/Root 1 0 R>>\nstartxref\n${x}\n%%EOF`));
+  const out=new Uint8Array(len);let p=0;parts.forEach(b=>{out.set(b,p);p+=b.length});return out;
+}
+function b64(u8){let s="";for(let i=0;i<u8.length;i+=0x8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));return btoa(s)}
+async function showCert(lvId){
+  if(!S.name){askName(true);const w=setInterval(()=>{if(S.name){clearInterval(w);showCert(lvId)}},400);return}
+  try{await document.fonts.ready}catch(e){}
+  const c=certCanvas(lvId),url=c.toDataURL("image/jpeg",.92),jpg=Uint8Array.from(atob(url.split(",")[1]),x=>x.charCodeAt(0));
+  const pdf=pdfFromJpeg(jpg,c.width,c.height),fname=`zemmora-certificate-${S.lang||"en"}-${lvId}.pdf`;
+  const o=document.createElement("div");o.id="cm";o.style.cssText="position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:99;overflow:auto;padding:14px";
+  o.innerHTML=`<div style="max-width:520px;margin:0 auto"><div class="card" style="text-align:center"><b>🎓 شهادة المستوى ${lvId}</b><img id="cimg" src="${url}" style="width:100%;border-radius:10px;margin:10px 0;border:1px solid var(--line)"><div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn" id="cpdf">📄 تحميل PDF</button>${window.AndroidFile?"":'<button class="btn sec" id="cpr">🖨️ طباعة</button>'}<button class="btn sec" id="cnm">✏️ تعديل الاسم</button><button class="btn sec" id="ccl">إغلاق</button></div><div class="note" id="cmsg"></div></div></div>`;
+  document.body.appendChild(o);
+  $("#ccl").onclick=()=>o.remove();
+  $("#cnm").onclick=()=>{o.remove();askName(true);const w=setInterval(()=>{if(!$("#nm")){clearInterval(w);showCert(lvId)}},300)};
+  $("#cpdf").onclick=()=>{
+    try{
+      if(window.AndroidFile){AndroidFile.savePdf(b64(pdf),fname);return}
+      const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([pdf],{type:"application/pdf"}));a.download=fname;document.body.appendChild(a);a.click();a.remove();
+      $("#cmsg").textContent="تم إنشاء الملف. إن لم يبدأ التحميل فاضغط مطوّلاً على الصورة واحفظها.";
+    }catch(e){$("#cmsg").textContent="تعذّر التحميل هنا. اضغط مطوّلاً على الصورة واحفظها."}
+  };
+  const pr=$("#cpr");if(pr)pr.onclick=()=>{document.body.classList.add("printcert");window.print();setTimeout(()=>document.body.classList.remove("printcert"),500)};
 }
 /* ---------- ISLAM BASICS ---------- */
 const ISL=[
@@ -1180,7 +1267,7 @@ function aiSettings(){
 /* ---------- OFFLINE ROLE-PLAY ENGINE ---------- */
 const HAS_AI=!!(window.claude&&typeof window.claude.use==="function");
 const tierOf=()=>({A1:0,A2:0,B1:1,B2:1,C1:2}[C.lv]);
-function useScript(){return !HAS_AI&&(!geminiOn()||C.forceOff)&&!!CS[C.sc]}
+function useScript(){return S.lang!=="fr"&&!HAS_AI&&(!geminiOn()||C.forceOff)&&!!CS[C.sc]}
 function addBotP(en,ar){const d=document.createElement("div");d.className="msg bot";d.innerHTML=botHTML({en,ar,fix:"",sug:[]})+`<br><button class="spk" style="width:36px;height:36px;font-size:15px;margin-top:6px">🔊</button>`;d.querySelector(".spk").onclick=()=>say(en,{rate:.85});$("#cb").appendChild(d);$("#cb").scrollTop=1e9;return d}
 function startScript(){
   C.started=true;C.script=CS[C.sc][tierOf()];C.turn=0;C.score=0;C.reveal=false;C.busy=false;C.done=false;
@@ -1236,7 +1323,7 @@ function finishScript(){
 }
 
 /* ---------- STORIES: READING & LISTENING ---------- */
-const ST=[
+const STEN=[
 {id:"s1",lv:"A1",t:"My Day",ar:"يومي",ic:"🌞",
  s:[["I wake up at seven.","نفيق على السبعة."],["I drink coffee and eat bread.","نشرب القهوة وناكل الخبز."],["Then I go to school by bus.","بعدها نروح للمدرسة بالأوطوبيس."],["I study English with my friend.","نقرا الإنجليزية مع صاحبي."],["In the evening, I play football.","في العشية نلعب الكرة."],["At night, I sleep early.","في الليل نرقد بكري."]],
  g:{wake:"يفيق",school:"المدرسة",study:"يدرس",evening:"العشية",early:"بكري",sleep:"يرقد"},
@@ -1432,10 +1519,101 @@ const ST=[
  g:{democratised:"جعله متاحا للجميع",divide:"فجوة",undermines:"يقوّض",hybrid:"هجين",adequately:"بما يكفي",unfulfilled:"غير متحقق"},
  q:[["What did remote education expose?",["A stark digital divide","Cheaper tuition","Better exams"],0],["What do hybrid models do?",["Preserve the best of both worlds","Replace teachers","End universities"],0],["What does the professor say about institutions?",["They are not adequately prepared","They are fully prepared","They no longer exist"],0]]}
 ];
+/* ---------- FRENCH COURSE ---------- */
+// per lesson: t (title), n (names, optional), w [[fr, example]] or full [fr,darija,emoji,example,exampleDarija], d (dialogue lines), tip
+const FRD=[
+{t:"Salutations",w:[["Bonjour","Bonjour, je m'appelle Amine."],["Au revoir","Au revoir, à demain !"],["S'il vous plaît","De l'eau, s'il vous plaît."],["Merci","Merci beaucoup !"],["Désolé","Désolé, je suis en retard."],["Ami","C'est mon ami."]],
+ d:["Bonjour ! Comment ça va ?","Ça va bien, merci. Et toi ?","Ça va. Comment tu t'appelles ?","Je m'appelle Sara. Enchantée !"],tip:"«Comment ça va ؟» = «واش راك؟» والجواب «Ça va bien» = «لاباس». للاحترام استعمل «vous» مع الكبار، و«tu» مع الأصدقاء."},
+{t:"Nourriture et boissons",n:["Serveur","Client"],w:[["L'eau","Je veux de l'eau."],["Le pain","Je mange du pain tous les jours."],["Le café","Un café, s'il vous plaît."],["Le lait","Le lait est froid."],["La pomme","Cette pomme est sucrée."],["Faim","J'ai faim."]],
+ d:["Bonjour ! Que désirez-vous ?","Je voudrais un café, s'il vous plaît.","Autre chose ?","Oui, une bouteille d'eau. C'est combien ?"],tip:"في الفرنسية نقول «J'ai faim» (عندي جوع) وليس «je suis faim». وللتأدب قل «Je voudrais» بدل «Je veux»."},
+{t:"Les achats",n:["Client","Vendeur"],w:[["Cher","Ce sac est cher."],["Bon marché","Les chaussures sont bon marché."],["La réduction","Puis-je avoir une réduction ?"],["La taille","Quelle est votre taille ?"],["Le sac","J'ai besoin d'un nouveau sac."],["Le reçu","Gardez le reçu."]],
+ d:["C'est combien, cette veste ?","Elle coûte quatre mille dinars.","C'est trop cher. Vous pouvez faire un prix ?","D'accord, trois mille cinq cents pour vous."],tip:"«C'est combien ؟» أشهر طريقة لسؤال الثمن. و«trop cher» = غالي بزاف."},
+{t:"Les directions",n:["Touriste","Policier"],w:[["À gauche","Tournez à gauche."],["À droite","Tournez à droite."],["Tout droit","Allez tout droit."],["Près","L'école est près."],["Loin","C'est loin d'ici."],["La rue","Cette rue est longue."]],
+ d:["Excusez-moi, où est la pharmacie ?","Allez tout droit, puis tournez à gauche.","C'est loin ?","Non, c'est près de la mosquée."],tip:"«Excusez-moi» لجذب الانتباه، و«où est…؟» = وين كاين…؟ وللأمر استعمل «Tournez» و«Allez»."},
+{t:"Voyage et aéroport",n:["Passager","Agent"],w:[["Le billet","J'ai acheté un billet en ligne."],["Le passeport","N'oubliez pas votre passeport."],["Les bagages","Mes bagages sont lourds."],["Retardé","Le vol est retardé."],["La réservation","J'ai une réservation."],["La porte","Allez à la porte douze."]],
+ d:["Bonjour. Puis-je voir votre passeport et votre billet ?","Voici. J'ai une valise à enregistrer.","Votre vol a une heure de retard.","Très bien. À quelle porte dois-je aller ?"],tip:"«Les bagages» تُستعمل بالجمع دائماً. وللإجابة عند التسليم: «Voici» أو «Tenez»."},
+{t:"La vie professionnelle",n:["Directeur","Employé"],w:[["La réunion","Nous avons une réunion à dix heures."],["L'échéance","L'échéance est vendredi."],["Le salaire","Mon salaire est bon."],["Le collègue","Mon collègue m'a aidé."],["Le patron","Mon patron est gentil."],["Le rendez-vous","J'ai un rendez-vous aujourd'hui."]],
+ d:["Vous avez fini le rapport ?","Pas encore. Je vais l'envoyer demain matin.","L'échéance est aujourd'hui, vous vous souvenez ?","Désolé. Je l'enverrai dans deux heures."],tip:"المستقبل القريب: «je vais + فعل» مثل «je vais envoyer». وللمستقبل البسيط: «j'enverrai»."},
+{t:"Donner son avis",n:["Étudiant","Professeur"],w:[["À mon avis","À mon avis, c'est une excellente idée.","💭"],["Cependant","C'est bon marché ; cependant, c'est lent.","↔️"],["Bien que","Bien qu'il pleuve, nous sortons.","🌦️"],["D'un autre côté","D'un autre côté, ça fait gagner du temps.","⚖️"],["Par conséquent","Par conséquent, il a échoué.","➡️"],["Je suis d'accord","Je suis d'accord avec vous.","👍"]],
+ d:["Pensez-vous que les réseaux sociaux sont bons pour les adolescents ?","À mon avis, ils ont des avantages et des inconvénients.","Pouvez-vous expliquer davantage ?","Bien qu'ils connectent les gens, ils font perdre du temps. Par conséquent, les notes peuvent baisser."],tip:"بعد «bien que» نستعمل المضارع الشرطي (subjonctif): «bien qu'il pleuve». وهذا من علامات المستوى الجيد."},
+{t:"Les verbes pronominaux",n:["Karim","Mécanicien"],w:[["Se lever","🌅"],["Se laver","🚿"],["S'habiller","👕"],["Se reposer","🛋️"],["Se souvenir","🧠"],["S'inquiéter","😟"]],
+ d:["Que se passe-t-il avec votre voiture ?","Je crois qu'on n'a plus d'essence, et je ne comprends pas le reste.","Ne vous inquiétez pas. Reposez-vous, je vérifie le moteur.","Merci ! Je me souviendrai de votre aide."],tip:"الأفعال الانعكاسية تحتاج ضميراً: je me lève, tu te laves, il s'habille. الضمير يتغير مع الفاعل."},
+{t:"Les expressions imagées",n:["Lina","Yacine"],w:[["Avoir le cafard","J'ai le cafard ce soir."],["Poser un lapin","Il m'a posé un lapin hier."],["Coûter les yeux de la tête","Cette montre coûte les yeux de la tête."],["Un coup de foudre","Ce fut un coup de foudre."],["Tomber dans les pommes","Elle est tombée dans les pommes."],["Avoir un poil dans la main","Il a un poil dans la main."]],
+ d:["Tu as le cafard aujourd'hui, non ?","Oui, mon ami m'a posé un lapin.","Ce n'est pas grave, allons manger quelque chose !","D'accord, mais pas au restaurant qui coûte les yeux de la tête !"],tip:"التعابير الاصطلاحية لا تُترجم حرفياً، فتعلّمها كاملة كقطعة واحدة."},
+{t:"Registre soutenu",n:["Chercheur","Professeur"],w:[["En outre","En outre, les données confirment cela.","➕"],["Néanmoins","Néanmoins, nous avons continué.","🔁"],["Par conséquent","Par conséquent, les coûts ont augmenté.","⛓️"],["Quoique","Quoique court, le rapport est bon.","🤏"],["D'où","D'où la nécessité du changement.","📌"],["Malgré","Malgré le retard, c'est réussi.","🚧"]],
+ d:["Les données confirment-elles votre hypothèse ?","En grande partie, quoique avec quelques limites.","Pouvez-vous préciser ces limites ?","L'échantillon était petit ; par conséquent, les résultats doivent être pris avec prudence. Néanmoins, ils sont prometteurs."],tip:"«Quoique» و«bien que» يتبعهما subjonctif. استعمل هذه الروابط في الكتابة الأكاديمية والرسمية."},
+{t:"La famille",n:["Yacine","Grand-mère"],w:[["La mère","Ma mère est professeure."],["Le père","Mon père travaille dur."],["Le frère","J'ai un frère."],["La sœur","Ma sœur a douze ans."],["La grand-mère","J'aime ma grand-mère."],["La famille","J'ai une grande famille."]],
+ d:["Mamie, qui est sur cette photo ?","C'est ton père avec son frère.","Et qui est la fille ?","C'est ta sœur. Elle a douze ans."],tip:"في الفرنسية للعمر نقول «Elle a douze ans» (عندها 12 سنة) وليس «elle est»."},
+{t:"Les nombres",n:["Client","Vendeur"],w:[["Un","J'ai un livre."],["Deux","Deux cafés, s'il vous plaît."],["Trois","Trois pommes."],["Dix","Dix minutes."],["Cent","Cent dinars."],["Mille","Mille mercis !"]],
+ d:["Combien d'oranges voulez-vous ?","Dix, s'il vous plaît.","Ça fait deux cents dinars.","Voici mille. Gardez la monnaie !"],tip:"الأرقام 70 و90 غريبة: 70 = soixante-dix (60+10)، و90 = quatre-vingt-dix (4×20+10)."},
+{t:"L'heure et les jours",w:[["Aujourd'hui","Je suis libre aujourd'hui."],["Demain","À demain."],["Hier","J'étais fatigué hier."],["Le matin","Bonjour !"],["La nuit","Bonne nuit."],["L'horloge","Quelle heure est-il ?"]],
+ d:["Quelle heure est-il ?","Il est trois heures et demie.","On peut se voir demain à neuf heures ?","Oui, neuf heures du matin, c'est parfait."],tip:"«Il est trois heures et demie» = الثالثة والنصف. و«et quart» = وربع، و«moins le quart» = إلا ربع."},
+{t:"Les couleurs",n:["Enfant","Peintre"],w:[["Rouge","Une voiture rouge."],["Bleu","La mer est bleue."],["Vert","Du thé vert."],["Jaune","Un citron jaune."],["Noir","Un chat noir."],["Blanc","Une chemise blanche."]],
+ d:["Quelle est ta couleur préférée ?","J'aime le bleu. C'est la couleur de la mer.","Je préfère le vert, comme la nature.","Peignons un arbre vert sous un ciel bleu !"],tip:"الألوان في الفرنسية تتبع جنس الاسم: «une voiture rouge», «une chemise blanche» (مؤنث: blanche)."},
+{t:"Le corps",n:["Patient","Médecin"],w:[["La tête","J'ai mal à la tête."],["L'œil","Fermez les yeux."],["La main","Lavez-vous les mains."],["La jambe","J'ai mal à la jambe."],["Le cœur","Un cœur gentil."],["La dent","J'ai mal aux dents."]],
+ d:["Quel est le problème ?","J'ai mal à la tête et les yeux fatigués.","Avez-vous de la fièvre ?","Non. J'ai juste besoin de me reposer."],tip:"للألم نقول «J'ai mal à + العضو»: «J'ai mal à la tête»."},
+{t:"La maison",n:["Propriétaire","Locataire"],w:[["La cuisine","La cuisine est grande."],["La chambre","Deux chambres."],["La salle de bain","La salle de bain est propre."],["La porte","Fermez la porte."],["La fenêtre","Ouvrez la fenêtre."],["La clé","Où est ma clé ?"]],
+ d:["Bienvenue ! Cet appartement a deux chambres et une grande cuisine.","Il y a un balcon ?","Oui, et il y a deux fenêtres dans le salon.","Très bien. C'est combien, le loyer ?"],tip:"«Il y a» = كاين / يوجد. «Il y a un balcon» = كاين بالكون."},
+{t:"Les vêtements",n:["Client","Vendeuse"],w:[["La chemise","Une chemise blanche."],["Le pantalon","Ce pantalon est serré."],["Les chaussures","De nouvelles chaussures."],["La robe","Une belle robe."],["Le manteau","Prenez votre manteau."],["La casquette","Je porte une casquette."]],
+ d:["Je peux essayer ce manteau ?","Bien sûr. La cabine d'essayage est là-bas.","Il est un peu serré. Vous avez une taille au-dessus ?","Oui, voici une grande taille. Il vous va bien !"],tip:"«Il vous va bien» = يليق بك. و«essayer» = جرّب."},
+{t:"La météo",w:[["Ensoleillé","Il fait ensoleillé aujourd'hui."],["Pluvieux","C'est un jour pluvieux."],["Nuageux","Il y a des nuages."],["Venteux","Il y a beaucoup de vent."],["La neige","Il neige en hiver."],["Chaud","Il fait trop chaud."]],
+ d:["Quel temps fait-il aujourd'hui ?","Il fait soleil mais il y a un peu de vent.","Va-t-il pleuvoir demain ?","Oui, il sera nuageux et pluvieux. Prenez un parapluie !"],tip:"للطقس نقول «Il fait chaud / froid / beau» وليس «il est chaud»."},
+{t:"Les transports",n:["Passager","Employé"],w:[["Le bus","Je prends le bus."],["Le train","Le train est rapide."],["Le taxi","Appelez un taxi."],["Le tramway","Le tramway est à l'heure."],["Le vélo","Je fais du vélo."],["La gare","Où est la gare ?"]],
+ d:["Un billet pour le centre-ville, s'il vous plaît.","Aller simple ou aller-retour ?","Aller-retour. À quelle heure est le prochain tramway ?","Dans cinq minutes, quai numéro deux."],tip:"«Un aller simple» = ذهاب فقط، و«un aller-retour» = ذهاب وإياب."},
+{t:"Au restaurant",n:["Client","Serveur"],w:[["Le menu","Je peux voir le menu ?"],["L'entrée","Je prends une salade en entrée."],["Le plat principal","Le plat principal est du poulet."],["Le dessert","Qu'y a-t-il comme dessert ?"],["L'addition","L'addition, s'il vous plaît."],["Le pourboire","J'ai laissé un pourboire."]],
+ d:["Vous êtes prêt à commander ?","Oui, je prends la soupe en entrée et le poisson grillé comme plat principal.","Désirez-vous un dessert ?","Juste l'addition, s'il vous plaît. Le service est compris ?"],tip:"«L'addition, s'il vous plaît» لطلب الحساب. و«Le service est compris ?» = الخدمة محسوبة؟"},
+{t:"Chez le médecin",n:["Patient","Médecin"],w:[["Le médecin","Je dois voir un médecin."],["Le médicament","Prenez ce médicament deux fois par jour."],["La fièvre","J'ai de la fièvre."],["La douleur","J'ai une douleur ici."],["L'ordonnance","Voici votre ordonnance."],["L'allergie","J'ai une allergie au pollen."]],
+ d:["Quel est le problème ?","J'ai de la fièvre et mal à la gorge depuis trois jours.","Avez-vous des allergies ?","Non. Dois-je prendre un médicament ?","Oui, voici une ordonnance. Reposez-vous et buvez beaucoup d'eau."],tip:"«depuis trois jours» = من 3 أيام (مع المضارع). وللدواء: «deux fois par jour»."},
+{t:"Téléphone et technologie",n:["Client","Support"],w:[["La batterie","Ma batterie est faible."],["Le mot de passe","J'ai oublié mon mot de passe."],["Le Wi-Fi","Quel est le mot de passe du Wi-Fi ?"],["Télécharger","Téléchargez l'application."],["L'écran","L'écran est cassé."],["Le chargeur","Je peux emprunter votre chargeur ?"]],
+ d:["Bonjour, comment puis-je vous aider ?","Mon internet ne marche pas et le Wi-Fi se coupe tout le temps.","Éteignez le routeur puis rallumez-le, s'il vous plaît.","Ça marche maintenant. Merci beaucoup !"],tip:"«Ça marche» = يخدم / تمام. و«éteindre» = طفّي، «rallumer» = شعل من جديد."},
+{t:"Les loisirs",w:[["Le passe-temps","Quel est ton passe-temps ?"],["Le football","J'adore jouer au football."],["La lecture","La lecture me détend."],["La cuisine","J'aime faire la cuisine."],["Voyager","Voyager ouvre l'esprit."],["La musique","J'écoute de la musique tous les jours."]],
+ d:["Que fais-tu pendant ton temps libre ?","J'aime jouer au football et lire des romans.","Moi, j'adore cuisiner. J'apprends à faire des pâtes.","Ça a l'air bien ! Tu pourrais cuisiner pour moi un jour ?"],tip:"«jouer au football» نستعمل «à + أل» مع الرياضة، و«faire de la musique» مع الموسيقى."},
+{t:"Banque et argent",n:["Client","Banquier"],w:[["Le compte bancaire","Je voudrais ouvrir un compte bancaire."],["Le prêt","J'ai demandé un prêt."],["L'épargne","Je mets de l'argent dans l'épargne."],["Le taux d'intérêt","Le taux d'intérêt est élevé."],["Retirer","Je veux retirer de l'argent."],["Le budget","Nous devons respecter le budget."]],
+ d:["Comment puis-je vous aider aujourd'hui ?","Je voudrais ouvrir un compte d'épargne. Quel est le taux d'intérêt ?","Il est de trois pour cent par an, sans frais mensuels.","Si j'épargne régulièrement, aurai-je aussi une carte bancaire ?"],tip:"«Je voudrais ouvrir…» جملة مهذبة وأساسية في البنك. و«par an» = في العام."},
+{t:"L'environnement",n:["Étudiant","Professeur"],w:[["La pollution","La pollution de l'air est un gros problème."],["Recycler","Nous devons recycler le plastique."],["Le changement climatique","Le changement climatique concerne tout le monde."],["L'énergie renouvelable","Le solaire est une énergie renouvelable."],["Les déchets","Réduisez les déchets alimentaires."],["En voie de disparition","Les pandas sont en voie de disparition."]],
+ d:["Pourquoi le changement climatique est-il un problème si grave ?","Parce qu'il est causé par la pollution et que la planète est abîmée.","Que pouvons-nous faire ?","Nous pouvons recycler, réduire les déchets et investir dans les énergies renouvelables."],tip:"«parce que» للسبب في جملة، و«à cause de» + اسم. «Nous pouvons» = نقدرو."},
+{t:"Études et université",n:["Étudiant","Conseiller"],w:[["L'université","J'étudie à l'université."],["Le diplôme","Elle a un master."],["La bourse","Il a gagné une bourse."],["Le cours magistral","Le cours commence à neuf heures."],["Le devoir","Rendez votre devoir."],["L'examen","J'ai un examen demain."]],
+ d:["Je voudrais demander une bourse à l'étranger.","Vous devez rendre vos devoirs et une lettre de motivation avant la date limite.","On m'a dit que l'examen avait lieu en juin.","Oui, et nous vous conseillons de vous préparer tôt."],tip:"«Vous devez» = لازم عليك. و«Nous vous conseillons de + فعل» أسلوب مهذب لإعطاء نصيحة."},
+{t:"Émotions et relations",w:[["Anxieux","Je me sens anxieux avant les examens."],["Fier","Je suis fier de toi."],["Jaloux","Ne sois pas jaloux."],["Déçu","Je suis déçu du résultat."],["Solidaire","Ma famille est très solidaire."],["La confiance","La confiance prend du temps."]],
+ d:["Tu as l'air inquiet. Qu'est-ce qui ne va pas ?","Je suis anxieuse pour mon entretien, et un peu déçue de moi.","Ne sois pas trop dure avec toi-même. Je suis vraiment fier de ton travail.","Merci. Tu es toujours très solidaire."],tip:"الصفات تتغير مع الجنس: «anxieux/anxieuse», «déçu/déçue», «fier/fière»."},
+{t:"Médias et politique",n:["Animateur","Analyste"],w:[["Le titre","Le titre a attiré mon attention."],["L'élection","L'élection a lieu le mois prochain."],["La politique","Une nouvelle politique économique."],["Le parti pris","L'article montre un parti pris."],["La propagande","C'est de la pure propagande."],["Le débat","Un débat animé."]],
+ d:["Pensez-vous que la couverture médiatique de l'élection était impartiale ?","On dit largement que certains médias ont montré un certain parti pris.","Cela pourrait-il influencer l'opinion publique ?","Probablement, c'est pourquoi la lecture critique est essentielle."],tip:"«On dit que…» = يُقال إن. و«c'est pourquoi» = ولهذا السبب."},
+{t:"Affaires et négociation",n:["Client","Directeur"],w:[["Négocier","Nous devons négocier les conditions."],["La partie prenante","Informez toutes les parties prenantes."],["Le chiffre d'affaires","Le chiffre d'affaires a augmenté de dix pour cent."],["La proposition","Envoyez-moi la proposition."],["Le compromis","Trouvons un compromis."],["Le levier","Nous avons peu de leviers."]],
+ d:["Franchement, votre proposition dépasse notre budget.","Nous pourrions envisager d'ajuster le périmètre, à condition de prolonger le délai.","Cela pourrait marcher. Seriez-vous ouverts à un compromis sur le prix ?","Si vous vous engagez sur un contrat plus long, nous serions disposés à le baisser."],tip:"«à condition de / à condition que» = بشرط. و«nous serions disposés à» أسلوب مهذب جداً في التفاوض."},
+{t:"Science et innovation",n:["Chercheur","Professeur"],w:[["Une percée","Une percée majeure en médecine."],["L'hypothèse","Testez l'hypothèse."],["L'intelligence artificielle","L'IA transforme les industries."],["Durable","Le développement durable."],["Le résultat","Le résultat était inattendu."],["De pointe","Une technologie de pointe."]],
+ d:["Quelle est l'importance de votre percée ?","Non seulement elle améliore la précision, mais elle réduit aussi les coûts de façon spectaculaire.","La technologie est-elle durable à long terme ?","Si nous obtenons le financement, le résultat devrait être transformateur."],tip:"«Non seulement… mais aussi…» تركيب مهم في المستوى المتقدم. و«de pointe» = متطور جداً."}
+];
+const FRX={
+ 6:[["À mon avis","في رايي","💭","À mon avis, c'est une excellente idée.","في رايي، هذي فكرة ممتازة."],["Cependant","بصح / لكن","↔️","C'est bon marché ; cependant, c'est lent.","رخيص، بصح بطيء."],["Bien que","رغم أنّ","🌦️","Bien qu'il pleuve, nous sortons.","رغم أنها تشتي، نخرجو."],["D'un autre côté","من جهة أخرى","⚖️","D'un autre côté, ça fait gagner du temps.","من جهة أخرى، يوفر الوقت."],["Par conséquent","ونتيجة لذلك","➡️","Par conséquent, il a échoué.","ونتيجة لذلك، رسب."],["Je suis d'accord","نتفق معاك","👍","Je suis d'accord avec vous.","نتفق معاك."]],
+ 7:[["Se lever","يوقف من النوم","🌅","Je me lève à sept heures.","نوقف على السبعة."],["Se laver","يغسل روحو","🚿","Il se lave les mains.","يغسل يديه."],["S'habiller","يلبس","👕","Elle s'habille vite.","تلبس بسرعة."],["Se reposer","يرتاح","🛋️","Nous nous reposons le dimanche.","نرتاحو نهار الأحد."],["Se souvenir","يتذكر","🧠","Je me souviens de ce jour.","نتذكر داك النهار."],["S'inquiéter","يقلق","😟","Ne t'inquiète pas.","ما تقلقش."]],
+ 8:[["Avoir le cafard","يحس بالحزن والملل","😞","J'ai le cafard ce soir.","راني حزين الليلة."],["Poser un lapin","ما يجيش للموعد","🐰","Il m'a posé un lapin hier.","ما جاش للموعد معايا البارح."],["Coûter les yeux de la tête","غالي بزاف","💸","Cette montre coûte les yeux de la tête.","هاذ الساعة غالية بزاف."],["Un coup de foudre","حب من أول نظرة","⚡","Ce fut un coup de foudre.","كان حب من أول نظرة."],["Tomber dans les pommes","يغمى عليه","😵","Elle est tombée dans les pommes.","غمي عليها."],["Avoir un poil dans la main","كسول بزاف","🛋️","Il a un poil dans la main.","كسول بزاف."]],
+ 9:[["En outre","علاوة على ذلك","➕","En outre, les données confirment cela.","علاوة على ذلك، المعطيات تدعم هذا."],["Néanmoins","ومع ذلك","🔁","Néanmoins, nous avons continué.","ومع ذلك واصلنا."],["Par conséquent","وبالتالي","⛓️","Par conséquent, les coûts ont augmenté.","وبالتالي ارتفعت التكاليف."],["Quoique","مع أنّ","🤏","Quoique court, le rapport est bon.","تقرير مليح وإن كان قصير."],["D'où","ومن هنا","📌","D'où la nécessité du changement.","ومن هنا الحاجة للتغيير."],["Malgré","بصرف النظر عن","🚧","Malgré le retard, c'est réussi.","بصرف النظر عن التأخير، نجح."]]
+};
+const FRDD={7:["واش بيها طوموبيلتك؟","نظن خلصلنا البنزين، وما نفهمش الباقي.","ما تقلقش. ارتاح وأنا نشوف المحرك.","شكرا! نتذكر مساعدتك."],8:["راك حزين اليوم، صح؟","إيه، صاحبي ما جاش للموعد.","ما كاين باس، يلا نروحو ناكلو حاجة!","ماشي، بصح ماشي المطعم الغالي بزاف!"]};
+function buildFR(){return LEN.map((l,i)=>{const f=FRD[i];return{...l,id:100+l.id,en:f.t,names:f.n||l.names,
+  w:FRX[i]?FRX[i]:l.w.map((w,k)=>[f.w[k][0],w[1],w[2],f.w[k][1],w[4]]),
+  d:l.d.map((x,k)=>[x[0],f.d[k],FRDD[i]?FRDD[i][k]:x[2]]),tip:f.tip}})}
+STFR=[
+{id:"fs1",lv:"A1",t:"Ma journée",ar:"يومي",ic:"🌞",s:[["Je me lève à sept heures.","نوقف على السبعة."],["Je bois du café et je mange du pain.","نشرب القهوة وناكل الخبز."],["Ensuite, je vais à l'école en bus.","بعدها نروح للمدرسة بالأوطوبيس."],["J'étudie le français avec mon ami.","نقرا الفرنسية مع صاحبي."],["Le soir, je joue au football.","في العشية نلعب الكرة."],["La nuit, je dors tôt.","في الليل نرقد بكري."]],g:{lève:"يوقف",école:"المدرسة",étudie:"يدرس",soir:"العشية",tôt:"بكري",dors:"يرقد"},q:[["À quelle heure se lève-t-il ?",["À six heures","À sept heures","À huit heures"],1],["Comment va-t-il à l'école ?",["En bus","En voiture","À pied"],0],["Que fait-il le soir ?",["Il lit","Il joue au football","Il regarde la télé"],1]]},
+{id:"fs2",lv:"A1",t:"Au marché",ar:"في السوق",ic:"🛒",s:[["Samira va au marché le samedi.","سميرة تروح للسوق نهار السبت."],["Elle achète des tomates et des oranges.","تشري الطماطم والبرتقال."],["Les tomates coûtent cent dinars.","الطماطم بمية دينار."],["Le vendeur est très sympathique.","البائع طيب بزاف."],["Elle dit merci et rentre à la maison.","تقول شكرا وترجع للدار."]],g:{marché:"السوق",achète:"تشري",coûtent:"تكلف",vendeur:"البائع",rentre:"ترجع"},q:[["Quand va-t-elle au marché ?",["Le samedi","Le lundi","Le vendredi"],0],["Que coûtent les tomates ?",["Cinquante dinars","Cent dinars","Deux cents dinars"],1]]},
+{id:"fs3",lv:"A2",t:"Le week-end en famille",ar:"نهاية الأسبوع مع العائلة",ic:"👨‍👩‍👧",s:[["Le week-end, ma famille se réveille tard.","في نهاية الأسبوع عائلتي تفيق متأخرة."],["Mon père prépare le petit-déjeuner pour tout le monde.","بابا يحضر الفطور للكل."],["Après le repas, nous allons au parc.","بعد الفطور نروحو للحديقة."],["Mes frères jouent au ballon et moi, je lis un livre.","خوتي يلعبو بالكورة وأنا نقرا كتاب."],["Le soir, nous regardons un film ensemble.","في العشية نشوفو فيلم مع بعض."],["C'est mon moment préféré de la semaine.","هذا وقتي المفضل في الأسبوع."]],g:{réveille:"تفيق",prépare:"يحضر",parc:"الحديقة",ballon:"الكورة",film:"فيلم",préféré:"المفضل"},q:[["Qui prépare le petit-déjeuner ?",["Le père","La mère","Le frère"],0],["Où va la famille après le repas ?",["Au marché","Au parc","Au cinéma"],1],["Que fait la narratrice au parc ?",["Elle joue au ballon","Elle lit un livre","Elle dort"],1]]},
+{id:"fs4",lv:"B1",t:"Un voyage en train",ar:"رحلة بالقطار",ic:"🚆",s:[["Hier, j'ai pris le train pour aller à Oran.","البارح ركبت التران باش نروح لوهران."],["Le voyage a duré quatre heures.","الرحلة دامت أربع ساعات."],["À côté de moi, il y avait une dame très sympathique.","جنبي كانت مرا طيبة بزاف."],["Nous avons parlé de nos familles et de nos métiers.","تحدثنا على عائلاتنا وخدمتنا."],["Quand je suis arrivé, mon cousin m'attendait à la gare.","كي وصلت، ولد عمي كان يستناني في المحطة."],["J'ai trouvé ce voyage vraiment agréable.","لقيت هذه الرحلة ممتعة بزاف."]],g:{train:"التران",duré:"دامت",dame:"مرا",métiers:"الوظائف",attendait:"كان يستنى",agréable:"ممتعة"},q:[["Combien de temps a duré le voyage ?",["Deux heures","Quatre heures","Six heures"],1],["Qui attendait le narrateur à la gare ?",["Son cousin","Son ami","Sa mère"],0],["Comment était le voyage ?",["Ennuyeux","Fatigant","Agréable"],2]]},
+{id:"fs5",lv:"B1",t:"Une nouvelle habitude",ar:"عادة جديدة",ic:"🏃",s:[["Depuis trois mois, je fais du sport tous les matins.","من 3 أشهر، نمارس الرياضة كل صباح."],["Au début, c'était difficile, car je n'avais pas l'habitude.","في البداية كان صعب، لأني ما كنتش متعود."],["Maintenant, je me sens plus en forme et plus heureux.","الآن نحس روحي أنشط وأسعد."],["Mon médecin m'a conseillé de continuer.","طبيبي نصحني نكمل."],["J'ai même invité mes amis à courir avec moi.","حتى عزمت صحابي يجريو معايا."]],g:{sport:"الرياضة",début:"البداية",difficile:"صعب",habitude:"عادة",forme:"نشاط",conseillé:"نصح"},q:[["Depuis quand fait-il du sport ?",["Une semaine","Trois mois","Un an"],1],["Comment se sent-il maintenant ?",["Fatigué","En forme","Triste"],1],["Qui a conseillé de continuer ?",["Son ami","Son médecin","Son père"],1]]},
+{id:"fs6",lv:"B2",t:"Le télétravail",ar:"العمل عن بعد",ic:"💻",s:[["Le télétravail s'est largement développé ces dernières années.","العمل عن بعد انتشر بشكل واسع في السنوات الأخيرة."],["Il permet aux employés de gagner du temps sur les trajets.","يسمح للموظفين بربح الوقت في التنقل."],["Cependant, certains se sentent isolés loin de leurs collègues.","لكن بعضهم يحس بالعزلة بعيداً عن زملائه."],["Les entreprises cherchent donc un équilibre entre présence et flexibilité.","فالشركات تبحث عن توازن بين الحضور والمرونة."],["Bien que cette formule séduise beaucoup de jeunes, elle exige de la discipline.","رغم أن هذه الصيغة تجذب الشباب، فهي تتطلب انضباطاً."]],g:{télétravail:"العمل عن بعد",trajets:"التنقلات",isolés:"معزولون",équilibre:"توازن",flexibilité:"مرونة",discipline:"انضباط"},q:[["Quel est l'avantage du télétravail cité ?",["Un meilleur salaire","Un gain de temps","Moins de réunions"],1],["Quel inconvénient est mentionné ?",["L'isolement","Le bruit","Le coût"],0],["Que demande cette formule selon le texte ?",["De la discipline","Plus de bureaux","Un grand budget"],0]]},
+{id:"fs7",lv:"B2",t:"Les jeunes et les réseaux sociaux",ar:"الشباب ووسائل التواصل",ic:"📱",s:[["Les réseaux sociaux occupent une place centrale dans la vie des adolescents.","وسائل التواصل تحتل مكانة مركزية في حياة المراهقين."],["Ils facilitent la communication et l'accès à l'information.","تسهل التواصل والوصول للمعلومة."],["Toutefois, une utilisation excessive peut nuire à la concentration.","لكن الإفراط في الاستعمال قد يضر بالتركيز."],["C'est pourquoi les parents doivent accompagner leurs enfants.","لهذا على الأهل مرافقة أبنائهم."],["À mon avis, l'éducation numérique est la meilleure solution.","في رأيي، التربية الرقمية هي الحل الأفضل."]],g:{adolescents:"المراهقين",facilitent:"تسهل",excessive:"مفرطة",concentration:"التركيز",accompagner:"يرافق",numérique:"رقمي"},q:[["Que facilitent les réseaux sociaux ?",["La communication","Le sport","Le travail"],0],["Quel risque est mentionné ?",["Perte de concentration","Perte d'argent","Perte de temps de sommeil"],0],["Quelle solution propose l'auteur ?",["Interdire les réseaux","L'éducation numérique","Supprimer les téléphones"],1]]},
+{id:"fs8",lv:"C1",t:"Intelligence artificielle et société",ar:"الذكاء الاصطناعي والمجتمع",ic:"🤖",s:[["L'intelligence artificielle bouleverse en profondeur de nombreux secteurs, de la santé à l'éducation.","الذكاء الاصطناعي يغيّر بعمق قطاعات كثيرة، من الصحة إلى التعليم."],["Si elle promet des gains de productivité considérables, elle suscite également des inquiétudes quant à l'emploi.","وإن كانت تعد بمكاسب إنتاجية كبيرة، فهي تثير مخاوف حول الشغل."],["Certains experts soulignent que les métiers évolueront plutôt qu'ils ne disparaîtront.","يؤكد بعض الخبراء أن المهن ستتطور بدل أن تختفي."],["Il convient donc d'investir massivement dans la formation continue.","لذا ينبغي الاستثمار بقوة في التكوين المستمر."],["Enfin, un cadre éthique clair demeure indispensable afin d'éviter les dérives.","وأخيراً، يبقى إطار أخلاقي واضح ضرورياً لتفادي الانحرافات."]],g:{bouleverse:"يقلب",productivité:"الإنتاجية",suscite:"تثير",évolueront:"ستتطور",formation:"التكوين",éthique:"أخلاقي"},q:[["Quelle inquiétude suscite l'IA ?",["L'emploi","Le climat","Le sport"],0],["Selon certains experts, que feront les métiers ?",["Disparaître","Évoluer","Rester identiques"],1],["Qu'est-ce qui est jugé indispensable ?",["Un cadre éthique","Moins de technologie","Plus de publicité"],0]]},
+{id:"fd1",lv:"A1",t:"Au café",ar:"في المقهى",ic:"☕",d:["Serveur","Client"],s:[["Bonjour ! Que désirez-vous ?","السلام! واش تحب؟",0],["Je voudrais un café, s'il vous plaît.","نحب قهوة، عفاك.",1],["Avec du sucre ?","بالسكر؟",0],["Non, merci. Sans sucre.","لا، شكرا. بلا سكر.",1],["Voilà votre café. Deux euros.","هاك القهوة. أورو.",0],["Merci beaucoup. Bonne journée !","شكرا بزاف. نهار سعيد!",1]],g:{désirez:"تحب",sucre:"السكر",café:"القهوة"},q:[["Que commande le client ?",["Un thé","Un café","Un jus"],1],["Veut-il du sucre ?",["Oui","Non","Un peu"],1]]},
+{id:"fd2",lv:"A2",t:"À la boulangerie",ar:"في المخبزة",ic:"🥖",d:["Boulanger","Cliente"],s:[["Bonjour madame, je vous écoute.","السلام مدام، أنا نسمعك.",0],["Bonjour. Je voudrais deux baguettes et un croissant.","السلام. نحب جوج باقيت وكرواسون.",1],["Voulez-vous autre chose ?","تحبي حاجة أخرى؟",0],["Oui, une tarte aux pommes, s'il vous plaît.","إيه، تارت التفاح، عفاك.",1],["Ça fait six euros cinquante.","المجموع ستة أورو ونص.",0],["Voici dix euros. Gardez la monnaie !","هاك عشرة أورو. الباقي ليك!",1]],g:{baguettes:"خبز طويل",tarte:"فطيرة",monnaie:"الباقي"},q:[["Combien de baguettes achète-t-elle ?",["Une","Deux","Trois"],1],["Combien coûte le total ?",["6,50 €","10 €","2 €"],0]]},
+{id:"fd3",lv:"B1",t:"Chez le médecin",ar:"عند الطبيب",ic:"🏥",d:["Médecin","Patient"],s:[["Bonjour. Qu'est-ce qui vous amène ?","السلام. ما الذي جاء بك؟",0],["J'ai mal à la gorge et je tousse depuis trois jours.","عندي وجع الحلق وأسعل من 3 أيام.",1],["Avez-vous de la fièvre ?","عندك سخانة؟",0],["Un peu, hier soir j'avais trente-huit.","شوية، البارح كانت 38.",1],["Je vous prescris un sirop et du repos.","نكتب لك شراب وراحة.",0],["Merci docteur. Dois-je revenir ?","شكرا دكتور. لازم نرجع؟",1]],g:{gorge:"الحلق",tousse:"أسعل",fièvre:"السخانة",sirop:"الشراب",repos:"الراحة"},q:[["Depuis combien de temps tousse-t-il ?",["Un jour","Trois jours","Une semaine"],1],["Que prescrit le médecin ?",["Un sirop et du repos","Une opération","Des vitamines"],0]]},
+{id:"fd4",lv:"B2",t:"Entretien d'embauche",ar:"مقابلة عمل",ic:"💼",d:["Recruteuse","Candidat"],s:[["Parlez-moi de votre parcours professionnel.","حدثني عن مسارك المهني.",0],["J'ai travaillé cinq ans comme ingénieur, puis j'ai dirigé une petite équipe.","اشتغلت 5 سنوات كمهندس، ثم قدت فريقاً صغيراً.",1],["Quelle est votre plus grande qualité ?","ما هي أكبر ميزة فيك؟",0],["Je dirais mon sens de l'organisation et ma capacité à écouter.","أقول حسن التنظيم والقدرة على الاستماع.",1],["Pourquoi souhaitez-vous rejoindre notre entreprise ?","لماذا تريد الانضمام لشركتنا؟",0],["Parce que vos projets innovants correspondent à mes ambitions.","لأن مشاريعكم المبتكرة تناسب طموحاتي.",1]],g:{parcours:"المسار",ingénieur:"مهندس",équipe:"الفريق",qualité:"ميزة",ambitions:"طموحات"},q:[["Combien d'années a-t-il travaillé comme ingénieur ?",["Deux","Cinq","Dix"],1],["Quelle qualité cite le candidat ?",["Le sens de l'organisation","La vitesse","Le talent artistique"],0]]}
+];
+LFR=buildFR();
+ST=STEN;
+
 
 let SPEED=.9; const SPD=[[.7,"🐢 0.7×"],[.9,"⏱ 0.9×"],[1.05,"🐇 1.05×"]];
-function gloss(st,w){const k=w.toLowerCase();for(const x of [k,k.replace(/s$/,""),k.replace(/es$/,""),k.replace(/ed$/,""),k.replace(/d$/,""),k.replace(/ing$/,""),k.replace(/ly$/,"")])if(st.g[x])return[x,st.g[x]];return null}
-function words(t,st){return esc(t).replace(/[A-Za-z][A-Za-z'-]*/g,w=>{const g=gloss(st,w);return g?`<span class="wd gl" data-k="${g[0]}">${w}</span>`:w})}
+function gloss(st,w){const k=w.toLowerCase();for(const x of [k,k.replace(/x$/,""),k.replace(/s$/,""),k.replace(/es$/,""),k.replace(/ed$/,""),k.replace(/d$/,""),k.replace(/ing$/,""),k.replace(/ly$/,"")])if(st.g[x])return[x,st.g[x]];return null}
+function words(t,st){return esc(t).replace(/[\p{L}][\p{L}'’-]*/gu,w=>{const g=gloss(st,w);return g?`<span class="wd gl" data-k="${g[0]}">${w}</span>`:w})}
 
 function storyList(mode){
   const done=id=>S.stories[id]&&S.stories[id][mode==="listen"?"l":"r"];
@@ -1495,7 +1673,7 @@ function story(){
 
 /* ---- drills ---- */
 function drillPool(){const i=LEVELS.findIndex(l=>l.id===S.dl);return L.filter(l=>{const k=LEVELS.findIndex(x=>x.id===l.lv);return k===i||k===i-1}).flatMap(l=>[...l.d.map(x=>[x[1],x[2]]),...l.w.map(w=>[w[3],w[4]])]).filter((x,k,a)=>a.findIndex(y=>y[0]===x[0])===k)}
-function norm(s){return s.toLowerCase().replace(/[^a-z0-9' ]/g," ").split(/\s+/).filter(Boolean)}
+function norm(s){return s.toLowerCase().replace(/[’]/g,"'").replace(/[^\p{L}0-9' ]/gu," ").split(/\s+/).filter(Boolean)}
 function lcsMarks(a,b){const n=a.length,m=b.length,d=Array.from({length:n+1},()=>Array(m+1).fill(0));for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)d[i][j]=a[i]===b[j]?d[i+1][j+1]+1:Math.max(d[i+1][j],d[i][j+1]);const mk=Array(m).fill(false);let i=0,j=0;while(i<n&&j<m){if(a[i]===b[j]){mk[j]=true;i++;j++}else if(d[i+1][j]>=d[i][j+1])i++;else j++}return mk}
 function drill(){
   const P=shuffle(drillPool()).slice(0,8),dict=S.drill==="dict";let i=0,sc=0,sp=.85;
@@ -1530,16 +1708,23 @@ function drill(){
 
 /* ---------- PROGRESS ---------- */
 function prog(){
-  const n=Object.keys(S.done).length;
+  const n=doneCount();
   const badge=n>=10?"👑 أستاذ":n>=7?"🚀 متقدّم":n>=4?"🌳 متوسط":n>=1?"🌱 مبتدئ نشيط":"🥚 بداية جديدة";
   app.innerHTML=`<div class="card" style="text-align:center"><div class="big" style="font-size:70px">${badge.split(" ")[0]}</div><h2>${badge.split(" ").slice(1).join(" ")}</h2><div>⭐ ${S.xp} نقطة · 🔥 ${S.streak} يوم متتالي</div></div>
+  <div class="card" style="display:flex;justify-content:space-between;align-items:center"><span>👤 <b>${esc(S.name||"بدون اسم")}</b></span><span><button class="btn sec" id="pn1">✏️ الاسم</button> <button class="btn sec" id="pl1">${LN().flag} تغيير اللغة</button></span></div>
+  <h2>🎓 شهاداتي (${LN().ar})</h2>${LEVELS.map(l=>{const ls=levelLessons(l.id),d=ls.filter(x=>S.done[x.id]).length,ok=d===ls.length;return `<div class="card" style="display:flex;justify-content:space-between;align-items:center"><span><b>${l.ic} ${l.name} ${E(l.id)}</b><div class="ex">${d} / ${ls.length} دروس</div></span>${ok?`<button class="btn cert" data-c="${l.id}">🎓 الشهادة</button>`:`<span class="pill">🔒 أكمل الدروس</span>`}</div>`}).join("")}
   <h2>التقدّم حسب المستوى</h2>${LEVELS.map(l=>`<div class="card"><b>${l.ic} ${l.name} ${E(l.id)}</b> <span class="ex">${lvPct(l.id)}%</span><div class="bar"><i style="width:${lvPct(l.id)}%"></i></div></div>`).join("")}
   <h2>📒 دفتر كلماتي (${S.saved.length})</h2><div class="card" id="nb">${S.saved.length?S.saved.map((w,i)=>`<div class="row" style="justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--line)"><span><b class="en">${esc(w[0])}</b> — ${esc(w[1])}</span><span><button class="spk" data-s="${i}" style="width:36px;height:36px;font-size:15px">🔊</button><button class="spk" data-d="${i}" style="width:36px;height:36px;font-size:15px">🗑️</button></span></div>`).join(""):"<div class=\"ex\">اضغط على الكلمات المسطّرة في القصص لحفظها هنا.</div>"}</div><div class="card"><div>📖 قصص مقروءة: <b>${Object.values(S.stories).filter(x=>x.r).length}</b> · 🎧 قصص مسموعة: <b>${Object.values(S.stories).filter(x=>x.l).length}</b></div></div><div class="card"><button class="btn sec" id="rs">🗑️ مسح التقدّم</button></div>`;
   app.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>say(S.saved[+b.dataset.s][0],{rate:.7}));app.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{S.saved.splice(+b.dataset.d,1);save();prog()});
+  $("#pn1").onclick=()=>askName(true);$("#pl1").onclick=()=>setLang(S.lang==="fr"?"en":"fr");app.querySelectorAll(".cert").forEach(b=>b.onclick=()=>showCert(b.dataset.c));
   $("#rs").onclick=()=>{S.xp=0;S.done={};S.stories={};S.saved=[];save();prog();head()};
 }
+if(S.lang==="fr"){L=LFR;ST=STFR}
+applyLang();
+$("#lg").onclick=()=>setLang(S.lang==="fr"?"en":"fr");
 render();
-
+if(!S.name)setTimeout(()=>askName(false),400);
+document.addEventListener("click",e=>{const b=e.target.closest("#cg");if(b)showCert(b.dataset.l)});
 let _ip=null;window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();_ip=e;const st=document.querySelector(".stats");if(st&&!document.getElementById("inst")){const b=document.createElement("button");b.id="inst";b.className="pill";b.style.cssText="border:0;color:#fff;cursor:pointer;font-family:inherit";b.textContent="📲 ثبّت";b.onclick=async()=>{_ip.prompt();try{await _ip.userChoice}catch(x){}b.remove()};st.appendChild(b)}});
 try{if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js")}catch(e){}
 </script>
