@@ -334,9 +334,9 @@ const LEN=[
 let L=LEN,ST=null,LFR=null,STFR=null;
 /* ---------- STATE ---------- */
 const S={view:"home",lv:null,les:null,tab:"cards",card:0,xp:0,done:{},streak:0,last:"",stories:{},saved:[],dl:"A1",sid:null,mode:"read",drill:"dict",hs:{},gl:"A1",game:null,isl:{},iid:null,lang:"en",name:""};
-const tabOf=v=>({lessons:"home",lesson:"home",story:S.mode==="listen"?"listen":"read",drill:"listen",game:"games",islam:"home",islesson:"home",study:"home"}[v]||v);
+const tabOf=v=>({lessons:"home",lesson:"home",story:S.mode==="listen"?"listen":"read",drill:"listen",game:"games",islam:"home",islesson:"home",study:"home",daily:"home",place:"home"}[v]||v);
 try{Object.assign(S,JSON.parse(localStorage.getItem("zemmora")||"{}"))}catch(e){}
-const save=()=>{try{localStorage.setItem("zemmora",JSON.stringify({xp:S.xp,done:S.done,streak:S.streak,last:S.last,stories:S.stories,saved:S.saved,dl:S.dl,hs:S.hs,gl:S.gl,isl:S.isl,lang:S.lang,name:S.name,gd:S.gd,pd:S.pd,vd:S.vd,rv:S.rv}))}catch(e){}};
+const save=()=>{try{localStorage.setItem("zemmora",JSON.stringify({xp:S.xp,done:S.done,streak:S.streak,last:S.last,stories:S.stories,saved:S.saved,dl:S.dl,hs:S.hs,gl:S.gl,isl:S.isl,lang:S.lang,name:S.name,gd:S.gd,pd:S.pd,vd:S.vd,rv:S.rv,srs:S.srs,hist:S.hist,pl:S.pl,dp:S.dp,acc:S.acc}))}catch(e){}};
 (function streak(){const t=new Date().toDateString();if(S.last!==t){const y=new Date(Date.now()-864e5).toDateString();S.streak=S.last===y?S.streak+1:1;S.last=t;save()}})();
 const $=s=>document.querySelector(s),app=$("#app");
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -377,15 +377,15 @@ function say1(text,{rate=.9,pitch=1}={}){
 /* ---------- ROUTER ---------- */
 function go(v,o={}){stopVideo();Object.assign(S,{view:v},o);document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===tabOf(v)));render();scrollTo(0,0)}
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>go(b.dataset.v,{lv:null,les:null}));
-function render(){head();document.body.classList.toggle("inchat",S.view==="chat"&&C.active);gStop();({home,lessons,lesson,chat,prog,read,listen,story,drill,games,game,islam,islesson,study})[S.view]()}
+function render(){head();document.body.classList.toggle("inchat",S.view==="chat"&&C.active);gStop();({home,lessons,lesson,chat,prog,read,listen,story,drill,games,game,islam,islesson,study,daily,place})[S.view]()}
 
 /* ---------- HOME ---------- */
 function lvPct(id){const ls=L.filter(l=>l.lv===id);return Math.round(100*ls.filter(l=>S.done[l.id]).length/ls.length)}
 function nextCard(){const n=L.find(l=>!S.done[l.id]);return n?`<div class="card next" id="nxl" data-i="${n.id}"><div style="font-size:38px">${n.ic}</div><div style="flex:1"><small style="color:#92400e">▶ تابع من حيث توقفت</small><div><b>${n.t}</b> <span class="ex">${E(n.en)} · ${n.lv}</span></div></div><div style="font-size:22px">◀</div></div>`:`<div class="card">🏆 أنهيت كل الدروس!</div>`}
 function home(){
   app.innerHTML=`<div class="card"><h2>👋 مرحبا بيك ${esc(S.name||"")}!</h2><div style="line-height:1.9">اختار مستواك وابدأ. كل درس فيه: <b>بطاقات بالصور</b> 🖼️، <b>فيديو حواري متحرّك</b> 🎬، و<b>اختبار</b> 🎯. وفي تبويب <b>محادثة</b> 💬 تهدر مع مدرّس ذكي يفهم الدارجة ويصحّحلك.</div></div>
-  ${nextCard()}<div class="card sc" id="hi" style="margin-bottom:14px;display:flex;gap:12px;align-items:center;cursor:pointer;border:2px solid #16a34a"><div style="font-size:38px">🕌</div><div><b>أساسيات الإسلام</b><div class="note" style="margin:2px 0 0">الطهارة والصلاة والصيام والزكاة والأخلاق والأصول الثلاثة</div></div></div><div class="card sc" id="hs" style="margin-bottom:14px;display:flex;gap:12px;align-items:center;cursor:pointer;border:2px solid #4f46e5"><div style="font-size:38px">📘</div><div><b>القواعد والنطق والمراجعة</b><div class="note" style="margin:2px 0 0">قواعد مشروحة بالعربية، أصوات صعبة، مفردات إضافية واختبارات</div></div></div><div class="grid2" style="margin-bottom:14px"><div class="card sc" id="hr"><div style="font-size:34px">📖</div><b>قصص للقراءة</b><small>قصص ومقالات بالكلمات المسطّرة</small></div><div class="card sc" id="hl"><div style="font-size:34px">🎧</div><b>تدريب الاستماع</b><small>إملاء وحوارات وقصص</small></div></div><h2>📚 المستويات</h2><div class="levels">${LEVELS.map(l=>`<div class="card lv" data-l="${l.id}"><div class="ic" style="background:${l.c}">${l.ic}</div><div style="flex:1"><b>${l.name} · ${E(l.id)}</b><small>${E(l.en)}</small><div class="bar"><i style="width:${lvPct(l.id)}%"></i></div></div></div>`).join("")}</div>`;
-  app.querySelectorAll(".lv").forEach(e=>e.onclick=()=>go("lessons",{lv:e.dataset.l}));$("#hr").onclick=()=>go("read");$("#hi").onclick=()=>go("islam");$("#hs").onclick=()=>{S.sti=null;go("study")};$("#hl").onclick=()=>go("listen");const nx=$("#nxl");if(nx)nx.onclick=()=>go("lesson",{les:+nx.dataset.i,tab:"cards",card:0});
+  ${planCard()}${S.pl[S.lang]?"":`<div class="card sc" data-p="pl" style="margin-bottom:14px;display:flex;gap:12px;align-items:center;cursor:pointer;border:2px solid #f59e0b"><div style="font-size:38px">🎯</div><div><b>حدّد مستواك</b><div class="note" style="margin:2px 0 0">اختبار قصير يحدد مستواك الحقيقي ونقاط ضعفك</div></div></div>`}${nextCard()}<div class="card sc" id="hi" style="margin-bottom:14px;display:flex;gap:12px;align-items:center;cursor:pointer;border:2px solid #16a34a"><div style="font-size:38px">🕌</div><div><b>أساسيات الإسلام</b><div class="note" style="margin:2px 0 0">الطهارة والصلاة والصيام والزكاة والأخلاق والأصول الثلاثة</div></div></div><div class="card sc" id="hs" style="margin-bottom:14px;display:flex;gap:12px;align-items:center;cursor:pointer;border:2px solid #4f46e5"><div style="font-size:38px">📘</div><div><b>القواعد والنطق والمراجعة</b><div class="note" style="margin:2px 0 0">قواعد مشروحة بالعربية، أصوات صعبة، مفردات إضافية واختبارات</div></div></div><div class="grid2" style="margin-bottom:14px"><div class="card sc" id="hr"><div style="font-size:34px">📖</div><b>قصص للقراءة</b><small>قصص ومقالات بالكلمات المسطّرة</small></div><div class="card sc" id="hl"><div style="font-size:34px">🎧</div><b>تدريب الاستماع</b><small>إملاء وحوارات وقصص</small></div></div><h2>📚 المستويات</h2><div class="levels">${LEVELS.map(l=>`<div class="card lv" data-l="${l.id}"><div class="ic" style="background:${l.c}">${l.ic}</div><div style="flex:1"><b>${l.name} · ${E(l.id)}</b><small>${E(l.en)}</small><div class="bar"><i style="width:${lvPct(l.id)}%"></i></div></div></div>`).join("")}</div>`;
+  app.querySelectorAll(".lv").forEach(e=>e.onclick=()=>go("lessons",{lv:e.dataset.l}));$("#hr").onclick=()=>go("read");$("#hi").onclick=()=>go("islam");$("#hs").onclick=()=>{S.sti=null;go("study")};planBind();$("#hl").onclick=()=>go("listen");const nx=$("#nxl");if(nx)nx.onclick=()=>go("lesson",{les:+nx.dataset.i,tab:"cards",card:0});
 }
 function lessons(){
   const lv=LEVELS.find(l=>l.id===S.lv);
@@ -458,20 +458,20 @@ function quizTab(l){
   const qs=shuffle(l.w).flatMap((w,i)=>{
     const t=i%3;
     const pool=(k,n)=>shuffle(all.filter(x=>x[k]!==w[k])).slice(0,n).map(x=>x[k]);
-    if(t===0)return[{p:`<div class="big" style="font-size:90px">${w[2]}</div><div class="q">ماذا تعني هذه الصورة باللغة ${LN().ar}؟</div>`,a:w[0],o:shuffle([w[0],...pool(0,3)]),en:true}];
-    if(t===1)return[{p:`<div class="q">ما معنى ${E(w[0])} بالدارجة؟</div>`,a:w[1],o:shuffle([w[1],...pool(1,3)]),en:false}];
-    return[{p:`<div class="q">🔊 استمع واختر الكلمة الصحيحة</div><div class="row"><button class="spk" id="ql">🔊</button></div>`,a:w[0],o:shuffle([w[0],...pool(0,3)]),en:true,say:w[0]}];
+    if(t===0)return[{p:`<div class="big" style="font-size:90px">${w[2]}</div><div class="q">ماذا تعني هذه الصورة باللغة ${LN().ar}؟</div>`,a:w[0],o:shuffle([w[0],...pool(0,3)]),en:true,k:w[0]}];
+    if(t===1)return[{p:`<div class="q">ما معنى ${E(w[0])} بالدارجة؟</div>`,a:w[1],o:shuffle([w[1],...pool(1,3)]),en:false,k:w[0]}];
+    return[{p:`<div class="q">🔊 استمع واختر الكلمة الصحيحة</div><div class="row"><button class="spk" id="ql">🔊</button></div>`,a:w[0],o:shuffle([w[0],...pool(0,3)]),en:true,say:w[0],k:w[0]}];
   });
   let i=0,score=0;
   const show=()=>{
-    if(i>=qs.length){const ok=score>=qs.length*0.6;if(ok){S.done[l.id]=1;addXP(score*5+20)}save();head();
+    if(i>=qs.length){const ok=score>=qs.length*0.6;if(ok){S.done[l.id]=1;addXP(score*5+20);seedLesson(l);planMark(1)}save();head();
       $("#body").innerHTML=`<div class="card win"><div class="big">${ok?"🏆":"💪"}</div><h2>${score} / ${qs.length}</h2><div>${ok?"ممتاز! أنهيت الدرس وربحت نقاط ⭐"+(levelDone(l.lv)?`<div style="margin-top:12px"><button class="btn" id="cg" data-l="${l.lv}">🎓 أنهيت مستوى ${l.lv}! احصل على شهادتك</button></div>`:""):"قريب! راجع البطاقات وجرّب من جديد"}</div><div class="row" style="margin-top:14px"><button class="btn sec" id="rt">🔁 أعد</button><button class="btn" id="bk">القائمة</button></div></div>`;
       $("#rt").onclick=()=>quizTab(l);$("#bk").onclick=()=>go("lessons");return}
     const q=qs[i];
     $("#body").innerHTML=`<div class="card"><div class="ex" style="text-align:center">السؤال ${i+1} / ${qs.length}</div><div class="bar"><i style="width:${i/qs.length*100}%"></i></div>${q.p}<div class="opts">${q.o.map(o=>`<button class="opt">${q.en?E(o):esc(o)}</button>`).join("")}</div></div>`;
     if(q.say){say(q.say);$("#ql").onclick=()=>say(q.say,{rate:.7})}
     app.querySelectorAll(".opt").forEach((b,k)=>b.onclick=()=>{
-      const good=q.o[k]===q.a;sfx(good);if(good)score++;
+      const good=q.o[k]===q.a;sfx(good);if(good)score++;if(q.k)srsRec(wid(q.k),good);
       app.querySelectorAll(".opt").forEach((x,m)=>{x.disabled=true;if(q.o[m]===q.a)x.classList.add("ok")});
       if(!good)b.classList.add("no");
       setTimeout(()=>{i++;show()},good?700:1400);
@@ -1187,7 +1187,7 @@ function quizRun(box,qs,done,rate){
     const t=qs[i],o=shuffle(t.o.map((v,k)=>k));
     box.innerHTML=`<div style="font-size:12px;color:#6b7488">${i+1} / ${qs.length}</div>`+(t.say?`<button class="spk" id="qs" style="margin:6px 0">🔊 اسمع</button>`:"")+(t.q?`<div class="en" style="margin:8px 0;font-weight:700;direction:ltr;text-align:left;font-size:17px">${esc(t.q)}</div>`:"")+(t.h?`<div style="color:#6b7488;font-size:14px">${t.h}</div>`:"")+o.map(k=>`<button class="opt" data-k="${k}" style="display:block;width:100%;margin-top:8px;direction:ltr;text-align:left">${esc(t.o[k])}</button>`).join("");
     if(t.say){const p=()=>say(t.say,{rate:rate||.85});$("#qs").onclick=p;setTimeout(p,250)}
-    box.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{const good=+b.dataset.k===t.a;sfx(good);if(good)sc++;box.querySelectorAll(".opt").forEach(e=>{e.disabled=true;if(+e.dataset.k===t.a)e.classList.add("ok")});if(!good)b.classList.add("no");setTimeout(()=>{i++;q()},good?700:1400)});
+    box.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{const good=+b.dataset.k===t.a;sfx(good);if(good)sc++;if(t.id)srsRec(t.id,good);box.querySelectorAll(".opt").forEach(e=>{e.disabled=true;if(+e.dataset.k===t.a)e.classList.add("ok")});if(!good)b.classList.add("no");setTimeout(()=>{i++;q()},good?700:1400)});
   };q();
 }
 const endBox=(sc,n,ok,xp)=>`<div class="win"><div class="big">${ok?"🏆":"💪"}</div><h2 dir="ltr">${sc} / ${n}</h2><div>${ok?`أحسنت! بارك الله فيك (+${xp} نقطة)`:"راجع الدرس وحاول مرة أخرى"}</div><button class="btn" id="qr" style="margin-top:8px">🔁 أعد</button> <button class="btn sec" id="qb">رجوع</button></div>`;
@@ -1202,7 +1202,7 @@ function studyItem(){
     <div class="card"><b>🎯 تمارين</b><div id="iq"></div></div>`;
     app.innerHTML=h;
     app.querySelectorAll("[data-e]").forEach(b=>b.onclick=()=>say(x.ex[+b.dataset.e][0],{rate:.85}));
-    const run=()=>quizRun($("#iq"),x.q.map(t=>({q:t[0],o:t[1],a:t[2]})),sc=>{const ok=sc>=3,k=sk("g",i);if(ok&&!S.gd[k]){S.gd[k]=1;addXP(15)}else save();sfx(ok);$("#iq").innerHTML=endBox(sc,x.q.length,ok,15);$("#qr").onclick=run;$("#qb").onclick=back});run();
+    const run=()=>quizRun($("#iq"),x.q.map((t,k)=>({q:t[0],o:t[1],a:t[2],id:gid(i,k)})),sc=>{const ok=sc>=3,k=sk("g",i);if(ok&&!S.gd[k]){S.gd[k]=1;addXP(15)}else save();sfx(ok);$("#iq").innerHTML=endBox(sc,x.q.length,ok,15);$("#qr").onclick=run;$("#qb").onclick=back});run();
   }else if(T==="p"){
     x=D.P[i];
     h=`<button class="back">→ رجوع</button><h2>${x.ic} <span class="en">${esc(x.t)}</span></h2>
@@ -1220,21 +1220,203 @@ function studyItem(){
     <div class="card"><b>🎯 اختبار</b><div id="iq"></div></div>`;
     app.innerHTML=h;
     app.querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>say(x.w[+b.dataset.w][0],{rate:.8}));
-    const run=()=>{const qs=shuffle(x.w).slice(0,6).map(w=>{const d=shuffle(x.w.filter(y=>y!==w)).slice(0,2),o=shuffle([w,...d]);return{h:`ما الكلمة المناسبة لـ: <b>${esc(w[1])}</b> ${w[2]}`,o:o.map(y=>y[0]),a:o.indexOf(w)}});quizRun($("#iq"),qs,sc=>{const ok=sc>=5,k=sk("v",i);if(ok&&!S.vd[k]){S.vd[k]=1;addXP(15)}else save();sfx(ok);$("#iq").innerHTML=endBox(sc,qs.length,ok,15);$("#qr").onclick=run;$("#qb").onclick=back},.8)};run();
+    const run=()=>{const qs=shuffle(x.w).slice(0,6).map(w=>{const d=shuffle(x.w.filter(y=>y!==w)).slice(0,2),o=shuffle([w,...d]);return{id:wid(w[0]),h:`ما الكلمة المناسبة لـ: <b>${esc(w[1])}</b> ${w[2]}`,o:o.map(y=>y[0]),a:o.indexOf(w)}});quizRun($("#iq"),qs,sc=>{const ok=sc>=5,k=sk("v",i);if(ok&&!S.vd[k]){S.vd[k]=1;addXP(15)}else save();sfx(ok);$("#iq").innerHTML=endBox(sc,qs.length,ok,15);$("#qr").onclick=run;$("#qb").onclick=back},.8)};run();
   }
   $(".back").onclick=back;
 }
 function studyReview(){
   const D=SD(),lv=S.stl;
   const pool=[];
-  D.G.filter(g=>g.lv===lv).forEach(g=>g.q.forEach(t=>pool.push({q:t[0],o:t[1],a:t[2]})));
+  D.G.forEach((g,gi)=>{if(g.lv===lv)g.q.forEach((t,k)=>pool.push({q:t[0],o:t[1],a:t[2],id:gid(gi,k)}))});
   const vs=D.V.filter(v=>v.lv===lv).flatMap(v=>v.w);
   const all=D.V.flatMap(v=>v.w);
-  vs.forEach(w=>{const d=shuffle(all.filter(y=>y!==w)).slice(0,2),o=shuffle([w,...d]);pool.push({h:`ما الكلمة المناسبة لـ: <b>${esc(w[1])}</b> ${w[2]}`,o:o.map(y=>y[0]),a:o.indexOf(w)})});
+  vs.forEach(w=>{const d=shuffle(all.filter(y=>y!==w)).slice(0,2),o=shuffle([w,...d]);pool.push({id:wid(w[0]),h:`ما الكلمة المناسبة لـ: <b>${esc(w[1])}</b> ${w[2]}`,o:o.map(y=>y[0]),a:o.indexOf(w)})});
   const qs=shuffle(pool).slice(0,10);
   app.innerHTML=`<button class="back">→ رجوع</button><h2>🧪 مراجعة ${lv}</h2><div class="card"><div id="iq"></div></div>`;
   $(".back").onclick=()=>study();
   const run=()=>quizRun($("#iq"),shuffle(pool).slice(0,10),sc=>{const ok=sc>=8,k=S.lang+lv,b=S.rv[k];if(b==null||sc>b)S.rv[k]=sc;if(ok&&b==null||ok&&b<8)addXP(30);else save();sfx(ok);$("#iq").innerHTML=endBox(sc,qs.length,ok,30);$("#qr").onclick=run;$("#qb").onclick=()=>study()});run();
+}
+
+/* ---------- LEARNING ENGINE: spaced repetition, production, placement, daily plan ---------- */
+S.srs=S.srs||{};S.hist=S.hist||{};S.pl=S.pl||{};S.dp=S.dp||{};S.acc=S.acc||{};S.dmode="review";
+const DAY=864e5,dnum=()=>Math.floor((Date.now()-new Date().getTimezoneOffset()*6e4)/DAY);
+const BOXD=[0,1,3,7,14,30];
+const wid=w=>"w|"+S.lang+"|"+w,gid=(i,k)=>"g|"+S.lang+"|"+i+"|"+k,sid=s=>"s|"+S.lang+"|"+s;
+const nz=s=>String(s).toLowerCase().replace(/[’`]/g,"'").replace(/[^\p{L}\p{N}' ]/gu," ").replace(/\s+/g," ").trim();
+const na=s=>nz(s).normalize("NFD").replace(/[̀-ͯ]/g,"");
+function srsRec(id,good){
+  if(!id)return;const t=dnum(),ty=id[0];
+  const r=S.srs[id]||{b:0,d:t,w:0,n:0};r.n++;
+  if(good){r.b=Math.min(5,r.b+1)}else{r.b=0;r.w++}
+  r.d=t+(good?BOXD[r.b]:0);S.srs[id]=r;
+  const h=S.hist[t]||(S.hist[t]={n:0,c:0});h.n++;if(good)h.c++;
+  const a=S.acc[ty]||(S.acc[ty]=[0,0]);a[0]++;if(good)a[1]++;
+  const ks=Object.keys(S.hist).sort();while(ks.length>30)delete S.hist[ks.shift()];
+  save();
+}
+function seedLesson(l){const t=dnum();l.w.forEach(w=>{const id=wid(w[0]);if(!S.srs[id])S.srs[id]={b:0,d:t+1,w:0,n:0}});save()}
+let _B=null,_BL=null;
+function bank(){
+  if(_B&&_BL===S.lang)return _B;
+  const D=SD(),W={},Sn={};
+  L.forEach(l=>{l.w.forEach(w=>{W[w[0]]={en:w[0],ar:w[1],ic:w[2]};if(w[3])Sn[w[3]]=w[4];});(l.d||[]).forEach(x=>{if(x[1])Sn[x[1]]=x[2]})});
+  D.V.forEach(v=>v.w.forEach(w=>{W[w[0]]={en:w[0],ar:w[1],ic:w[2]}}));
+  D.G.forEach(g=>g.ex.forEach(e=>{Sn[e[0]]=e[1]}));
+  _BL=S.lang;return _B={W,Sn,all:Object.values(W),D};
+}
+const okSent=s=>{const n=s.split(/\s+/).length;return n>=3&&n<=9};
+function mkTask(id,r){
+  const B=bank(),p=id.split("|"),ty=p[0],b=r?r.b:0;
+  if(ty==="w"){
+    const w=B.W[p.slice(2).join("|")];if(!w)return null;
+    const d=shuffle(B.all.filter(x=>x.en!==w.en)).slice(0,3),o=shuffle([w,...d]);
+    const pr=`<div style="text-align:center;font-size:54px">${w.ic}</div><div class="q">ما الكلمة المناسبة لـ <b>${esc(w.ar)}</b>؟</div>`;
+    if(b<=1)return{id,k:"mcq",p:pr,o:o.map(x=>x.en),a:o.indexOf(w)};
+    if(b<=3)return{id,k:"typ",p:pr.replace("ما الكلمة المناسبة لـ","اكتب بـ"+LN().ar+":"),ans:w.en};
+    return{id,k:"typ",p:`<div class="q">🔊 اسمع واكتب ما سمعت</div>`,ans:w.en,say:w.en};
+  }
+  if(ty==="g"){const g=B.D.G[+p[2]];if(!g||!g.q[+p[3]])return null;const q=g.q[+p[3]];return{id,k:"mcq",p:`<div class="en" style="font-weight:700;font-size:17px;direction:ltr;text-align:left;margin:8px 0">${esc(q[0])}</div><div class="ex">${esc(g.t)}</div>`,o:q[1],a:q[2],en:true}}
+  if(ty==="s"){const s=p.slice(2).join("|");if(!(s in B.Sn))return null;return{id,k:"ord",sent:s,ar:B.Sn[s]}}
+  return null;
+}
+function dueIds(max){const t=dnum();return Object.entries(S.srs).filter(([id,r])=>id.split("|")[1]===S.lang&&r.d<=t).sort((a,b)=>b[1].w-a[1].w||a[1].d-b[1].d).slice(0,max).map(x=>x[0])}
+function dueCount(){const t=dnum();return Object.entries(S.srs).filter(([id,r])=>id.split("|")[1]===S.lang&&r.d<=t).length}
+/* --- exercise renderers: each calls cb(good) --- */
+function exMCQ(box,t,cb){
+  box.innerHTML=t.p+(t.say?`<div class="row"><button class="spk" id="xs">🔊</button></div>`:"")+`<div class="opts">${t.o.map(o=>`<button class="opt" style="direction:ltr;text-align:left">${esc(o)}</button>`).join("")}</div>`;
+  if(t.say){say(t.say);$("#xs").onclick=()=>say(t.say,{rate:.7})}
+  box.querySelectorAll(".opt").forEach((b,k)=>b.onclick=()=>{const good=k===t.a;sfx(good);box.querySelectorAll(".opt").forEach((x,m)=>{x.disabled=true;if(m===t.a)x.classList.add("ok")});if(!good)b.classList.add("no");setTimeout(()=>cb(good),good?650:1500)});
+}
+function exType(box,t,cb){
+  box.innerHTML=t.p+(t.say?`<div class="row"><button class="spk" id="xs">🔊</button></div>`:"")+`<input id="xi" autocomplete="off" autocapitalize="off" spellcheck="false" style="width:100%;padding:12px;font-size:20px;border:2px solid var(--line);border-radius:12px;direction:ltr;text-align:left;margin-top:8px" placeholder="…"><div id="xr" style="min-height:40px;margin-top:8px"></div><div class="row" style="margin-top:6px"><button class="btn" id="xc">تحقّق</button> <button class="btn sec" id="xk">لا أعرف</button></div>`;
+  if(t.say){say(t.say);$("#xs").onclick=()=>say(t.say,{rate:.7})}
+  const inp=$("#xi");inp.focus();let fin=false;
+  const ans=[t.ans,t.ans.replace(/\s*\(.*\)/,"")];
+  const fin2=(good,msg)=>{if(fin)return;fin=true;sfx(good);inp.disabled=true;$("#xr").innerHTML=msg;if(!good||t.say)say(t.ans,{rate:.8});setTimeout(()=>cb(good),good?1000:2200)};
+  const chk=()=>{const v=inp.value;if(!v.trim())return;
+    if(ans.some(a=>nz(a)===nz(v)))return fin2(true,`<span style="color:#16a34a">✅ صحيح!</span>`);
+    if(ans.some(a=>na(a)===na(v)))return fin2(true,`<span style="color:#16a34a">✅ صحيح</span> <span style="color:#b45309">· انتبه للتهجئة/التشكيل: <b class="en">${esc(t.ans)}</b></span>`);
+    fin2(false,`<span style="color:#dc2626">❌ الصحيح: <b class="en" style="direction:ltr;display:inline-block">${esc(t.ans)}</b></span>`)};
+  $("#xc").onclick=chk;inp.onkeydown=e=>{if(e.key==="Enter")chk()};
+  $("#xk").onclick=()=>fin2(false,`<span style="color:#dc2626">الصحيح: <b class="en" style="direction:ltr;display:inline-block">${esc(t.ans)}</b></span>`);
+}
+function exOrder(box,t,cb){
+  const toks=t.sent.split(/\s+/),sh=shuffle(toks.map((w,i)=>({w,i})));let pick=[],fin=false;
+  const draw=()=>{
+    box.innerHTML=`<div class="q">رتّب الكلمات لتكوين الجملة:</div><div style="font-size:17px;font-weight:700;margin:6px 0">🇩🇿 ${esc(t.ar||"")}</div><div id="oa" style="min-height:54px;border:2px dashed var(--line);border-radius:12px;padding:8px;direction:ltr;display:flex;flex-wrap:wrap;gap:6px">${pick.map(x=>`<button class="chip on" data-r="${x.i}">${esc(x.w)}</button>`).join("")}</div><div id="ow" style="margin-top:10px;direction:ltr;display:flex;flex-wrap:wrap;gap:6px">${sh.filter(x=>!pick.includes(x)).map(x=>`<button class="chip" data-a="${x.i}">${esc(x.w)}</button>`).join("")}</div><div id="xr" style="min-height:36px;margin-top:8px"></div><div class="row"><button class="btn sec" id="xk">لا أعرف</button></div>`;
+    if(fin)return;
+    box.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{pick.push(sh.find(x=>x.i===+b.dataset.a));draw();if(pick.length===toks.length)chk()});
+    box.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{pick=pick.filter(x=>x.i!==+b.dataset.r);draw()});
+    $("#xk").onclick=()=>end(false);
+  };
+  const end=good=>{if(fin)return;fin=true;sfx(good);say(t.sent,{rate:.85});box.querySelectorAll("button").forEach(b=>b.disabled=true);$("#xr").innerHTML=good?`<span style="color:#16a34a">✅ ممتاز!</span>`:`<span style="color:#dc2626">❌ الصحيح: <b class="en" style="direction:ltr;display:inline-block">${esc(t.sent)}</b></span>`;setTimeout(()=>cb(good),good?1100:2600)};
+  const chk=()=>end(na(pick.map(x=>x.w).join(" "))===na(t.sent));
+  draw();
+}
+function exSpeak(box,t,cb){
+  let tries=0,busy=false,fin=false;
+  box.innerHTML=`<div class="q">🎤 انطق الجملة بصوت واضح:</div><div id="sx" style="font-size:22px;font-weight:800;direction:ltr;margin:8px 0;text-align:center">${esc(t.sent)}</div><div style="text-align:center;color:#6b7488">${esc(t.ar||"")}</div><div class="row" style="justify-content:center;margin-top:8px"><button class="spk" id="sl2">🔊</button><button class="btn" id="sm">🎤 انطق الآن</button><button class="btn sec" id="sk">تخطّي</button></div><div id="sr" style="text-align:center;min-height:50px;margin-top:8px"></div>`;
+  $("#sl2").onclick=()=>say(t.sent,{rate:.8});
+  const end=g=>{if(fin)return;fin=true;setTimeout(()=>cb(g),g?1200:1500)};
+  $("#sk").onclick=()=>{if(!busy)end(false)};
+  $("#sm").onclick=async()=>{
+    if(busy||fin)return;busy=true;const sm=$("#sm");sm.textContent="🎙️ أسمعك…";sm.disabled=true;$("#sr").textContent="";
+    const r=await listenOnce();if(!$("#sm")){busy=false;return}sm.disabled=false;sm.textContent="🎤 انطق الآن";busy=false;
+    if(!r.text){$("#sr").innerHTML=`<span style="color:#dc2626">${STTERR[r.err]||"تعذّر التعرّف. أعد المحاولة."}</span>`;return}
+    const e=norm(t.sent),h=norm(r.text),mk=lcsMarks(h,e),pct=e.length?mk.filter(Boolean).length/e.length:0,ok=pct>=.75;sfx(ok);tries++;
+    $("#sx").innerHTML=e.map((x,k)=>`<span style="color:${mk[k]?"#16a34a":"#dc2626"}">${esc(x)}</span>`).join(" ");
+    $("#sr").innerHTML=`<div style="color:#6b7488;direction:ltr">${esc(r.text)}</div>`+(ok?`<div style="color:#16a34a">✅ نطق ممتاز!</div>`:`<div style="color:#dc2626">❌ الكلمات الحمراء لم تُنطق بوضوح${tries<3?" · أعد المحاولة ("+tries+"/3)":""}</div>`);
+    if(ok){busy=true;say(t.sent,{rate:.85});fin=true;setTimeout(()=>cb(tries<=2),1500)}else if(tries>=3){fin=true;setTimeout(()=>cb(false),1600)}
+  };
+}
+function runTasks(box,tasks,end,head2){
+  let i=0,sc=0;const hd=()=>head2?`<div class="ex" style="text-align:center">${head2}</div>`:"";
+  const next=()=>{
+    if(i>=tasks.length)return end(sc,tasks.length);
+    const t=tasks[i],inner=document.createElement("div");
+    box.innerHTML=`${hd()}<div class="ex" style="text-align:center">${i+1} / ${tasks.length}</div><div class="bar"><i style="width:${i/tasks.length*100}%"></i></div><div id="tk"></div>`;
+    const tb=$("#tk"),f={mcq:exMCQ,typ:exType,ord:exOrder,spk:exSpeak}[t.k];
+    f(tb,t,good=>{if(good)sc++;if(t.id)srsRec(t.id,good);i++;next()});
+  };next();
+}
+const sessEnd=(box,sc,n,xp,again,back)=>{const ok=sc>=n*.6;if(ok)addXP(xp);sfx(ok);box.innerHTML=`<div class="win"><div class="big">${ok?"🏆":"💪"}</div><h2 dir="ltr">${sc} / ${n}</h2><div>${ok?`أحسنت! (+${xp} نقطة)`:"استمر، التكرار هو سرّ التقدّم"}</div><div style="margin-top:10px"><button class="btn" id="ag">${again[0]}</button> <button class="btn sec" id="bk2">🏠 الرئيسية</button></div></div>`;$("#ag").onclick=again[1];$("#bk2").onclick=()=>go("home")};
+function planMark(i){const d=dnum();if(S.dp.d!==d)S.dp={d,s:[0,0,0],b:0};S.dp.s[i]=1;if(S.dp.s.every(x=>x)&&!S.dp.b){S.dp.b=1;addXP(25)}save()}
+function planGet(){const d=dnum();if(S.dp.d!==d){S.dp={d,s:[0,0,0],b:0};}return S.dp}
+function daily(){
+  const m=S.dmode;
+  app.innerHTML=`<button class="back">→ رجوع</button><h2>${m==="review"?"🔁 مراجعة اليوم":m==="mist"?"📕 دفتر أخطائي":"🎤 تمرين الإنتاج"}</h2><div class="card" id="dbx"></div>`;
+  $(".back").onclick=()=>go("home");const box=$("#dbx"),B=bank();
+  if(m==="review"||m==="mist"){
+    let ids;
+    if(m==="mist"){ids=Object.entries(S.srs).filter(([id,r])=>id.split("|")[1]===S.lang&&r.w>0).sort((a,b)=>b[1].w-a[1].w).slice(0,10).map(x=>x[0])}
+    else ids=dueIds(10);
+    const tasks=ids.map(id=>mkTask(id,S.srs[id])).filter(Boolean);
+    if(!tasks.length){box.innerHTML=`<div style="text-align:center"><div class="big">${m==="mist"?"✨":"🎉"}</div><div>${m==="mist"?"لا أخطاء مسجّلة. أحسنت!":"لا توجد كلمات للمراجعة الآن. أنهِ درساً جديداً وستظهر كلماته غداً."}</div></div>`;if(m==="review")planMark(0);return}
+    runTasks(box,tasks,(sc,n)=>{if(m==="review")planMark(0);sessEnd(box,sc,n,10+sc*2,[m==="review"?"🔁 جولة أخرى":"🔁 أعد",()=>daily()])},m==="review"?"كلمات وقواعد حان وقت مراجعتها":"أكثر ما أخطأت فيه");
+  }else{
+    const sents=[...Object.keys(B.Sn)].filter(okSent);
+    const picks=shuffle(sents).slice(0,6);
+    const tasks=picks.map((s,i)=>({id:sid(s),k:(i>=3&&sttCan())?"spk":"ord",sent:s,ar:B.Sn[s]}));
+    if(!tasks.length){box.innerHTML="لا توجد جمل كافية.";return}
+    runTasks(box,tasks,(sc,n)=>{planMark(2);sessEnd(box,sc,n,15+sc*3,["🔁 تمرين آخر",()=>daily()])},"ترتيب الجمل ثم النطق"+(sttCan()?"":" (النطق غير متاح هنا)"));
+  }
+}
+function planCard(){
+  const p=planGet(),due=dueCount(),nl=L.find(l=>!S.done[l.id]),all=p.s.every(x=>x);
+  const row=(i,ic,t,sub,id)=>`<div class="row" data-p="${id}" style="padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer;gap:10px"><span style="font-size:22px">${p.s[i]?"✅":ic}</span><span style="flex:1"><b>${t}</b><div class="ex">${sub}</div></span><span>◀</span></div>`;
+  return `<div class="card" style="border:2px solid #4f46e5"><b>🎯 خطتك اليوم ${all?"· أنجزتها! 🎉":"· 15 دقيقة"}</b>${row(0,"🔁","مراجعة ذكية",due?due+" عنصر حان وقت مراجعته":"لا شيء مستحق الآن","rv")}${nl?row(1,"📖","درس جديد",esc(nl.t),"ls"):""}${row(2,"🎤","تمرين الجمل والنطق","رتّب جملاً وانطقها","pd")}${Object.values(S.srs).some(r=>r.w>0)?`<div class="row" data-p="ms" style="padding:8px 0;cursor:pointer;gap:10px"><span style="font-size:20px">📕</span><span style="flex:1">دفتر أخطائي</span><span>◀</span></div>`:""}</div>`;
+}
+function planBind(){
+  app.querySelectorAll("[data-p]").forEach(r=>r.onclick=()=>{const k=r.dataset.p;
+    if(k==="rv")go("daily",{dmode:"review"});else if(k==="pd")go("daily",{dmode:"produce"});else if(k==="ms")go("daily",{dmode:"mist"});
+    else if(k==="ls"){const n=L.find(l=>!S.done[l.id]);if(n)go("lesson",{les:n.id,tab:"cards",card:0})}
+    else if(k==="pl")go("place")});
+}
+/* --- placement test --- */
+function place(){
+  const D=SD(),B=bank(),allW=D.V.flatMap(v=>v.w);
+  app.innerHTML=`<button class="back">→ رجوع</button><h2>🎯 اختبار تحديد المستوى (${LN().ar})</h2><div class="note" style="margin:-6px 0 8px">أسئلة متدرجة من A1 إلى C1، ويتوقف الاختبار عند الصعوبة. أجب بصدق ولا تخمّن كثيراً.</div><div class="card" id="pbx"></div>`;
+  $(".back").onclick=()=>go("home");const box=$("#pbx");
+  const res={lv:[],g:[0,0],v:[0,0]};let li=0;
+  const mkLevel=lv=>{
+    const gq=[];D.G.forEach((g,gi)=>{if(g.lv===lv)g.q.forEach((q,k)=>gq.push({id:gid(gi,k),k:"mcq",ty:"g",p:`<div class="en" style="font-weight:700;font-size:17px;direction:ltr;text-align:left;margin:8px 0">${esc(q[0])}</div>`,o:q[1],a:q[2]}))});
+    const vw=D.V.filter(v=>v.lv===lv).flatMap(v=>v.w);
+    const mkv=(w,listen)=>{const d=shuffle(allW.filter(x=>x[0]!==w[0])).slice(0,3),o=shuffle([w,...d]);return{id:wid(w[0]),k:"mcq",ty:"v",o:o.map(x=>x[0]),a:o.indexOf(w),say:listen?w[0]:null,p:listen?`<div class="q">🔊 اسمع واختر الكلمة</div>`:`<div style="text-align:center;font-size:48px">${w[2]}</div><div class="q">ما الكلمة المناسبة لـ <b>${esc(w[1])}</b>؟</div>`}};
+    const vs=shuffle(vw);
+    return[...shuffle(gq).slice(0,2),mkv(vs[0],false),mkv(vs[1],true)];
+  };
+  const step=()=>{
+    if(li>=LEVELS.length)return fin();
+    const lv=LEVELS[li].id,tasks=mkLevel(lv);let k=0,sc=0;
+    k=0;sc=0;
+    const go1=()=>{
+      if(k>=tasks.length){res.lv.push(sc);if(sc<=1)return fin();li++;return step()}
+      const t=tasks[k];
+      box.innerHTML=`<div class="ex" style="text-align:center">المستوى ${lv} · ${k+1} / ${tasks.length}</div><div class="bar"><i style="width:${(li*4+k)/(LEVELS.length*4)*100}%"></i></div><div id="tk"></div>`;
+      exMCQ($("#tk"),t,good=>{if(good)sc++;const r=res[t.ty];r[0]++;if(good)r[1]++;srsRec(t._id||t.id,good);k++;go1()});
+    };go1();
+  };
+  const fin=()=>{
+    let placed="A1";for(let i=0;i<res.lv.length;i++){if(res.lv[i]>=3)placed=LEVELS[Math.min(i+1,LEVELS.length-1)].id;else{placed=LEVELS[i].id;break}}
+    if(res.lv.length===LEVELS.length&&res.lv.every(x=>x>=3))placed="C1";
+    const gp=res.g[0]?Math.round(100*res.g[1]/res.g[0]):0,vp=res.v[0]?Math.round(100*res.v[1]/res.v[0]):0;
+    S.pl[S.lang]={lv:placed,g:gp,v:vp,d:dnum(),n:res.lv.length};S.dl=placed;S.gl=placed;S.stl=placed;save();addXP(20);
+    const lvo=LEVELS.find(l=>l.id===placed),adv=gp+10<vp?"قواعدك أضعف من مفرداتك، ركّز على قسم القواعد.":vp+10<gp?"مفرداتك أضعف من قواعدك، ركّز على المفردات والمراجعة اليومية.":"مفرداتك وقواعدك متوازنة، تابع بانتظام.";
+    box.innerHTML=`<div class="win"><div class="big">${lvo.ic}</div><h2>مستواك: ${lvo.name} <span class="en">${placed}</span></h2><div style="margin:8px 0">📚 المفردات والاستماع: <b>${vp}%</b> · 📘 القواعد: <b>${gp}%</b></div><div class="note">${adv}</div><div style="margin-top:10px"><button class="btn" id="g1">ابدأ من هنا</button> <button class="btn sec" id="g2">أعد الاختبار</button></div></div>`;
+    $("#g1").onclick=()=>go("home");$("#g2").onclick=()=>place();
+  };
+  step();
+}
+function reportCard(){
+  const t=dnum(),rows=Object.entries(S.srs).filter(([id])=>id.split("|")[1]===S.lang),m=rows.filter(([,r])=>r.b>=3).length,lr=rows.filter(([,r])=>r.b<3).length,due=dueCount();
+  const pl=S.pl[S.lang],acc=k=>S.acc[k]&&S.acc[k][0]?Math.round(100*S.acc[k][1]/S.acc[k][0])+"%":"—";
+  const days=[...Array(7)].map((_,i)=>t-6+i),mx=Math.max(1,...days.map(d=>(S.hist[d]||{n:0}).n));
+  const weak=rows.filter(([,r])=>r.w>0).sort((a,b)=>b[1].w-a[1].w).slice(0,5).map(([id,r])=>{const p=id.split("|"),B=bank();let lb=p[0]==="w"?p.slice(2).join("|"):p[0]==="s"?p.slice(2).join("|"):"قاعدة";if(p[0]==="g"){const g=B.D.G[+p[2]];lb=g?g.t:"قاعدة"}return `<div style="padding:4px 0;border-bottom:1px dashed var(--line)"><span class="en">${esc(lb)}</span> <span class="ex">× ${r.w}</span></div>`}).join("");
+  return `<h2>📊 تقريري (${LN().ar})</h2><div class="card">${pl?`<div>🎯 مستواك المُحدّد: <b>${pl.lv}</b> <span class="ex">· مفردات ${pl.v}% · قواعد ${pl.g}%</span></div>`:`<div>لم تُجرِ اختبار تحديد المستوى بعد.</div>`}<div style="margin-top:6px"><button class="btn sec" id="plb">🎯 ${pl?"أعد الاختبار":"حدّد مستواك الآن"}</button></div></div>
+  <div class="card"><div class="grid2" style="gap:8px"><div><b style="font-size:24px">${m}</b><div class="ex">كلمة متقنة</div></div><div><b style="font-size:24px">${lr}</b><div class="ex">قيد التعلّم</div></div><div><b style="font-size:24px">${due}</b><div class="ex">مستحقة للمراجعة</div></div><div><b style="font-size:24px">${Object.values(S.srs).filter(r=>r.w>0).length}</b><div class="ex">في دفتر الأخطاء</div></div></div>
+  <div style="margin-top:10px">دقّتك: المفردات <b>${acc("w")}</b> · القواعد <b>${acc("g")}</b> · الجمل <b>${acc("s")}</b></div>
+  <div style="display:flex;gap:6px;align-items:flex-end;height:70px;margin-top:10px;direction:ltr">${days.map(d=>{const h=S.hist[d]||{n:0,c:0};return `<div style="flex:1;text-align:center"><div style="background:${h.n?"#4f46e5":"#e5e7eb"};height:${Math.max(4,h.n/mx*50)}px;border-radius:4px" title="${h.c}/${h.n}"></div><div class="ex" style="font-size:10px">${h.n}</div></div>`}).join("")}</div><div class="ex" style="text-align:center">عدد الإجابات في آخر 7 أيام</div></div>
+  ${weak?`<div class="card"><b>⚠️ أضعف نقاطك</b>${weak}<div style="margin-top:8px"><button class="btn" id="msb">📕 تدرّب عليها</button></div></div>`:""}`;
 }
 
 /* ---------- ISLAM BASICS ---------- */
@@ -1912,10 +2094,11 @@ function prog(){
   const badge=n>=10?"👑 أستاذ":n>=7?"🚀 متقدّم":n>=4?"🌳 متوسط":n>=1?"🌱 مبتدئ نشيط":"🥚 بداية جديدة";
   app.innerHTML=`<div class="card" style="text-align:center"><div class="big" style="font-size:70px">${badge.split(" ")[0]}</div><h2>${badge.split(" ").slice(1).join(" ")}</h2><div>⭐ ${S.xp} نقطة · 🔥 ${S.streak} يوم متتالي</div></div>
   <div class="card" style="display:flex;justify-content:space-between;align-items:center"><span>👤 <b>${esc(S.name||"بدون اسم")}</b></span><span><button class="btn sec" id="pn1">✏️ الاسم</button> <button class="btn sec" id="pl1">${LN().flag} تغيير اللغة</button></span></div>
+  ${reportCard()}
   <h2>🎓 شهاداتي (${LN().ar})</h2>${LEVELS.map(l=>{const ls=levelLessons(l.id),d=ls.filter(x=>S.done[x.id]).length,ok=d===ls.length;return `<div class="card" style="display:flex;justify-content:space-between;align-items:center"><span><b>${l.ic} ${l.name} ${E(l.id)}</b><div class="ex">${d} / ${ls.length} دروس</div></span>${ok?`<button class="btn cert" data-c="${l.id}">🎓 الشهادة</button>`:`<span class="pill">🔒 أكمل الدروس</span>`}</div>`}).join("")}
   <h2>التقدّم حسب المستوى</h2>${LEVELS.map(l=>`<div class="card"><b>${l.ic} ${l.name} ${E(l.id)}</b> <span class="ex">${lvPct(l.id)}%</span><div class="bar"><i style="width:${lvPct(l.id)}%"></i></div></div>`).join("")}
   <h2>📒 دفتر كلماتي (${S.saved.length})</h2><div class="card" id="nb">${S.saved.length?S.saved.map((w,i)=>`<div class="row" style="justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--line)"><span><b class="en">${esc(w[0])}</b> — ${esc(w[1])}</span><span><button class="spk" data-s="${i}" style="width:36px;height:36px;font-size:15px">🔊</button><button class="spk" data-d="${i}" style="width:36px;height:36px;font-size:15px">🗑️</button></span></div>`).join(""):"<div class=\"ex\">اضغط على الكلمات المسطّرة في القصص لحفظها هنا.</div>"}</div><div class="card"><div>📖 قصص مقروءة: <b>${Object.values(S.stories).filter(x=>x.r).length}</b> · 🎧 قصص مسموعة: <b>${Object.values(S.stories).filter(x=>x.l).length}</b></div></div><div class="card"><button class="btn sec" id="rs">🗑️ مسح التقدّم</button></div>`;
-  app.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>say(S.saved[+b.dataset.s][0],{rate:.7}));app.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{S.saved.splice(+b.dataset.d,1);save();prog()});
+  {const a=$("#plb");if(a)a.onclick=()=>go("place");const m=$("#msb");if(m)m.onclick=()=>go("daily",{dmode:"mist"})}app.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>say(S.saved[+b.dataset.s][0],{rate:.7}));app.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{S.saved.splice(+b.dataset.d,1);save();prog()});
   $("#pn1").onclick=()=>askName(true);$("#pl1").onclick=()=>setLang(S.lang==="fr"?"en":"fr");app.querySelectorAll(".cert").forEach(b=>b.onclick=()=>showCert(b.dataset.c));
   $("#rs").onclick=()=>{S.xp=0;S.done={};S.stories={};S.saved=[];save();prog();head()};
 }
